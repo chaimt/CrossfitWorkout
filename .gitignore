@@ -1,0 +1,27 @@
+# Build outputs
+bin/
+build/
+.gradle/
+.kotlin/
+*.apk
+*.aab
+*.prg
+*.iq
+
+# Secrets — never commit (REQ-BT03, REQ-NF07)
+developer_key
+*.key
+*.keystore
+*.jks
+local.properties
+.env
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+__pycache__/
+
+# Claude worktrees and local agent state
+.claude/

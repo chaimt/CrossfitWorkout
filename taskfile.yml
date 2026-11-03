@@ -1,0 +1,78 @@
+# https://taskfile.dev — root tasks for the CrossfitWorkout monorepo (REQ-BT02).
+version: "3"
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  android:build:
+    desc: Assemble the WOD Capture debug APK
+    dir: android
+    cmds:
+      - ./gradlew --console=plain :app:assembleDebug
+
+  android:test:
+    desc: Run the Android JVM unit tests (domain + app)
+    dir: android
+    cmds:
+      - ./gradlew --console=plain :domain:test :app:testDebugUnitTest
+
+  watch:build:
+    desc: Compile the WOD Coach debug .prg for the fr965
+    dir: watch
+    cmds:
+      - bash scripts/build.sh
+
+  watch:test:
+    desc: Compile and run the watch unit tests in the simulator (simulator must be running)
+    dir: watch
+    cmds:
+      - bash scripts/test.sh
+
+  watch:deploy-simulator:
+    desc: Build and push WOD Coach to the Connect IQ simulator
+    dir: watch
+    interactive: true
+    cmds:
+      - bash scripts/build.sh
+      - bash scripts/run-simulator.sh
+
+  watch:deploy-watch:
+    desc: Build and copy WOD Coach onto the USB-connected watch
+    dir: watch
+    cmds:
+      - bash scripts/build.sh
+      - bash scripts/deploy-watch.sh
+
+  watch:package:
+    desc: Build a release .iq package for the Connect IQ store / beta
+    dir: watch
+    cmds:
+      - bash scripts/package.sh
+
+  contract:test:
+    desc: Validate shared schemas, golden wire fixtures and catalogs (REQ-TS08)
+    dir: tools
+    cmds:
+      - poetry install --quiet
+      - poetry run pytest -q
+
+  contract:gen:
+    desc: Regenerate shared catalogs and golden wire fixtures
+    cmds:
+      - python3 tools/gen_catalog.py
+      - cd tools && poetry run gen-wire-fixtures
+
+  eval:
+    desc: Run the parser eval harness over shared/fixtures (REQ-AX12; needs ANTHROPIC_API_KEY for the cloud parser)
+    dir: android
+    cmds:
+      - ./gradlew --console=plain :domain:eval
+
+  test:
+    desc: Run every automated test suite that doesn't need a device
+    cmds:
+      - task: contract:test
+      - task: android:test

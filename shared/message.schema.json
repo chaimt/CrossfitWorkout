@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crossfitworkout.local/message.schema.json",
+  "title": "Wire envelope (protocol v1) — docs/protocol.md §2–3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "t", "id", "ts", "g"],
+  "properties": {
+    "v": { "type": "integer", "minimum": 1 },
+    "t": {
+      "enum": [
+        "plan.put", "plan.del", "profile.put", "result.ack", "result.chunk.ack", "session.ack", "sync.req",
+        "hello", "plan.ack", "profile.ack", "result.put", "result.chunk", "session.put", "sync.ack"
+      ]
+    },
+    "id": { "$ref": "#/$defs/uuid" },
+    "ts": { "type": "integer", "minimum": 0 },
+    "g": { "type": "integer", "minimum": 1 },
+    "oid": { "$ref": "#/$defs/uuid" },
+    "rev": { "type": "integer", "minimum": 1 },
+    "p": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "t": { "enum": ["plan.put", "plan.del", "profile.put", "result.put", "result.chunk", "session.put", "plan.ack", "profile.ack", "result.ack", "result.chunk.ack", "session.ack"] } } },
+      "then": { "required": ["oid", "rev"] }
+    },
+    {
+      "if": { "properties": { "t": { "const": "plan.put" } } },
+      "then": { "required": ["p"], "properties": { "p": { "$ref": "watch-plan.schema.json" } } }
+    },
+    {
+      "if": { "properties": { "t": { "const": "result.put" } } },
+      "then": { "required": ["p"], "properties": { "p": { "$ref": "result.schema.json" } } }
+    },
+    {
+      "if": { "properties": { "t": { "const": "session.put" } } },
+      "then": { "required": ["p"], "properties": { "p": { "$ref": "session.schema.json" } } }
+    },
+    {
+      "if": { "properties": { "t": { "enum": ["plan.ack", "profile.ack", "result.ack", "result.chunk.ack", "session.ack"] } } },
+      "then": { "required": ["p"], "properties": { "p": { "$ref": "#/$defs/ack" } } }
+    },
+    {
+      "if": { "properties": { "t": { "const": "hello" } } },
+      "then": { "required": ["p"], "properties": { "p": { "$ref": "#/$defs/hello" } } }
+    },
+    {
+      "if": { "properties": { "t": { "const": "result.chunk" } } },
+      "then": { "required": ["p"], "properties": { "p": { "$ref": "#/$defs/chunk" } } }
+    }
+  ],
+  "$defs": {
+    "uuid": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "ack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mid", "st"],
+      "properties": {
+        "mid": { "$ref": "#/$defs/uuid" },
+        "st": { "enum": ["ok", "already_applied", "stale", "conflict", "error"] },
+        "rs": { "type": "string", "maxLength": 32 },
+        "ix": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "hello": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pv", "app", "dev", "inv", "del", "free", "rc", "cap"],
+      "properties": {
+        "pv": { "type": "array", "items": { "type": "integer" }, "minItems": 1 },
+        "app": { "type": "string" },
+        "dev": { "type": "string" },
+        "inv": { "type": "array", "maxItems": 10, "items": { "$ref": "#/$defs/idRev" } },
+        "del": { "type": "array", "items": { "$ref": "#/$defs/idRev" } },
+        "free": { "type": "integer", "minimum": 0 },
+        "rc": { "type": "integer", "minimum": 0 },
+        "cap": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "idRev": {
+      "type": "array",
+      "prefixItems": [{ "$ref": "#/$defs/uuid" }, { "type": "integer", "minimum": 1 }],
+      "items": false,
+      "minItems": 2
+    },
+    "chunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["xid", "ix", "n", "len", "sha", "d"],
+      "properties": {
+        "xid": { "$ref": "#/$defs/uuid" },
+        "ix": { "type": "integer", "minimum": 0, "maximum": 63 },
+        "n": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "len": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "sha": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "d": { "type": "string" }
+      }
+    }
+  }
+}
