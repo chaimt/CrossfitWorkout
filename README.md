@@ -15,12 +15,19 @@ results back to the phone. Specification: [`REQUIREMENTS.md`](REQUIREMENTS.md).
 
 ```bash
 task --list                 # all tasks
-task contract:test          # shared schemas + golden wire fixtures + catalogs
-task android:test           # JVM unit tests (domain + app)
-task android:build          # debug APK
-task watch:build            # fr965 debug .prg (needs Connect IQ SDK + watch/developer_key)
-task watch:test             # watch unit tests in the simulator (simulator running)
+task build                  # Android debug APK + fr965 debug .prg
+task test                   # contract + Android JVM + watch simulator tests
+task release                # unsigned release APK + store .iq package
+
+task emulator               # WOD Capture in the Android emulator (AVD created on first run, ~2 GB)
+task watch:deploy-simulator # WOD Coach in the Connect IQ simulator
+task sim                    # phone app + simulator tethered together (adb forward 7381)
+task deploy                 # USB phone (install + launch) and USB watch (copy .prg)
 ```
+
+Prerequisites: JDK 21 for Gradle (auto-detected; JDK 27 cannot run AGP), the Android SDK
+(`android/local.properties` → `sdk.dir`), the Connect IQ SDK, and `watch/developer_key`.
+The Connect IQ simulator cannot run tests while the macOS screen is locked.
 
 Secrets are never committed: `watch/developer_key`, `android/local.properties`, keystores
 and API keys are git-ignored (REQ-BT03). The Anthropic API key is entered in the app and
