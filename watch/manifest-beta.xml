@@ -3,7 +3,7 @@
     Connect IQ application manifest for WOD Coach - BETA UUID
     (docs/protocol.md section 0), used for Connect IQ beta uploads.
     manifest.xml is identical except for the production UUID; keep the two
-    in sync. Build with `bash scripts/build.sh --beta`.
+    in sync. Build with scripts/build.sh with the beta flag.
 -->
 <iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
     <iq:application

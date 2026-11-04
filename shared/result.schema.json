@@ -97,18 +97,28 @@
         "u": { "enum": ["kg", "lb", "m", "km", "mi", "ft", "yd"] },
         "i": { "type": "integer", "minimum": 0 },
         "ok": { "type": "boolean" },
-        "tx": { "type": "string", "maxLength": 256 }
+        "tx": { "type": "string", "maxLength": 256 },
+        "pd": { "type": "boolean" }
       },
       "additionalProperties": false,
-      "allOf": [
-        { "if": { "properties": { "ty": { "const": "time" } } }, "then": { "required": ["s"] } },
-        { "if": { "properties": { "ty": { "const": "rounds_reps" } } }, "then": { "required": ["r", "x"] } },
-        { "if": { "properties": { "ty": { "enum": ["reps", "calories"] } } }, "then": { "required": ["n"] } },
-        { "if": { "properties": { "ty": { "enum": ["load", "distance"] } } }, "then": { "required": ["v", "u"] } },
-        { "if": { "properties": { "ty": { "const": "minutes_reps" } } }, "then": { "required": ["i", "x"] } },
-        { "if": { "properties": { "ty": { "const": "completion" } } }, "then": { "required": ["ok"] } },
-        { "if": { "properties": { "ty": { "const": "text" } } }, "then": { "required": ["tx"] } }
-      ]
+      "if": { "required": ["pd"], "properties": { "pd": { "const": true } } },
+      "then": {
+        "not": { "anyOf": [
+          { "required": ["s"] }, { "required": ["r"] }, { "required": ["x"] }, { "required": ["n"] },
+          { "required": ["v"] }, { "required": ["i"] }, { "required": ["ok"] }, { "required": ["tx"] }
+        ] }
+      },
+      "else": {
+        "allOf": [
+          { "if": { "properties": { "ty": { "const": "time" } } }, "then": { "required": ["s"] } },
+          { "if": { "properties": { "ty": { "const": "rounds_reps" } } }, "then": { "required": ["r", "x"] } },
+          { "if": { "properties": { "ty": { "enum": ["reps", "calories"] } } }, "then": { "required": ["n"] } },
+          { "if": { "properties": { "ty": { "enum": ["load", "distance"] } } }, "then": { "required": ["v", "u"] } },
+          { "if": { "properties": { "ty": { "const": "minutes_reps" } } }, "then": { "required": ["i", "x"] } },
+          { "if": { "properties": { "ty": { "const": "completion" } } }, "then": { "required": ["ok"] } },
+          { "if": { "properties": { "ty": { "const": "text" } } }, "then": { "required": ["tx"] } }
+        ]
+      }
     }
   }
 }

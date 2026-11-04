@@ -25,6 +25,7 @@ SID = "70000000-0000-4000-8000-000000000001"
 RID_FRAN = "80000000-0000-4000-8000-000000000001"
 RID_SQUAT = "80000000-0000-4000-8000-000000000002"
 MSG = "60000000-0000-4000-8000-0000000000{:02d}"
+PROFILE_OID = "00000000-0000-4000-8000-000000000000"  # singleton profile object (protocol §6)
 
 Json = dict[str, Any]
 
@@ -227,7 +228,34 @@ def valid_fixtures() -> dict[str, Json]:
         "result.put.strength.json": envelope("result.put", 8, RID_SQUAT, 1, squat_result()),
         "result.ack.json": envelope("result.ack", 10, RID_FRAN, 1, {"mid": MSG.format(7), "st": "ok"}),
         "session.put.json": envelope("session.put", 11, SID, 1, session()),
+        "profile.put.json": envelope("profile.put", 12, PROFILE_OID, 4, profile()),
+        "result.put.pending-score.json": envelope("result.put", 13, RID_FRAN, 1, pending_result()),
     }
+
+
+def profile() -> Json:
+    """Phone defaults for the watch settings (protocol §6)."""
+    return {
+        "prep": 10,
+        "snd": True,
+        "vib": True,
+        "rec": True,
+        "tch": True,
+        "ws": 2.5,
+        "wsf": 0.5,
+        "u": "kg",
+        "rest": 120,
+        "tap": True,
+    }
+
+
+def pending_result() -> Json:
+    """Score not entered on the watch: intended type kept, no value keys (protocol §5)."""
+    doc = fran_result()
+    doc["st"] = "completed"
+    doc["sc"] = {"ty": "time", "rv": 1, "pd": True}
+    doc["ev"] = [[0, "rd", 201000], [1, "rd", 395000], [2, "fin", 452000]]
+    return doc
 
 
 def _mutate(base: Json, change: Callable[[Json], None]) -> Json:
@@ -252,6 +280,7 @@ def invalid_fixtures(valid: dict[str, Json]) -> dict[str, Json]:
         "plan.unknown-schema-version.json": _mutate(put, lambda d: d["p"].update(sv=2)),
         "result.missing-score-value.json": _mutate(res, lambda d: d["p"]["sc"].pop("n")),
         "result.null-hr.json": _mutate(res, lambda d: d["p"].update(hr=None)),
+        "result.pending-with-value.json": _mutate(res, lambda d: d["p"]["sc"].update(pd=True)),
         "envelope.missing-generation.json": _mutate(valid["sync.req.json"], lambda d: d.pop("g")),
     }
 

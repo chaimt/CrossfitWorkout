@@ -232,14 +232,18 @@ One Result per part attempted. Compact by design.
 | `rr` | result revision (watch always sends 1; phone edits create local revisions) |
 | `st` | `completed` · `capped` · `stopped_early` · `interrupted` · `skipped` |
 | `el`/`act`/`wk` | measured wall elapsed / active activity / part score (work + in-clock rest) seconds (REQ-WR08) |
-| `sc` | typed score: `time`→`{"s":seconds}`; `rounds_reps`→`{"r","x"}`; `reps`/`calories`→`{"n"}`; `load`→`{"v","u"}`; `distance`→`{"v","u"}`; `minutes_reps`→`{"i","x"}`; `completion`→`{"ok":true}`; `text`→`{"tx"}`; plus `man` and `rv`. `cs`: corrected-score flag when the athlete edited a measured value (measured values stay in `el/act/wk`). |
-| `ev` | progress events `[segment-or-round index, kind, ms]`, kind: `rd` round, `mv` movement, `fin` finish, `cap` cap, `undo` compensating undo |
-| `sets` | `[setId, setIndex, targetReps(-1 if none), actualReps, actualLoad(-1 if none/bodyweight), unit, implementCount, status, ms]`, status `done`·`partial`·`failed`·`skipped` |
+| `sc` | typed score: `time`→`{"s":seconds}`; `rounds_reps`→`{"r","x"}`; `reps`/`calories`→`{"n"}`; `load`→`{"v","u"}`; `distance`→`{"v","u"}`; `minutes_reps`→`{"i","x"}`; `completion`→`{"ok":true}`; `text`→`{"tx"}`; plus `man` and `rv`. `cs`: corrected-score flag when the athlete edited a measured value (measured values stay in `el/act/wk`). **Pending score:** `{"ty":<intended type>,"rv":1,"pd":true}` with no value keys — the score was not entered on the watch (e.g. text scores, skipped entry) and must be completed on the phone; never read as 0. |
+| `ev` | progress events `[segment-or-round index, kind, ms]`, kind: `rd` round, `mv` movement, `fin` finish, `cap` cap, `undo` compensating undo. `ms` (here and in `sets`) is **part running time**: milliseconds since the part's first work start, pauses excluded, in-part rests included. |
+| `sets` | `[setId, setIndex, targetReps(-1 if none), actualReps, actualLoad(-1 if none/bodyweight), unit, implementCount, status, ms]`, status `done`·`partial`·`failed`·`skipped`. A skipped set has `actualReps = 0` and status `skipped`; the status, not the 0, is authoritative (missing ≠ zero). |
 | `ld` | actual loads for loaded metcon items `[nodeId, value, unit, count]` |
 | `edt` | timer parameters edited on the watch before start (REQ-WN03) |
 | `hr` | `[avg, max]` for the part; omitted when unavailable (never session totals, REQ-WR10) |
 | `cal` | activity calories for the part; omitted when unavailable |
-| `fit` | recording outcome `off` · `saved` · `failed` · `unknown` |
+| `fit` | recording outcome `off` · `saved` · `failed` · `unknown`. Parts finalized before the session ends report `unknown`; the SessionSummary `fit` is authoritative. |
+
+**Size guarantee:** the watch lowers the per-part event admission limit (below 200 when
+needed) so every finalized Result fits one `result.put`; `result.chunk` remains a phone
+capability for future watch builds.
 
 ### 5.4 SessionSummary (payload of `session.put`)
 
@@ -260,7 +264,9 @@ One Result per part attempted. Compact by design.
   "ws": 2.5, "wsf": 0.5, "u": "kg", "rest": 120, "tap": true }
 ```
 
-Phone defaults; the watch keeps a local override mask per key (REQ-WG01).
+Phone defaults; the watch keeps a local override mask per key (REQ-WG01). The profile is a
+singleton object: `oid` is always `00000000-0000-4000-8000-000000000000`; `rev` increases
+with every phone-side profile change and the watch ignores lower revisions.
 
 ## 7. Flow control (REQ-SY13)
 
