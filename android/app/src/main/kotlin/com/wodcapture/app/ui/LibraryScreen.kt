@@ -27,9 +27,9 @@ import androidx.compose.ui.unit.dp
 import com.wodcapture.app.ciq.SdkState
 import com.wodcapture.app.data.WorkoutEntity
 
-/** Library, newest first, searchable by text and movement (REQ-AL01). */
+/** Library, newest first, searchable by text and movement (REQ-AL01); Capture and New workout (REQ-AC09). */
 @Composable
-fun LibraryScreen(vm: AppViewModel, open: (String) -> Unit, capture: () -> Unit, go: (String) -> Unit) {
+fun LibraryScreen(vm: AppViewModel, open: (String) -> Unit, capture: () -> Unit, newWorkout: () -> Unit, go: (String) -> Unit) {
     val library by vm.library.collectAsState()
     val sdk by vm.sdkState.collectAsState()
     var query by remember { mutableStateOf("") }
@@ -50,7 +50,8 @@ fun LibraryScreen(vm: AppViewModel, open: (String) -> Unit, capture: () -> Unit,
         }
         Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = capture) { Text("Capture") }
-            OutlinedButton(onClick = { vm.newManual(open) }) { Text("New manual") }
+            // REQ-AC09: guided form, no photo, text or network needed.
+            OutlinedButton(onClick = newWorkout) { Text("New workout") }
         }
         Field("Search text or movement", query, Modifier.fillMaxWidth().padding(horizontal = 12.dp)) { query = it }
         LazyColumn(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

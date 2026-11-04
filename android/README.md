@@ -28,6 +28,8 @@ protocol/    Envelope + Map codec, payload codecs, Outbox, ResultIngest/SessionI
 parser/      WorkoutParser, CloudLlmParser (+HttpTransport/OkHttp), StructuredSchema,
              SystemPrompt, IdNormalizer, ParseJobs, CostEstimator
 review/      ReviewActions (confirm splits, accept fallback, revisions, duplicate), LoadText, TimeText
+manual/      ManualWorkoutForm + ManualForms, ManualWorkoutBuilder (form → canonical Workout +
+             live validation), ManualTemplates (REQ-AC09 guided "New workout")
 eval/        EvalHarness + EvalCli (`:domain:eval`)
 resources/   workout.schema.json (canonical schema; parser schema is derived from it)
 ```
@@ -101,6 +103,7 @@ AES-GCM encrypted with an Android Keystore key and never logged.
 | DM28 backup/restore | ⬜ | v1 |
 | AP01–AP06 | ✅ | AP06 SDK hygiene in `ciq/ConnectIqAdapter.kt` |
 | AC01 scanner + plain photo, AC02 picker/share, AC03 text, AC04 ≤4 images, AC05 preprocessing, AC07 private storage, AC08 manual/duplicate | ✅ | manual crop for plain photo ⬜ |
+| AC09 guided manual workout | ✅ | `manual/` builder + templates (AMRAP 20, EMOM 10, For time 21-15-9, 5 × 5 strength, Tabata, Intervals, Custom); `ui/ManualWorkoutScreen.kt` (New workout next to Capture, catalog autocomplete, M/F loads, live validation, Create → Review); Review **Save & log result** → manual entry. Manual Fran compiles to the H1 golden part (levels aside); benchmarks (AC08) v1 |
 | AX01 parser interface, AX02–AX04 cloud parser, AX05 validation, AX10 consent, AX11 key, AX16/AX18 jobs | ✅ | |
 | AX03/AX15 confidence + assumptions in review | ✅ | low/medium nodes highlighted, assumption chips (no inline edit of chips yet) |
 | AX09 cost estimate | 🟡 | estimate only; running total v1 |

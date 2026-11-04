@@ -45,6 +45,21 @@ class WorkoutRepository(private val db: WodDatabase, private val ids: IdSource =
         return e
     }
 
+    /**
+     * Stores a workout built in the guided manual form (REQ-AC09) as a draft: no images, no source
+     * text, no parse result. It reaches the watch only after Review (REQ-AE05).
+     */
+    fun createManual(w: Workout, nowSec: Long): WorkoutEntity {
+        val stored = w.copy(revision = 1, createdAt = nowSec, updatedAt = nowSec)
+        val e = WorkoutEntity(
+            id = stored.id, revision = 1, title = stored.title, date = stored.date, workoutJson = DomainJson.encodeWorkout(stored),
+            imagePaths = json.encodeToString(ListSerializer(String.serializer()), emptyList()), rawText = null,
+            status = "draft", createdAt = nowSec, updatedAt = nowSec,
+        )
+        dao.upsertWorkout(e)
+        return e
+    }
+
     /** Saves an edit as the next revision; prior revisions stay immutable (REQ-DM15). */
     fun saveRevision(entity: WorkoutEntity, edited: Workout, nowSec: Long, status: String = "saved"): WorkoutEntity {
         val prev = DomainJson.decodeWorkout(entity.workoutJson)

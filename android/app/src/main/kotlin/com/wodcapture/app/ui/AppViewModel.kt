@@ -12,6 +12,10 @@ import com.wodcapture.app.data.WorkoutEntity
 import com.wodcapture.app.image.ImagePreprocessor
 import com.wodcapture.app.work.ParseWorker
 import com.wodcapture.domain.DomainJson
+import com.wodcapture.domain.manual.ManualBuild
+import com.wodcapture.domain.manual.ManualForms
+import com.wodcapture.domain.manual.ManualWorkoutBuilder
+import com.wodcapture.domain.manual.ManualWorkoutForm
 import com.wodcapture.domain.model.ParseResult
 import com.wodcapture.domain.model.SexSelection
 import com.wodcapture.domain.model.Workout
@@ -170,9 +174,39 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         e?.let { onDone(it.id) }
     }
 
-    fun newManual(onDraft: (String) -> Unit) = viewModelScope.launch {
-        val id = withContext(Dispatchers.IO) { c.workouts.createDraft(emptyList(), null, nowSec()).id }
-        onDraft(id)
+    /** The open "New workout" form (REQ-AC09); kept here so it survives rotation and navigation. */
+    val manualForm = MutableStateFlow<ManualWorkoutForm?>(null)
+    private val manualBuilder by lazy { ManualWorkoutBuilder(c.ids) }
+
+    /** Starts a fresh guided form: today, in the phone's time zone, one For-time part. */
+    fun startManual() {
+        manualForm.value = ManualForms.blank(c.ids, LocalDate.now().toString(), ZoneId.systemDefault().id)
+    }
+
+    fun updateManual(f: (ManualWorkoutForm) -> ManualWorkoutForm) {
+        manualForm.value = manualForm.value?.let(f)
+    }
+
+    /** Canonical workout + live validation for the form, rebuilt on every edit (REQ-AX05). */
+    fun buildManual(form: ManualWorkoutForm): ManualBuild = manualBuilder.build(form, nowSec())
+
+    /**
+     * Create (REQ-AC09): stores the built workout as a draft and hands its ID to Review; nothing is
+     * sent from here. Refuses forms that still have blocking findings.
+     */
+    fun createManual(onCreated: (String) -> Unit) = viewModelScope.launch {
+        val form = manualForm.value ?: return@launch
+        val built = buildManual(form)
+        if (!built.canCreate) { message.value = "Fix the highlighted fields first"; return@launch }
+        val id = withContext(Dispatchers.IO) { c.workouts.createManual(built.workout, nowSec()).id }
+        manualForm.value = null
+        onCreated(id)
+    }
+
+    /** "Save & log result" (REQ-AC09, REQ-AL03): saves the reviewed workout, then opens manual entry. */
+    fun saveAndLog(entity: WorkoutEntity, edited: Workout, onSaved: (String) -> Unit) = viewModelScope.launch {
+        withContext(Dispatchers.IO) { c.workouts.saveRevision(entity, edited, nowSec()) }
+        onSaved(entity.id)
     }
 
     fun saveManualResult(r: WorkoutResult) = viewModelScope.launch(Dispatchers.IO) { c.workouts.saveManualResult(r); message.value = "Result saved" }

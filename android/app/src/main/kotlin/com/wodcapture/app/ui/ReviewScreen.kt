@@ -78,14 +78,14 @@ import java.io.File
  * warnings first, a structured editor, level choice, the exact watch preview, Send / Save.
  */
 @Composable
-fun ReviewScreen(vm: AppViewModel, id: String, back: () -> Unit) {
+fun ReviewScreen(vm: AppViewModel, id: String, back: () -> Unit, logResult: (String) -> Unit) {
     val entity by vm.observe(id).collectAsState(initial = null)
     val e = entity ?: run { Text("Loading…", Modifier.padding(16.dp)); return }
-    ReviewContent(vm, e, back)
+    ReviewContent(vm, e, back, logResult)
 }
 
 @Composable
-private fun ReviewContent(vm: AppViewModel, e: WorkoutEntity, back: () -> Unit) {
+private fun ReviewContent(vm: AppViewModel, e: WorkoutEntity, back: () -> Unit, logResult: (String) -> Unit) {
     var draft by remember(e.id, e.revision) { mutableStateOf(DomainJson.decodeWorkout(e.workoutJson)) }
     var levels by remember(e.id) { mutableStateOf(mapOf<String, String>()) }
     var sex by remember(e.id) { mutableStateOf<SexSelection?>(null) }
@@ -130,9 +130,11 @@ private fun ReviewContent(vm: AppViewModel, e: WorkoutEntity, back: () -> Unit) 
             }
             item { Preview(review.compile) }
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 16.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 16.dp)) {
                     Button(enabled = review.compile is CompileResult.Success, onClick = { vm.sendToWatch(e, draft, levels, sex) }) { Text("Send to watch") }
                     OutlinedButton(onClick = { vm.save(e, draft) }) { Text("Save only") }
+                    // REQ-AC09: a session already done without the watch goes straight to manual entry (REQ-AL03).
+                    OutlinedButton(enabled = draft.parts.isNotEmpty(), onClick = { vm.saveAndLog(e, draft, logResult) }) { Text("Save & log result") }
                 }
             }
         }

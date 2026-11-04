@@ -78,9 +78,14 @@ object Routes {
     const val CAPTURE = "capture"
     const val REVIEW = "review/{id}"
     const val RESULTS = "results"
+    const val RESULTS_ROUTE = "results?log={log}"
+    const val MANUAL = "manual"
     const val DEVICE = "device"
     const val SETTINGS = "settings"
     fun review(id: String) = "review/$id"
+
+    /** Results with manual entry open for workout [id] (REQ-AL03). */
+    fun logResult(id: String) = "results?log=$id"
 }
 
 @Composable
@@ -100,16 +105,28 @@ fun AppRoot(vm: AppViewModel) {
                     vm,
                     open = { nav.navigate(Routes.review(it)) },
                     capture = { nav.navigate(Routes.CAPTURE) },
+                    newWorkout = { vm.startManual(); nav.navigate(Routes.MANUAL) },
                     go = { nav.navigate(it) },
                 )
+            }
+            composable(Routes.MANUAL) {
+                ManualWorkoutScreen(vm, onCreated = { id -> nav.popBackStack(); nav.navigate(Routes.review(id)) }, back = { nav.popBackStack() })
             }
             composable(Routes.CAPTURE) {
                 CaptureScreen(vm, onDraft = { id -> nav.popBackStack(); nav.navigate(Routes.review(id)) }, back = { nav.popBackStack() })
             }
             composable(Routes.REVIEW, arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->
-                ReviewScreen(vm, entry.arguments?.getString("id").orEmpty(), back = { nav.popBackStack() })
+                ReviewScreen(
+                    vm, entry.arguments?.getString("id").orEmpty(), back = { nav.popBackStack() },
+                    logResult = { id -> nav.navigate(Routes.logResult(id)) },
+                )
             }
-            composable(Routes.RESULTS) { ResultsScreen(vm, back = { nav.popBackStack() }) }
+            composable(
+                Routes.RESULTS_ROUTE,
+                arguments = listOf(navArgument("log") { type = NavType.StringType; nullable = true; defaultValue = null }),
+            ) { entry ->
+                ResultsScreen(vm, back = { nav.popBackStack() }, logFor = entry.arguments?.getString("log"))
+            }
             composable(Routes.DEVICE) { DeviceScreen(vm, back = { nav.popBackStack() }) }
             composable(Routes.SETTINGS) { SettingsScreen(vm, back = { nav.popBackStack() }) }
         }

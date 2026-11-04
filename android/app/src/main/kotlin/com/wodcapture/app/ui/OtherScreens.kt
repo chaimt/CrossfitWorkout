@@ -39,18 +39,22 @@ import com.wodcapture.domain.model.RepMax
 import com.wodcapture.domain.model.ResultSource
 import com.wodcapture.domain.model.ResultStatus
 import com.wodcapture.domain.model.Score
+import com.wodcapture.domain.model.ScoreType
 import com.wodcapture.domain.model.SexSelection
 import com.wodcapture.domain.model.WorkoutResult
 import com.wodcapture.domain.parser.CostEstimator
 import com.wodcapture.domain.protocol.Protocol
 import com.wodcapture.domain.review.TimeText
 
-/** Result history and manual entry (REQ-AL02, AL03). */
+/**
+ * Result history and manual entry (REQ-AL02, AL03). [logFor] opens manual entry for that workout
+ * right away ("Save & log result" in Review, REQ-AC09).
+ */
 @Composable
-fun ResultsScreen(vm: AppViewModel, back: () -> Unit) {
+fun ResultsScreen(vm: AppViewModel, back: () -> Unit, logFor: String? = null) {
     val results by vm.results.collectAsState()
     val library by vm.library.collectAsState()
-    var entering by remember { mutableStateOf(false) }
+    var entering by remember { mutableStateOf(logFor != null) }
     Column(Modifier.fillMaxSize()) {
         Bar("Results", back) { TextButton(onClick = { entering = true }) { Text("Add manual") } }
         LazyColumn(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -71,7 +75,7 @@ fun ResultsScreen(vm: AppViewModel, back: () -> Unit) {
             }
         }
     }
-    if (entering) ManualResultDialog(vm) { entering = false }
+    if (entering) ManualResultDialog(vm, logFor) { entering = false }
 }
 
 fun scoreText(s: PartScore?): String = when (val v = s?.score) {
@@ -92,23 +96,25 @@ fun scoreText(s: PartScore?): String = when (val v = s?.score) {
 }
 
 @Composable
-private fun ManualResultDialog(vm: AppViewModel, close: () -> Unit) {
+private fun ManualResultDialog(vm: AppViewModel, initialWorkoutId: String?, close: () -> Unit) {
     val library by vm.library.collectAsState()
-    var workoutId by remember { mutableStateOf(library.firstOrNull()?.id) }
-    var kind by remember { mutableStateOf("time") }
+    var workoutId by remember { mutableStateOf(initialWorkoutId ?: library.firstOrNull()?.id) }
     var a by remember { mutableStateOf("") }
     var b by remember { mutableStateOf("") }
     var status by remember { mutableStateOf(ResultStatus.COMPLETED) }
     val entity = library.firstOrNull { it.id == workoutId }
     val workout = entity?.let { DomainJson.decodeWorkout(it.workoutJson) }
-    var partId by remember(workoutId) { mutableStateOf(workout?.parts?.firstOrNull()?.id) }
+    // Keyed on the loaded revision too: right after "Save & log result" the library may emit later.
+    var partId by remember(workoutId, workout?.revision) { mutableStateOf(workout?.parts?.firstOrNull()?.id) }
+    val part = workout?.parts?.firstOrNull { it.id == partId }
+    var kind by remember(partId) { mutableStateOf(part?.let { entryKind(it.scoring.type) } ?: "time") }
     AlertDialog(
         onDismissRequest = close,
         title = { Text("Manual result") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Choice("Workout", workoutId, library.map { it.id }, { id -> library.firstOrNull { it.id == id }?.title ?: "-" }) { workoutId = it }
-                workout?.let { w -> Choice("Part", partId, w.parts.map { it.id }, { id -> w.parts.firstOrNull { it.id == id }?.let { p -> "${p.label} ${p.title.orEmpty()}" } ?: "-" }) { partId = it } }
+                workout?.let { w -> Choice("Part", partId, w.parts.map { it.id }, { id -> w.parts.indexOfFirst { it.id == id }.takeIf { it >= 0 }?.let { i -> partName(w.parts[i], i) } ?: "-" }) { partId = it } }
                 Choice("Score", kind, listOf("time", "rounds_reps", "reps", "load", "text")) { kind = it }
                 Choice("Status", status, ResultStatus.entries, { it.wire }) { status = it }
                 when (kind) {
@@ -143,6 +149,19 @@ private fun ManualResultDialog(vm: AppViewModel, close: () -> Unit) {
         },
         dismissButton = { TextButton(onClick = close) { Text("Cancel") } },
     )
+}
+
+/** "A Fran", or "Part 1" when a single part has neither label nor name. */
+private fun partName(p: com.wodcapture.domain.model.Part, index: Int): String =
+    "${p.label} ${p.title.orEmpty()}".trim().ifBlank { "Part ${index + 1}" }
+
+/** The manual-entry field matching a part's score type; anything else is typed as text. */
+private fun entryKind(type: ScoreType): String = when (type) {
+    ScoreType.TIME -> "time"
+    ScoreType.ROUNDS_REPS -> "rounds_reps"
+    ScoreType.REPS, ScoreType.POINTS -> "reps"
+    ScoreType.LOAD, ScoreType.TOTAL_LOAD, ScoreType.VOLUME -> "load"
+    else -> "text"
 }
 
 /** Watch connection (REQ-AW01–AW05): devices, install state per UUID, delivery states, Sync. */
