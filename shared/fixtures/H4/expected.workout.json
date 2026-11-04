@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "id": "f0400000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "title": "AMRAP 15",
+  "date": "2026-11-03",
+  "scheduleTimeZone": "Asia/Jerusalem",
+  "source": {
+    "kind": "text",
+    "imageRefs": [],
+    "parser": "fixture"
+  },
+  "parts": [
+    {
+      "id": "f0410000-0000-4000-8000-000000000001",
+      "label": "",
+      "kind": "metcon",
+      "format": {
+        "type": "amrap",
+        "durationSec": 900
+      },
+      "body": [
+        {
+          "type": "item",
+          "id": "f0420000-0000-4000-8000-000000000001",
+          "movementId": "lateral_burpee_over_the_dumbbell",
+          "name": "Lateral burpee over DB",
+          "measure": {
+            "kind": "reps",
+            "value": 3.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "progression": {
+            "repsPerRound": 3
+          },
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f0420000-0000-4000-8000-000000000002",
+          "movementId": "dumbbell_hang_clean_to_overhead",
+          "name": "DB hang clean-to-overhead",
+          "measure": {
+            "kind": "reps",
+            "value": 3.0,
+            "labeled": false
+          },
+          "load": {
+            "kind": "split",
+            "male": {
+              "value": 50.0,
+              "unit": "lb"
+            },
+            "female": {
+              "value": 35.0,
+              "unit": "lb"
+            },
+            "labeled": false,
+            "confirmed": false
+          },
+          "implement": "dumbbell",
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "progression": {
+            "repsPerRound": 3
+          },
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f0420000-0000-4000-8000-000000000003",
+          "movementId": "walking_lunge",
+          "name": "Walking lunge",
+          "measure": {
+            "kind": "distance",
+            "value": 30.0,
+            "labeled": false,
+            "unit": "ft"
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        }
+      ],
+      "scoring": {
+        "type": "reps",
+        "manual": true,
+        "ruleVersion": 1
+      },
+      "levels": []
+    }
+  ],
+  "tags": []
+}

@@ -135,6 +135,8 @@ data class WorkoutResult(
     val activeSec: Int? = null,
     val workSec: Int? = null,
     val score: PartScore? = null,
+    /** Intended score type when the watch left the score pending; the phone must complete it. */
+    val scorePendingType: String? = null,
     val level: String? = null,
     val sets: List<SetObservation> = emptyList(),
     val events: List<ProgressEvent> = emptyList(),

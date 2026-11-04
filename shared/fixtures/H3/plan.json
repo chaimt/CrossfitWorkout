@@ -1,0 +1,189 @@
+{
+  "sv": 1,
+  "id": "f0340000-0000-4000-8000-000000000001",
+  "rev": 1,
+  "wid": "f0300000-0000-4000-8000-000000000001",
+  "wr": 1,
+  "ti": "EMOM 16",
+  "date": "2026-11-03",
+  "tz": "Asia/Jerusalem",
+  "u": "kg",
+  "p": [
+    {
+      "id": "f0310000-0000-4000-8000-000000000001",
+      "l": "W",
+      "n": "EMOM 16",
+      "mode": "emom",
+      "fb": false,
+      "ln": [
+        "EMOM 16",
+        "1: 15 cal Row",
+        "2: 12 Toes-to-bar",
+        "3: 0:40 Max Double-under",
+        "4: Rest"
+      ],
+      "seg": [
+        {
+          "k": "work",
+          "d": 60,
+          "lb": "MIN 1",
+          "ix": 0,
+          "s": 0
+        },
+        {
+          "k": "work",
+          "d": 60,
+          "lb": "MIN 2",
+          "ix": 1,
+          "s": 1
+        },
+        {
+          "k": "work",
+          "d": 40,
+          "lb": "MIN 3",
+          "ix": 2,
+          "s": 2
+        },
+        {
+          "k": "rest",
+          "d": 20,
+          "lb": "REST",
+          "ix": 2,
+          "s": 2,
+          "ic": true
+        },
+        {
+          "k": "rest",
+          "d": 60,
+          "lb": "REST",
+          "ix": 3,
+          "s": 3,
+          "ic": true
+        },
+        {
+          "k": "work",
+          "d": 60,
+          "lb": "MIN 5",
+          "ix": 4,
+          "s": 0
+        },
+        {
+          "k": "work",
+          "d": 60,
+          "lb": "MIN 6",
+          "ix": 5,
+          "s": 1
+        },
+        {
+          "k": "work",
+          "d": 40,
+          "lb": "MIN 7",
+          "ix": 6,
+          "s": 2
+        },
+        {
+          "k": "rest",
+          "d": 20,
+          "lb": "REST",
+          "ix": 6,
+          "s": 2,
+          "ic": true
+        },
+        {
+          "k": "rest",
+          "d": 60,
+          "lb": "REST",
+          "ix": 7,
+          "s": 3,
+          "ic": true
+        },
+        {
+          "k": "work",
+          "d": 60,
+          "lb": "MIN 9",
+          "ix": 8,
+          "s": 0
+        },
+        {
+          "k": "work",
+          "d": 60,
+          "lb": "MIN 10",
+          "ix": 9,
+          "s": 1
+        },
+        {
+          "k": "work",
+          "d": 40,
+          "lb": "MIN 11",
+          "ix": 10,
+          "s": 2
+        },
+        {
+          "k": "rest",
+          "d": 20,
+          "lb": "REST",
+          "ix": 10,
+          "s": 2,
+          "ic": true
+        },
+        {
+          "k": "rest",
+          "d": 60,
+          "lb": "REST",
+          "ix": 11,
+          "s": 3,
+          "ic": true
+        },
+        {
+          "k": "work",
+          "d": 60,
+          "lb": "MIN 13",
+          "ix": 12,
+          "s": 0
+        },
+        {
+          "k": "work",
+          "d": 60,
+          "lb": "MIN 14",
+          "ix": 13,
+          "s": 1
+        },
+        {
+          "k": "work",
+          "d": 40,
+          "lb": "MIN 15",
+          "ix": 14,
+          "s": 2
+        },
+        {
+          "k": "rest",
+          "d": 20,
+          "lb": "REST",
+          "ix": 14,
+          "s": 2,
+          "ic": true
+        },
+        {
+          "k": "rest",
+          "d": 60,
+          "lb": "REST",
+          "ix": 15,
+          "s": 3,
+          "ic": true
+        }
+      ],
+      "mv": [
+        "15 cal Row",
+        "12 Toes-to-bar",
+        "0:40 Max Double-under",
+        "Rest"
+      ],
+      "sc": {
+        "ty": "completion",
+        "rv": 1,
+        "man": true
+      },
+      "lv": "Rx"
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "id": "f0100000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "title": "Fran",
+  "date": "2026-11-03",
+  "scheduleTimeZone": "Asia/Jerusalem",
+  "source": {
+    "kind": "text",
+    "imageRefs": [],
+    "parser": "fixture"
+  },
+  "parts": [
+    {
+      "id": "f0110000-0000-4000-8000-000000000001",
+      "label": "WOD",
+      "kind": "metcon",
+      "title": "Fran",
+      "format": {
+        "type": "for_time",
+        "capSec": 480,
+        "eachRoundForTime": false
+      },
+      "body": [
+        {
+          "type": "group",
+          "id": "f0120000-0000-4000-8000-000000000001",
+          "kind": "rounds",
+          "repeat": 3,
+          "repScheme": [
+            21,
+            15,
+            9
+          ],
+          "children": [
+            {
+              "type": "item",
+              "id": "f0120000-0000-4000-8000-000000000002",
+              "movementId": "thruster",
+              "name": "Thruster",
+              "measure": {
+                "kind": "rep_scheme",
+                "labeled": false
+              },
+              "load": {
+                "kind": "split",
+                "male": {
+                  "value": 95.0,
+                  "unit": "lb"
+                },
+                "female": {
+                  "value": 65.0,
+                  "unit": "lb"
+                },
+                "labeled": false,
+                "confirmed": false
+              },
+              "implement": "barbell",
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            },
+            {
+              "type": "item",
+              "id": "f0120000-0000-4000-8000-000000000003",
+              "movementId": "pull_up",
+              "name": "Pull-up",
+              "measure": {
+                "kind": "rep_scheme",
+                "labeled": false
+              },
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            }
+          ]
+        }
+      ],
+      "scoring": {
+        "type": "time",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": [
+        {
+          "name": "Scaled",
+          "overrides": [
+            {
+              "targetId": "f0120000-0000-4000-8000-000000000002",
+              "load": {
+                "kind": "split",
+                "male": {
+                  "value": 65.0,
+                  "unit": "lb"
+                },
+                "female": {
+                  "value": 45.0,
+                  "unit": "lb"
+                },
+                "labeled": false,
+                "confirmed": false
+              }
+            },
+            {
+              "targetId": "f0120000-0000-4000-8000-000000000003",
+              "movementId": "jumping_pull_up",
+              "name": "Jumping pull-up"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tags": []
+}

@@ -111,6 +111,7 @@ module PlanCodec {
         if (!_enum(part, "trk", ["round", "mv"] as Array<String>, false)
                 || !_lines(part, "mv", MAX_MOVES, MAX_LINE, false)
                 || !_intList(part, "rr", MAX_ROUNDS, 1)
+                || !_optBool(part, "rrc")
                 || !_lines(part, "rl", MAX_ROUNDS, 16, false)
                 || !_posInt(part, "rnd", false)
                 || !_optRange(part, "att", 1, MAX_SETS)

@@ -79,6 +79,10 @@ sealed interface CompileResult {
 class PlanCompiler(private val catalog: MovementCatalog) {
 
     fun compile(workout: Workout, profile: AthleteProfile, identity: PlanIdentity, options: CompileOptions = CompileOptions()): CompileResult {
+        // Unknown local versions stay retained but never compile (REQ-DM26).
+        if (workout.schemaVersion != com.wodcapture.domain.model.WORKOUT_SCHEMA_VERSION) {
+            return CompileResult.Failure(listOf(CompileError("unsupported_schema_version", "Workout schema version ${workout.schemaVersion} is not supported")))
+        }
         val errors = mutableListOf<CompileError>()
         val warnings = mutableListOf<String>()
         val parts = workout.parts.filter { it.effectiveRunOnWatch }
@@ -193,7 +197,10 @@ private class PartCompiler(
             trk = tracking,
             mv = movements,
             rr = rr,
-            rl = if (scheme.isNotEmpty() && rr != null) scheme.map { "$it reps" } else null,
+            // A non-progressive AMRAP compiles one round template; tell the watch it
+            // repeats so extra reps stay bounded beyond round 1 (protocol §4.1 `rrc`).
+            rrc = if (amrap != null && rr?.size == 1) true else null,
+            rl = if (scheme.isNotEmpty() && rr != null) scheme.map { if (it == 1) "1 rep" else "$it reps" } else null,
             rnd = if (forTime != null && rounds != null && rounds > 1) rounds else null,
             cap = forTime?.capSec?.let { if (rr != null) "reps" else "text" },
             ld = loadItems(),
@@ -295,12 +302,7 @@ private class PartCompiler(
         val refs = (part.format as StrengthSets).setRefs
         val ordered: List<Pair<Item, StrengthSet>> = if (refs.isEmpty()) items.flatMap { i -> i.sets.map { i to it } }
         else refs.mapNotNull { r -> items.firstNotNullOfOrNull { i -> i.sets.firstOrNull { it.id == r }?.let { i to it } } }
-        items.forEach { item ->
-            addWrapped(strengthSummaryLine(item))
-            val rests = item.sets.mapNotNull { it.restSec }.distinct()
-            if (rests.size == 1 && rests[0] > 0) lines += "Rest ${DisplayText.clock(rests[0])}"
-            item.sets.firstNotNullOfOrNull { it.tempo }?.let { lines += "Tempo $it" }
-        }
+        items.forEach(::strengthLines)
         if (ordered.size > WatchLimits.SETS) return fail("too_many_sets", "${ordered.size} sets; the watch takes at most ${WatchLimits.SETS}")
         val sets = ordered.mapIndexed { idx, (item, set) -> watchSet(item, set, isLast = idx == ordered.lastIndex) ?: return null }
         return part(mode = "strength_sets", sets = sets, nameFallback = items.firstOrNull()?.let { strengthName(it) })
@@ -385,6 +387,14 @@ private class PartCompiler(
         return "${displayName(item)} $scheme"
     }
 
+    /** Summary, shared rest and tempo lines of one strength movement. */
+    private fun strengthLines(item: Item) {
+        addWrapped(strengthSummaryLine(item))
+        val rests = item.sets.mapNotNull { it.restSec }.distinct()
+        if (rests.size == 1 && rests[0] > 0) lines += "Rest ${DisplayText.clock(rests[0])}"
+        item.sets.firstNotNullOfOrNull { it.tempo }?.let { lines += "Tempo $it" }
+    }
+
     private fun strengthSummaryLine(item: Item): String {
         val load = when (val l = item.sets.firstOrNull()?.load ?: item.load) {
             is PercentOfMax -> " @${MassMath.format(l.selectedPercent ?: l.percent)}%"
@@ -414,7 +424,7 @@ private class PartCompiler(
                 lines += emomTitle(f)
                 BodyTree.items(part.body).forEach { addItemLines(it, null) }
             }
-            is StrengthSets -> BodyTree.items(part.body).forEach { addWrapped(strengthSummaryLine(it)) }
+            is StrengthSets -> BodyTree.items(part.body).forEach(::strengthLines)
             else -> {
                 headerLines(f, program)
                 bodyLines(program)
@@ -432,7 +442,8 @@ private class PartCompiler(
             }
             FallbackTimer.COUNT_UP -> listOf(WatchSegment(k = "open", cap = cap, lb = "TIMER", ix = 0))
         }
-        return part(mode = "manual", seg = seg, ld = loadItems(), cap = cap?.let { "text" })
+        val name = (part.format as? StrengthSets)?.let { BodyTree.items(part.body).firstOrNull { it.sets.isNotEmpty() }?.let(::strengthName) }
+        return part(mode = "manual", seg = seg, ld = loadItems(), cap = cap?.let { "text" }, nameFallback = name)
     }
 
     /** Natural countdown of a format, used as the default fallback countdown. */
@@ -538,7 +549,8 @@ private class PartCompiler(
         val qty = if (withQty) quantity(item, workSec) else ""
         val load = when (resolved) {
             is ResolvedLoad.Resolved -> " " + MassMath.formatMass(resolved.mass) + if (resolved.count > 1) " x${resolved.count}" else ""
-            is ResolvedLoad.Manual -> ""
+            // Athlete-choice loads keep the board's word ("build") visible; others are entered later.
+            is ResolvedLoad.Manual -> if (resolved.reason == "athlete_choice" && resolved.note != null) " (${resolved.note})" else ""
             is ResolvedLoad.NeedsChoice -> {
                 errors += CompileError(resolved.reason, "Choose the load for ${item.name} in review", part.id, item.id)
                 return null
@@ -622,6 +634,7 @@ private class PartCompiler(
         trk: String? = null,
         mv: List<String>? = null,
         rr: List<Int>? = null,
+        rrc: Boolean? = null,
         rl: List<String>? = null,
         rnd: Int? = null,
         sets: List<WatchSet>? = null,
@@ -652,6 +665,7 @@ private class PartCompiler(
             trk = trk,
             mv = mv?.takeIf { it.isNotEmpty() },
             rr = rr,
+            rrc = rrc,
             rl = rl,
             rnd = rnd,
             sets = sets,
@@ -680,6 +694,7 @@ private class PartCompiler(
         val base = when (val f = part.format) {
             is ForTime -> when {
                 scheme.isNotEmpty() -> DisplayText.scheme(scheme)
+                f.eachRoundForTime -> "$rounds rds each for time"
                 rounds > 1 -> "$rounds RFT"
                 else -> "For time"
             }

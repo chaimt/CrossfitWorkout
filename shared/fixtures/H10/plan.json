@@ -1,0 +1,50 @@
+{
+  "sv": 1,
+  "id": "f1040000-0000-4000-8000-000000000001",
+  "rev": 1,
+  "wid": "f1000000-0000-4000-8000-000000000001",
+  "wr": 1,
+  "ti": "AMRAP 10",
+  "date": "2026-11-03",
+  "tz": "Asia/Jerusalem",
+  "u": "kg",
+  "p": [
+    {
+      "id": "f1010000-0000-4000-8000-000000000001",
+      "l": "W",
+      "n": "AMRAP 10:00",
+      "mode": "amrap",
+      "fb": false,
+      "ln": [
+        "AMRAP 10:00",
+        "5 Pull-up",
+        "10 Push-up",
+        "15 Air squat"
+      ],
+      "seg": [
+        {
+          "k": "work",
+          "d": 600,
+          "lb": "AMRAP",
+          "ix": 0
+        }
+      ],
+      "trk": "round",
+      "mv": [
+        "5 Pull-up",
+        "10 Push-up",
+        "15 Air squat"
+      ],
+      "rr": [
+        30
+      ],
+      "rrc": true,
+      "sc": {
+        "ty": "rounds_reps",
+        "rv": 1,
+        "man": false
+      },
+      "lv": "Rx"
+    }
+  ]
+}

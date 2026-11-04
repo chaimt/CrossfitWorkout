@@ -1,0 +1,475 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crossfitworkout.local/workout.schema.json",
+  "title": "Canonical Workout (REQUIREMENTS §4, REQ-DM01–DM20), schemaVersion 1",
+  "description": "Mirrors android/domain model/Workout.kt. Discriminators: 'type' for body nodes and formats, 'kind' for loads. Absent values are omitted, never null.",
+  "$ref": "#/$defs/Workout",
+  "$defs": {
+    "ParseResult": {
+      "type": "object",
+      "description": "Parser output wrapper (REQ-DM17).",
+      "additionalProperties": false,
+      "required": ["workout", "diagnostics", "assumptions", "unparsed"],
+      "properties": {
+        "workout": { "$ref": "#/$defs/Workout" },
+        "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/Diagnostic" } },
+        "assumptions": { "type": "array", "items": { "$ref": "#/$defs/Assumption" } },
+        "unparsed": { "type": "array", "items": { "$ref": "#/$defs/UnparsedSpan" } }
+      }
+    },
+    "Diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "confidence"],
+      "properties": {
+        "nodeId": { "type": "string" },
+        "path": { "type": "string", "description": "Field path such as 'load' or 'measure.value'." },
+        "confidence": { "enum": ["high", "medium", "low"] },
+        "reason": { "type": "string" },
+        "rawSpan": { "type": "string", "description": "Board text this value came from, verbatim." },
+        "sourceRef": { "type": "string", "description": "Image index (0-based) or 'text'." },
+        "alternatives": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Assumption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "properties": {
+        "text": { "type": "string" },
+        "nodeId": { "type": "string" },
+        "path": { "type": "string" },
+        "token": { "type": "string", "description": "Ambiguous token resolved, e.g. 'PU'." }
+      }
+    },
+    "UnparsedSpan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "properties": {
+        "text": { "type": "string" },
+        "sourceRef": { "type": "string" }
+      }
+    },
+    "Workout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "parts"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "id": { "type": "string" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "scheduleTimeZone": { "type": "string" },
+        "source": { "$ref": "#/$defs/Source" },
+        "parts": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Part" } },
+        "notes": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "integer" },
+        "updatedAt": { "type": "integer" }
+      }
+    },
+    "Source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["photo", "text", "manual", "duplicate", "benchmark"] },
+        "imageRefs": { "type": "array", "items": { "type": "string" } },
+        "rawText": { "type": "string" },
+        "parser": { "type": "string" },
+        "model": { "type": "string" },
+        "promptVersion": { "type": "string" }
+      }
+    },
+    "Part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "kind", "format", "body", "scoring"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string", "description": "Board label: 'A', 'B', 'A1', 'WOD'." },
+        "kind": { "enum": ["warmup", "skill", "strength", "metcon", "accessory", "cooldown", "other"] },
+        "title": { "type": "string", "description": "Benchmark or named workout, e.g. 'Fran'." },
+        "format": { "$ref": "#/$defs/Format" },
+        "body": { "type": "array", "items": { "$ref": "#/$defs/BodyNode" } },
+        "scoring": { "$ref": "#/$defs/Scoring" },
+        "levels": { "type": "array", "items": { "$ref": "#/$defs/Level" } },
+        "chosenLevel": { "type": "string" },
+        "restAfterSec": { "type": "integer", "minimum": 0 },
+        "notes": { "type": "string" },
+        "runOnWatch": { "type": "boolean" },
+        "hints": { "$ref": "#/$defs/PartHints" },
+        "fallback": { "$ref": "#/$defs/Fallback" }
+      }
+    },
+    "PartHints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "partner": { "$ref": "#/$defs/PartnerHint" },
+        "chipper": { "type": "boolean" },
+        "tiebreakAfter": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "PartnerHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["teamSize"],
+      "properties": {
+        "teamSize": { "type": "integer", "minimum": 2 },
+        "splitRule": { "type": "string" },
+        "synchro": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    },
+    "Fallback": {
+      "type": "object",
+      "description": "Set only by review (REQ-DM18); parsers leave it out.",
+      "additionalProperties": false,
+      "properties": {
+        "accepted": { "type": "boolean" },
+        "timer": { "enum": ["count_up", "count_down"] },
+        "durationSec": { "type": "integer", "minimum": 1 },
+        "capSec": { "type": "integer", "minimum": 1 },
+        "reason": { "type": "string" }
+      }
+    },
+    "BodyNode": {
+      "anyOf": [
+        { "$ref": "#/$defs/Item" },
+        { "$ref": "#/$defs/Group" },
+        { "$ref": "#/$defs/Rest" }
+      ]
+    },
+    "Item": {
+      "type": "object",
+      "description": "Movement prescription (REQ-DM05).",
+      "additionalProperties": false,
+      "required": ["type", "id", "name"],
+      "properties": {
+        "type": { "const": "item" },
+        "id": { "type": "string" },
+        "movementId": { "type": "string", "description": "Catalog id; omit for unknown movements." },
+        "name": { "type": "string" },
+        "displayName": { "type": "string" },
+        "rawText": { "type": "string" },
+        "measure": { "$ref": "#/$defs/Measure" },
+        "load": { "$ref": "#/$defs/LoadSpec" },
+        "height": { "$ref": "#/$defs/SplitLength" },
+        "target": { "$ref": "#/$defs/SplitLength" },
+        "implement": { "type": "string" },
+        "count": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "side": { "enum": ["each", "alternating", "total"] },
+        "modifiers": { "type": "array", "items": { "type": "string" } },
+        "role": { "enum": ["buy_in", "main", "cash_out"] },
+        "progression": { "$ref": "#/$defs/Progression" },
+        "sets": { "type": "array", "items": { "$ref": "#/$defs/StrengthSet" } },
+        "notes": { "type": "string" }
+      }
+    },
+    "Group": {
+      "type": "object",
+      "description": "rounds ×repeat / sequence / complex / superset (REQ-DM16).",
+      "additionalProperties": false,
+      "required": ["type", "id", "kind", "children"],
+      "properties": {
+        "type": { "const": "group" },
+        "id": { "type": "string" },
+        "kind": { "enum": ["rounds", "sequence", "complex", "superset"] },
+        "repeat": { "type": "integer", "minimum": 1, "maximum": 200 },
+        "repScheme": { "type": "array", "items": { "type": "integer", "minimum": 1 } },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/BodyNode" } },
+        "label": { "type": "string" }
+      }
+    },
+    "Rest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "sec"],
+      "properties": {
+        "type": { "const": "rest" },
+        "id": { "type": "string" },
+        "sec": { "type": "integer", "minimum": 1 },
+        "inClock": { "type": "boolean" },
+        "betweenOnly": { "type": "boolean" }
+      }
+    },
+    "Progression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repsPerRound"],
+      "properties": { "repsPerRound": { "type": "integer" } }
+    },
+    "Measure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["reps", "rep_scheme", "max", "calories", "distance", "duration"] },
+        "value": { "type": "number", "description": "Male / single value; seconds for duration." },
+        "female": { "type": "number" },
+        "labeled": { "type": "boolean", "description": "Board marked M/F explicitly." },
+        "unit": { "enum": ["m", "km", "mi", "ft", "yd"] }
+      }
+    },
+    "Length": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit"],
+      "properties": {
+        "value": { "type": "number" },
+        "unit": { "enum": ["in", "cm", "ft", "m"] }
+      }
+    },
+    "SplitLength": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["male"],
+      "properties": {
+        "male": { "$ref": "#/$defs/Length" },
+        "female": { "$ref": "#/$defs/Length" },
+        "labeled": { "type": "boolean" }
+      }
+    },
+    "Mass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit"],
+      "properties": {
+        "value": { "type": "number" },
+        "unit": { "enum": ["kg", "lb", "pood", "unspecified"] },
+        "guessedUnit": { "enum": ["kg", "lb", "pood"] }
+      }
+    },
+    "LoadSpec": {
+      "anyOf": [
+        { "$ref": "#/$defs/AbsoluteLoad" },
+        { "$ref": "#/$defs/SplitLoad" },
+        { "$ref": "#/$defs/PercentOfMax" },
+        { "$ref": "#/$defs/PercentOfBodyweight" },
+        { "$ref": "#/$defs/BodyweightLoad" },
+        { "$ref": "#/$defs/RpeLoad" },
+        { "$ref": "#/$defs/RelativeToTopLoad" },
+        { "$ref": "#/$defs/AthleteChoiceLoad" },
+        { "$ref": "#/$defs/NoLoad" }
+      ]
+    },
+    "AbsoluteLoad": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "mass"],
+      "properties": { "kind": { "const": "absolute" }, "mass": { "$ref": "#/$defs/Mass" } }
+    },
+    "SplitLoad": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "male", "female"],
+      "description": "M/F pair. Unlabeled pairs: higher value as male, labeled=false (review confirms).",
+      "properties": {
+        "kind": { "const": "split" },
+        "male": { "$ref": "#/$defs/Mass" },
+        "female": { "$ref": "#/$defs/Mass" },
+        "labeled": { "type": "boolean" },
+        "confirmed": { "type": "boolean", "description": "Set by review only." }
+      }
+    },
+    "PercentOfMax": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "percent"],
+      "properties": {
+        "kind": { "const": "percent_1rm" },
+        "percent": { "type": "number" },
+        "percentMax": { "type": "number" },
+        "selectedPercent": { "type": "number" },
+        "ofMovementId": { "type": "string" },
+        "repMax": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "PercentOfBodyweight": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "percent"],
+      "properties": { "kind": { "const": "percent_bodyweight" }, "percent": { "type": "number", "description": "1.5xBW = 150." } }
+    },
+    "BodyweightLoad": {
+      "type": "object", "additionalProperties": false, "required": ["kind"],
+      "properties": { "kind": { "const": "bodyweight" } }
+    },
+    "RpeLoad": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+      "properties": { "kind": { "const": "rpe" }, "value": { "type": "number" }, "rir": { "type": "integer" } }
+    },
+    "RelativeToTopLoad": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "deltaPercent"],
+      "properties": { "kind": { "const": "relative_to_top" }, "deltaPercent": { "type": "number" } }
+    },
+    "AthleteChoiceLoad": {
+      "type": "object", "additionalProperties": false, "required": ["kind"],
+      "properties": { "kind": { "const": "athlete_choice" }, "text": { "type": "string" } }
+    },
+    "NoLoad": {
+      "type": "object", "additionalProperties": false, "required": ["kind"],
+      "properties": { "kind": { "const": "none" } }
+    },
+    "StrengthSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "reps"],
+      "properties": {
+        "id": { "type": "string" },
+        "reps": { "$ref": "#/$defs/RepTarget" },
+        "load": { "$ref": "#/$defs/LoadSpec" },
+        "restSec": { "type": "integer", "minimum": 0 },
+        "tempo": { "type": "string", "description": "4 chars, e.g. '32X1'." },
+        "pauseSec": { "type": "integer" },
+        "rpe": { "type": "number" },
+        "rir": { "type": "integer" },
+        "cluster": { "$ref": "#/$defs/Cluster" },
+        "setType": { "enum": ["warmup", "working", "top", "backoff", "drop", "amrap"] }
+      }
+    },
+    "RepTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "integer" },
+        "upTo": { "type": "integer" },
+        "max": { "type": "boolean" },
+        "perSide": { "type": "boolean" }
+      }
+    },
+    "Cluster": {
+      "type": "object", "additionalProperties": false, "required": ["miniSets", "intraRestSec"],
+      "properties": { "miniSets": { "type": "array", "items": { "type": "integer" } }, "intraRestSec": { "type": "integer" } }
+    },
+    "Format": {
+      "anyOf": [
+        { "$ref": "#/$defs/ForTime" },
+        { "$ref": "#/$defs/Amrap" },
+        { "$ref": "#/$defs/Emom" },
+        { "$ref": "#/$defs/Tabata" },
+        { "$ref": "#/$defs/Intervals" },
+        { "$ref": "#/$defs/DeathBy" },
+        { "$ref": "#/$defs/MaxEffort" },
+        { "$ref": "#/$defs/StrengthSets" },
+        { "$ref": "#/$defs/BuildToMax" },
+        { "$ref": "#/$defs/NotForTime" },
+        { "$ref": "#/$defs/CustomSegments" }
+      ]
+    },
+    "ForTime": {
+      "type": "object", "additionalProperties": false, "required": ["type"],
+      "properties": { "type": { "const": "for_time" }, "capSec": { "type": "integer", "minimum": 1 }, "eachRoundForTime": { "type": "boolean" } }
+    },
+    "Amrap": {
+      "type": "object", "additionalProperties": false, "required": ["type", "durationSec"],
+      "properties": { "type": { "const": "amrap" }, "durationSec": { "type": "integer", "minimum": 1 } }
+    },
+    "Emom": {
+      "type": "object", "additionalProperties": false, "required": ["type", "intervalSec", "intervalCount"],
+      "properties": {
+        "type": { "const": "emom" },
+        "intervalSec": { "type": "integer", "minimum": 1 },
+        "intervalCount": { "type": "integer", "minimum": 1 },
+        "stations": { "type": "array", "items": { "$ref": "#/$defs/Station" } },
+        "remainder": { "enum": ["none", "amrap", "max"] }
+      }
+    },
+    "Station": {
+      "type": "object", "additionalProperties": false,
+      "description": "Omit nodeId for a rest station.",
+      "properties": { "nodeId": { "type": "string" }, "workSec": { "type": "integer", "minimum": 1 } }
+    },
+    "Tabata": {
+      "type": "object", "additionalProperties": false, "required": ["type"],
+      "properties": {
+        "type": { "const": "tabata" },
+        "workSec": { "type": "integer" }, "restSec": { "type": "integer" }, "rounds": { "type": "integer" },
+        "blocks": { "type": "array", "items": { "type": "string" } },
+        "restBetweenBlocksSec": { "type": "integer" }
+      }
+    },
+    "Intervals": {
+      "type": "object", "additionalProperties": false, "required": ["type", "rounds", "workSec"],
+      "properties": {
+        "type": { "const": "intervals" },
+        "rounds": { "type": "integer", "minimum": 1 },
+        "workSec": { "type": "integer", "minimum": 1 },
+        "restSec": { "type": "integer", "minimum": 0 },
+        "finalRest": { "type": "boolean" },
+        "inner": { "enum": ["amrap", "for_time", "max_effort", "none"] }
+      }
+    },
+    "DeathBy": {
+      "type": "object", "additionalProperties": false, "required": ["type"],
+      "properties": {
+        "type": { "const": "death_by" },
+        "intervalSec": { "type": "integer" }, "startReps": { "type": "integer" },
+        "increment": { "type": "integer" }, "maxRounds": { "type": "integer" }
+      }
+    },
+    "MaxEffort": {
+      "type": "object", "additionalProperties": false, "required": ["type"],
+      "properties": {
+        "type": { "const": "max_effort" },
+        "windowSec": { "type": "integer", "minimum": 1 }, "attempts": { "type": "integer", "minimum": 1 },
+        "measure": { "enum": ["reps", "calories", "distance", "load", "time"] }
+      }
+    },
+    "StrengthSets": {
+      "type": "object", "additionalProperties": false, "required": ["type"],
+      "properties": { "type": { "const": "strength_sets" }, "setRefs": { "type": "array", "items": { "type": "string" } } }
+    },
+    "BuildToMax": {
+      "type": "object", "additionalProperties": false, "required": ["type"],
+      "properties": {
+        "type": { "const": "build_to_max" },
+        "repsPerSet": { "type": "integer", "minimum": 1 }, "windowSec": { "type": "integer" }, "attemptLimit": { "type": "integer" }
+      }
+    },
+    "NotForTime": {
+      "type": "object", "additionalProperties": false, "required": ["type"],
+      "properties": { "type": { "const": "not_for_time" } }
+    },
+    "CustomSegments": {
+      "type": "object", "additionalProperties": false, "required": ["type"],
+      "properties": {
+        "type": { "const": "custom_segments" },
+        "segments": { "type": "array", "items": { "$ref": "#/$defs/CustomSegment" } }
+      }
+    },
+    "CustomSegment": {
+      "type": "object", "additionalProperties": false, "required": ["kind"],
+      "properties": { "kind": { "type": "string" }, "durationSec": { "type": "integer" }, "label": { "type": "string" } }
+    },
+    "Scoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["time", "rounds_reps", "reps", "load", "total_load", "volume", "calories", "distance", "points", "minutes_reps", "completion", "text", "none"] },
+        "aggregation": { "enum": ["sum", "min", "max", "average", "each", "sum_of_block_min"] },
+        "countingRule": { "type": "string" },
+        "distanceUnit": { "enum": ["m", "km", "mi", "ft", "yd"] },
+        "manual": { "type": "boolean" },
+        "ruleVersion": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "Level": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "overrides"],
+      "properties": {
+        "name": { "type": "string", "description": "'Scaled', 'Rx+', 'Foundations', … (the base prescription is 'Rx')." },
+        "overrides": { "type": "array", "items": { "$ref": "#/$defs/Override" } }
+      }
+    },
+    "Override": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targetId"],
+      "properties": {
+        "targetId": { "type": "string" },
+        "replace": { "$ref": "#/$defs/BodyNode" },
+        "movementId": { "type": "string" },
+        "name": { "type": "string" },
+        "load": { "$ref": "#/$defs/LoadSpec" },
+        "measure": { "$ref": "#/$defs/Measure" }
+      }
+    }
+  }
+}

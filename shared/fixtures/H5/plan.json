@@ -1,0 +1,51 @@
+{
+  "sv": 1,
+  "id": "f0540000-0000-4000-8000-000000000001",
+  "rev": 1,
+  "wid": "f0500000-0000-4000-8000-000000000001",
+  "wr": 1,
+  "ti": "3 rounds each for time",
+  "date": "2026-11-03",
+  "tz": "Asia/Jerusalem",
+  "u": "kg",
+  "p": [
+    {
+      "id": "f0510000-0000-4000-8000-000000000001",
+      "l": "W",
+      "n": "3 rds each for time",
+      "mode": "manual",
+      "fb": true,
+      "ln": [
+        "3 rounds, each for time",
+        "400 m Run",
+        "21 Kettlebell swing 24 kg",
+        "12 Chest-to-bar pull-up",
+        "Rest 3:00 between",
+        "Cash-out: 50 GHD sit-up"
+      ],
+      "seg": [
+        {
+          "k": "open",
+          "lb": "TIMER",
+          "ix": 0
+        }
+      ],
+      "sc": {
+        "ty": "time",
+        "rv": 1,
+        "man": true,
+        "agg": "each"
+      },
+      "ld": [
+        {
+          "id": "f0520000-0000-4000-8000-000000000003",
+          "nm": "Kettlebell swing",
+          "v": 24,
+          "u": "kg",
+          "c": 1
+        }
+      ],
+      "lv": "Rx"
+    }
+  ]
+}

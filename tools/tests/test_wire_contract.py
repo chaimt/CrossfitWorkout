@@ -58,5 +58,31 @@ def test_no_nulls_anywhere_in_valid_fixtures() -> None:
     assert not any(has_null(json.loads(p.read_text())) for p in VALID)
 
 
+GOLDEN_PLANS = sorted((WIRE.parent).glob("H*/plan.json"))
+
+
+def test_every_parser_fixture_has_a_golden_plan() -> None:
+    """The Android compiler must publish a golden plan for each Appendix H fixture."""
+    assert [p.parent.name for p in GOLDEN_PLANS] == sorted(f"H{i}" for i in range(1, 11))
+
+
+@pytest.mark.parametrize("path", GOLDEN_PLANS, ids=lambda p: p.parent.name)
+def test_compiled_golden_plan_matches_watch_contract(path: Path, validator: validate.Draft202012Validator) -> None:
+    """Cross-app gate: the phone compiler's output is a valid plan.put for the watch decoder."""
+    doc = json.loads(path.read_text())
+    envelope = {
+        "v": 1,
+        "t": "plan.put",
+        "id": "60000000-0000-4000-8000-0000000000ff",
+        "ts": 1793700000,
+        "g": 1,
+        "oid": doc["id"],
+        "rev": doc["rev"],
+        "p": doc,
+    }
+    assert validate.errors_for(envelope, validator) == []
+    assert validate.encoded_size(envelope) <= validate.PHONE_BUDGET_BYTES
+
+
 def test_movement_catalog_ids_are_unique_snake_case() -> None:
     assert gen_catalog_check.catalog_problems() == []

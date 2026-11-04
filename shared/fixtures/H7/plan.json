@@ -1,0 +1,97 @@
+{
+  "sv": 1,
+  "id": "f0740000-0000-4000-8000-000000000001",
+  "rev": 1,
+  "wid": "f0700000-0000-4000-8000-000000000001",
+  "wr": 1,
+  "ti": "4 x 4:00",
+  "date": "2026-11-03",
+  "tz": "Asia/Jerusalem",
+  "u": "kg",
+  "p": [
+    {
+      "id": "f0710000-0000-4000-8000-000000000001",
+      "l": "W",
+      "n": "4 x 4:00",
+      "mode": "intervals",
+      "fb": false,
+      "ln": [
+        "4 x 4:00 on / 2:00 off",
+        "200 m Run",
+        "then AMRAP rest of interval:",
+        "5 Deadlift 102 kg",
+        "10 Burpee"
+      ],
+      "seg": [
+        {
+          "k": "work",
+          "d": 240,
+          "lb": "WORK",
+          "ix": 0
+        },
+        {
+          "k": "rest",
+          "d": 120,
+          "lb": "REST",
+          "ix": 0,
+          "ic": true
+        },
+        {
+          "k": "work",
+          "d": 240,
+          "lb": "WORK",
+          "ix": 1
+        },
+        {
+          "k": "rest",
+          "d": 120,
+          "lb": "REST",
+          "ix": 1,
+          "ic": true
+        },
+        {
+          "k": "work",
+          "d": 240,
+          "lb": "WORK",
+          "ix": 2
+        },
+        {
+          "k": "rest",
+          "d": 120,
+          "lb": "REST",
+          "ix": 2,
+          "ic": true
+        },
+        {
+          "k": "work",
+          "d": 240,
+          "lb": "WORK",
+          "ix": 3
+        }
+      ],
+      "trk": "round",
+      "mv": [
+        "200 m Run",
+        "5 Deadlift 102 kg",
+        "10 Burpee"
+      ],
+      "rnd": 4,
+      "sc": {
+        "ty": "rounds_reps",
+        "rv": 1,
+        "man": false,
+        "agg": "sum"
+      },
+      "ld": [
+        {
+          "id": "f0720000-0000-4000-8000-000000000003",
+          "nm": "Deadlift",
+          "v": 102,
+          "u": "kg",
+          "c": 1
+        }
+      ],
+      "lv": "Rx"
+    }
+  ]
+}

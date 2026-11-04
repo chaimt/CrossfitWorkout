@@ -47,7 +47,7 @@ for all object IDs (`10000000-0000-4000-8000-000000000001` style, lower-case).
 | `t` | message type (§3). |
 | `id` | message UUID. Retries reuse the exact `id` + body; changed content = new `id` + higher `rev` (REQ-SY02). |
 | `ts` | send time, epoch seconds. |
-| `g` | pairing generation (Integer ≥ 1, phone-owned, REQ-DM27/SY11). The watch stores the latest `g` it accepted; messages with a lower `g` are acked `st:"stale"`. |
+| `g` | pairing generation (Integer ≥ 1, phone-owned, REQ-DM27/SY11). The watch stores the latest `g` it accepted; messages with a lower `g` are acked `st:"stale"`. Results/sessions arriving with an older `g` are **not acknowledged** by the phone: they are quarantined until the athlete chooses import or discard (REQ-DM27), so the watch keeps its copy and keeps them pending. |
 | `oid` | object ID the message concerns (plan / result / session ID). Omitted for `hello`, `sync.req`, `sync.ack`. |
 | `rev` | object revision (Integer ≥ 1). |
 | `p` | payload Dictionary (per type). Omitted when empty. |
@@ -68,7 +68,7 @@ No acknowledgments of acknowledgments.
 |-----|---------|
 | `mid` | original message `id` being acknowledged |
 | `st`  | `"ok"` · `"already_applied"` · `"stale"` · `"conflict"` · `"error"` |
-| `rs`  | reason when `st` is `error`/`conflict`/`stale`: `"version"`, `"size"`, `"invalid"`, `"capacity"`, `"conflict"`, `"generation"`, … |
+| `rs`  | reason when `st` is `error`/`conflict`/`stale`: `"version"`, `"size"`, `"invalid"`, `"capacity"`, `"conflict"`, `"generation"`; for `result.chunk.ack` also `"restart"` (no staging state — resend from chunk 0), `"busy"` (another transfer active) and `"hash"` (length/hash mismatch — restart) |
 | `ix`  | (`result.chunk.ack` only) chunk index |
 
 Receiver semantics (REQ-SY11/SY14): validate fully **before** committing; commit content
@@ -131,10 +131,11 @@ Payload: `{ "xid": "<transfer uuid>", "ix": 0, "n": 3, "len": 9012, "sha": "<hex
 | `mode` | String | `for_time` · `amrap` · `emom` · `tabata` · `intervals` · `max_effort` · `strength_sets` · `build_to_max` · `manual` |
 | `fb` | Boolean | `true` = reviewed fallback (REQ-DM18). The watch shows `"Manual timer: no automatic movement/interrupt/rest cues"` and uses `seg` as a plain clock plus `sc` manual entry. `mode` is then `manual`. |
 | `ln` | Array<String> | ≤ 12 display lines, each ≤ 28 chars (movement list, cap, notes) |
-| `seg` | Array<Segment> | timer program (§4.2). Omitted for `strength_sets` / `build_to_max` (they use `sets`). |
+| `seg` | Array<Segment> | timer program (§4.2). Omitted for `strength_sets` / `build_to_max` (they use `sets`). A build-to-max window countdown is v1; MVP sends no `seg` for it. |
 | `trk` | String | metcon LAP meaning: `"round"` (LAP = +1 round) or `"mv"` (LAP = next movement). |
 | `mv` | Array<String> | ordered movement display lines used by movement mode and the "current movement" line, each ≤ 28 chars |
-| `rr` | Array<Integer> | reps per round for display/scoring, one entry per round of a fixed program (`[42,30,18]` for Fran) — or per round of a progressive AMRAP for as many rounds as were compiled. Omit when rounds have no rep-based counting rule. |
+| `rr` | Array<Integer> | reps per round for display/scoring, one entry per round of a fixed program (`[42,30,18]` for Fran) — or per round of a progressive AMRAP for as many rounds as were compiled. Omit when rounds have no rep-based counting rule. Rounds beyond the list have **no** rule unless `rrc` is set. |
+| `rrc` | `true` | the last `rr` entry applies to every later round — a constant-round AMRAP compiled as one template (`rr:[30], rrc:true` for Cindy). Omitted otherwise. |
 | `rl` | Array<String> | optional per-round label shown on the running screen, parallel to `rr` (`"21 reps"`). |
 | `rnd` | Integer | planned number of rounds (for_time / intervals); omitted when open |
 | `sets` | Array<Set> | strength / build-to-max sets (§4.3) |
@@ -188,7 +189,7 @@ Mode mapping the phone compiles:
 | `nm` | display name ≤ 20 chars; `mv` catalog id (optional) |
 | `r` | target reps (Integer). **Omitted** when the target is unresolved (range, `max`) → watch opens rep entry before logging (REQ-WS02). |
 | `rx` | rep display text ("3", "5-8", "max") |
-| `w` | load `{v, u, c}`: `v` value (Number, per implement), `u` `"kg"`/`"lb"`, `c` implement count (1 barbell, 2 dumbbells). **Omit `w`** for an unresolved load (missing 1RM, H9; runtime back-off) → manual load entry required. Omit `v` but keep `u` to fix the entry unit. Bodyweight-only sets carry `"bw": true` instead of `w`. |
+| `w` | load `{v, u, c}`: `v` value (Number, per implement), `u` `"kg"`/`"lb"`, `c` implement count (1 barbell, 2 dumbbells). **Unresolved load** (missing 1RM, H9; runtime back-off): send `w` with `u` and `c` but **without `v`** → manual load entry in that unit is required before logging. Bodyweight-only sets carry `"bw": true` instead of `w`. The final set carries `rest: 0` unless rest is prescribed. |
 | `rest` | rest after this set, seconds (omitted/0 = no rest; never after the final set unless prescribed) |
 | `ty` | `warmup` · `working` · `top` · `backoff` · `amrap` |
 | `nt` | note line ≤ 28 chars (shown under the target) |

@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "id": "f1000000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "title": "AMRAP 10",
+  "date": "2026-11-03",
+  "scheduleTimeZone": "Asia/Jerusalem",
+  "source": {
+    "kind": "text",
+    "imageRefs": [],
+    "parser": "fixture"
+  },
+  "parts": [
+    {
+      "id": "f1010000-0000-4000-8000-000000000001",
+      "label": "",
+      "kind": "metcon",
+      "format": {
+        "type": "amrap",
+        "durationSec": 600
+      },
+      "body": [
+        {
+          "type": "group",
+          "id": "f9420000-0000-4000-8000-000000000001",
+          "kind": "rounds",
+          "repeat": 201,
+          "repScheme": [],
+          "children": [
+            {
+              "type": "item",
+              "id": "f1020000-0000-4000-8000-000000000001",
+              "movementId": "pull_up",
+              "name": "Pull-up",
+              "measure": {
+                "kind": "reps",
+                "value": 5.0,
+                "labeled": false
+              },
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            },
+            {
+              "type": "item",
+              "id": "f1020000-0000-4000-8000-000000000002",
+              "movementId": "push_up",
+              "name": "Push-up",
+              "measure": {
+                "kind": "reps",
+                "value": 10.0,
+                "labeled": false
+              },
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            },
+            {
+              "type": "item",
+              "id": "f1020000-0000-4000-8000-000000000003",
+              "movementId": "air_squat",
+              "name": "Air squat",
+              "measure": {
+                "kind": "reps",
+                "value": 15.0,
+                "labeled": false
+              },
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            }
+          ]
+        }
+      ],
+      "scoring": {
+        "type": "rounds_reps",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": []
+    }
+  ],
+  "tags": []
+}

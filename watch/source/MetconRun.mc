@@ -32,6 +32,7 @@ class MetconRun {
     var moves as Array = [];
     //! Reps per round (docs/protocol.md `rr`), or null without a counting rule.
     var roundReps as Array? = null;
+    var repeatLastRound as Boolean = false;
     var plannedRounds as Number = 0;
     var capMs as Number = 0;
     //! [index, kind, ms] progress events, in acceptance order.
@@ -57,6 +58,7 @@ class MetconRun {
         moves = mv == null ? [] : mv;
         movementMode = U.eq(U.str(part, "trk"), "mv") && moves.size() > 0;
         roundReps = U.arr(part, "rr");
+        repeatLastRound = U.bool(part, "rrc") == true;
         var rnd = U.num(part, "rnd");
         plannedRounds = rnd == null ? 0 : rnd;
         capMs = prog.capMs;
@@ -220,25 +222,39 @@ class MetconRun {
         if (rr == null || rr.size() == 0) {
             return -1;
         }
-        if (rounds < rr.size()) {
-            return U.asNum(rr[rounds]);
-        }
+        var rule = _roundRule(rounds);
         // Progressive AMRAP compiled for N rounds: beyond that the rule is
         // unknown, so extra reps are not bounded by it.
-        return -1;
+        return rule == null ? -1 : rule;
     }
 
     //! Reps in all completed rounds, or -1 when any round lacks a rule.
     function completedRoundReps() as Number {
-        var rr = roundReps;
-        if (rr == null || rounds > rr.size()) {
+        if (roundReps == null) {
             return -1;
         }
         var total = 0;
         for (var i = 0; i < rounds; i++) {
-            total += U.asNum(rr[i]);
+            var rule = _roundRule(i);
+            if (rule == null) {
+                return -1;
+            }
+            total += rule;
         }
         return total;
+    }
+
+    //! Reps prescribed for round i, or null without a rule. With `rrc` the last
+    //! entry repeats (constant-round AMRAP compiled as one template, protocol §4.1).
+    hidden function _roundRule(i as Number) as Number? {
+        var rr = roundReps;
+        if (rr == null || rr.size() == 0) {
+            return null;
+        }
+        if (i < rr.size()) {
+            return U.asNum(rr[i]);
+        }
+        return repeatLastRound ? U.asNum(rr[rr.size() - 1]) : null;
     }
 
     //! Largest extra-rep entry allowed (REQ-WM03/DM24: current-round total

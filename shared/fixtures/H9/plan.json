@@ -1,0 +1,105 @@
+{
+  "sv": 1,
+  "id": "f0940000-0000-4000-8000-000000000001",
+  "rev": 1,
+  "wid": "f0900000-0000-4000-8000-000000000001",
+  "wr": 1,
+  "ti": "Step-ups, row, squat",
+  "date": "2026-11-03",
+  "tz": "Asia/Jerusalem",
+  "u": "kg",
+  "p": [
+    {
+      "id": "f0910000-0000-4000-8000-000000000001",
+      "l": "1",
+      "n": "For time",
+      "mode": "for_time",
+      "fb": false,
+      "ln": [
+        "For time, cap 1:00:00",
+        "1000 Box step-up",
+        "2000 m Row"
+      ],
+      "seg": [
+        {
+          "k": "open",
+          "cap": 3600,
+          "lb": "FOR TIME",
+          "ix": 0
+        }
+      ],
+      "trk": "mv",
+      "mv": [
+        "1000 Box step-up",
+        "2000 m Row"
+      ],
+      "sc": {
+        "ty": "time",
+        "rv": 1,
+        "cap": "text",
+        "man": false
+      },
+      "lv": "Rx"
+    },
+    {
+      "id": "f0910000-0000-4000-8000-000000000002",
+      "l": "2",
+      "n": "Back squat 3x3",
+      "mode": "strength_sets",
+      "fb": false,
+      "ln": [
+        "Back squat 3x3 @75%"
+      ],
+      "sets": [
+        {
+          "id": "f0930000-0000-4000-8000-000000000001",
+          "nm": "Back squat",
+          "mv": "back_squat",
+          "r": 3,
+          "rx": "3",
+          "w": {
+            "u": "kg",
+            "c": 1
+          },
+          "rest": 120,
+          "ty": "working",
+          "nt": "75% 1RM: enter load"
+        },
+        {
+          "id": "f0930000-0000-4000-8000-000000000002",
+          "nm": "Back squat",
+          "mv": "back_squat",
+          "r": 3,
+          "rx": "3",
+          "w": {
+            "u": "kg",
+            "c": 1
+          },
+          "rest": 120,
+          "ty": "working",
+          "nt": "75% 1RM: enter load"
+        },
+        {
+          "id": "f0930000-0000-4000-8000-000000000003",
+          "nm": "Back squat",
+          "mv": "back_squat",
+          "r": 3,
+          "rx": "3",
+          "w": {
+            "u": "kg",
+            "c": 1
+          },
+          "rest": 0,
+          "ty": "working",
+          "nt": "75% 1RM: enter load"
+        }
+      ],
+      "sc": {
+        "ty": "load",
+        "rv": 1,
+        "man": false
+      },
+      "lv": "Rx"
+    }
+  ]
+}

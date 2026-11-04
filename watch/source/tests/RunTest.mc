@@ -96,6 +96,29 @@ function testMovementModeChipper(logger as Test.Logger) as Boolean {
 }
 
 (:test)
+function testConstantAmrapRepeatsLastRound(logger as Test.Logger) as Boolean {
+    // H10-style AMRAP: the phone compiles one 30-rep template plus rrc:true.
+    var part = Fx.metcon("amrap", [Fx.seg("work", 600, 0)]);
+    part["rr"] = [30];
+    part["rrc"] = true;
+    var run = new MetconRun(part, new Program(part["seg"] as Array));
+    run.lap(100000, 0);
+    run.lap(200000, 0);
+    run.lap(300000, 0);
+    Test.assertEqual(30, run.currentRoundReps());
+    Test.assertEqual(29, run.maxExtraReps());
+    Test.assertEqual(90, run.completedRoundReps());
+    // Without rrc the rule ends after the listed rounds (progressive AMRAP).
+    part.remove("rrc");
+    var open = new MetconRun(part, new Program(part["seg"] as Array));
+    open.lap(100000, 0);
+    open.lap(200000, 0);
+    Test.assertEqual(-1, open.maxExtraReps());
+    Test.assertEqual(-1, open.completedRoundReps());
+    return true;
+}
+
+(:test)
 function testAmrapLadderAndEarlyStop(logger as Test.Logger) as Boolean {
     var part = Fx.metcon("amrap", [Fx.seg("work", 720, 0)]);
     part["rr"] = [6, 12, 18, 24];

@@ -1,0 +1,453 @@
+{
+  "schemaVersion": 1,
+  "id": "f1000000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "title": "AMRAP 10",
+  "date": "2026-11-03",
+  "scheduleTimeZone": "Asia/Jerusalem",
+  "source": {
+    "kind": "text",
+    "imageRefs": [],
+    "parser": "fixture"
+  },
+  "parts": [
+    {
+      "id": "f1010000-0000-4000-8000-000000000001",
+      "label": "",
+      "kind": "metcon",
+      "format": {
+        "type": "for_time",
+        "eachRoundForTime": false
+      },
+      "body": [
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000001",
+          "name": "Movement number 1 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000002",
+          "name": "Movement number 2 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000003",
+          "name": "Movement number 3 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000004",
+          "name": "Movement number 4 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000005",
+          "name": "Movement number 5 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000006",
+          "name": "Movement number 6 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000007",
+          "name": "Movement number 7 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000008",
+          "name": "Movement number 8 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000009",
+          "name": "Movement number 9 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000010",
+          "name": "Movement number 10 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000011",
+          "name": "Movement number 11 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000012",
+          "name": "Movement number 12 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000013",
+          "name": "Movement number 13 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000014",
+          "name": "Movement number 14 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000015",
+          "name": "Movement number 15 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000016",
+          "name": "Movement number 16 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000017",
+          "name": "Movement number 17 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000018",
+          "name": "Movement number 18 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000019",
+          "name": "Movement number 19 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000020",
+          "name": "Movement number 20 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000021",
+          "name": "Movement number 21 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000022",
+          "name": "Movement number 22 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000023",
+          "name": "Movement number 23 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000024",
+          "name": "Movement number 24 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000025",
+          "name": "Movement number 25 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000026",
+          "name": "Movement number 26 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000027",
+          "name": "Movement number 27 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000028",
+          "name": "Movement number 28 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000029",
+          "name": "Movement number 29 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f9520000-0000-4000-8000-000000000030",
+          "name": "Movement number 30 with a long name",
+          "measure": {
+            "kind": "reps",
+            "value": 1.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        }
+      ],
+      "scoring": {
+        "type": "rounds_reps",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": []
+    }
+  ],
+  "tags": []
+}

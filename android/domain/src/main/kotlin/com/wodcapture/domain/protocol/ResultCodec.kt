@@ -38,9 +38,14 @@ data class WireScore(
     val i: Int? = null,
     val ok: Boolean? = null,
     val tx: String? = null,
+    /** Pending: not entered on the watch, to be completed on the phone; never read as 0. */
+    val pd: Boolean? = null,
 ) {
-    /** Domain score (REQ-DM22). Manual/corrected flags move to [PartScore]. */
-    fun toDomain(): PartScore {
+    val pending: Boolean get() = pd == true
+
+    /** Domain score (REQ-DM22), or `null` while pending. Manual/corrected flags move to [PartScore]. */
+    fun toDomain(): PartScore? {
+        if (pending) return null
         val score: Score = when (ty) {
             "time" -> Score.Time(s!!)
             "rounds_reps" -> Score.RoundsReps(r!!, x!!)
@@ -70,6 +75,7 @@ data class WireScore(
         put("rv", rv)
         man?.let { put("man", it) }
         cs?.let { put("cs", it) }
+        pd?.let { put("pd", it) }
     }
 
     companion object {
@@ -79,12 +85,16 @@ data class WireScore(
             "minutes_reps" to listOf("i", "x"), "completion" to listOf("ok"), "text" to listOf("tx"),
             "none" to emptyList(),
         )
+        private val VALUE_KEYS = setOf("s", "r", "x", "n", "v", "u", "i", "ok", "tx")
 
         fun parse(o: JsonObject): WireScore {
-            requireOnly(o, setOf("ty", "rv", "man", "cs", "s", "r", "x", "n", "v", "u", "i", "ok", "tx"), "score")
+            requireOnly(o, setOf("ty", "rv", "man", "cs", "s", "r", "x", "n", "v", "u", "i", "ok", "tx", "pd"), "score")
             val ty = o.str("ty") ?: throw WireException("invalid", "score.ty")
             val required = REQUIRED[ty] ?: throw WireException("invalid", "score.ty $ty")
-            required.filter { it !in o }.takeIf { it.isNotEmpty() }?.let {
+            if (o.bool("pd") == true) {
+                // A pending score carries no value: it is completed on the phone, never read as 0.
+                if (VALUE_KEYS.any { it in o }) throw WireException("invalid", "pending score must not carry a value")
+            } else required.filter { it !in o }.takeIf { it.isNotEmpty() }?.let {
                 throw WireException("invalid", "score $ty is missing $it (missing is never 0)")
             }
             val sc = WireScore(
@@ -92,7 +102,7 @@ data class WireScore(
                 rv = o.int("rv")?.takeIf { it >= 1 } ?: throw WireException("invalid", "score.rv"),
                 man = o.bool("man"), cs = o.bool("cs"), s = o.int("s"), r = o.int("r"), x = o.int("x"),
                 n = o.int("n"), v = o.num("v"), u = o.str("u"), i = o.int("i"), ok = o.bool("ok"),
-                tx = o.str("tx"),
+                tx = o.str("tx"), pd = o.bool("pd"),
             )
             if (sc.s != null && sc.s !in 0..86399) throw WireException("invalid", "score.s")
             if (sc.n != null && sc.n !in 0..99999) throw WireException("invalid", "score.n")
@@ -150,7 +160,8 @@ data class WireResult(
     fun toDomain(): WorkoutResult = WorkoutResult(
         id = id, sessionId = sid, workoutId = wid, workoutRevision = wr, planId = pl, planRevision = pr,
         partId = pt, resultRevision = rr, startedAt = t0, status = ResultStatus.fromWire(st)!!,
-        elapsedSec = el, activeSec = act, workSec = wk, score = sc.toDomain(), level = lv,
+        elapsedSec = el, activeSec = act, workSec = wk, score = sc.toDomain(),
+        scorePendingType = if (sc.pending) sc.ty else null, level = lv,
         sets = sets.map { s ->
             SetObservation(
                 setId = s.id, index = s.ix, targetReps = s.target.takeIf { it >= 0 }, actualReps = s.actual,

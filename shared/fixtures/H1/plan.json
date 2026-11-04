@@ -1,0 +1,70 @@
+{
+  "sv": 1,
+  "id": "f0140000-0000-4000-8000-000000000001",
+  "rev": 1,
+  "wid": "f0100000-0000-4000-8000-000000000001",
+  "wr": 1,
+  "ti": "Fran",
+  "date": "2026-11-03",
+  "tz": "Asia/Jerusalem",
+  "u": "kg",
+  "p": [
+    {
+      "id": "f0110000-0000-4000-8000-000000000001",
+      "l": "W",
+      "n": "Fran 21-15-9",
+      "mode": "for_time",
+      "fb": false,
+      "ln": [
+        "For time, cap 8:00",
+        "21-15-9 reps of:",
+        "Thruster 43 kg (Rx 95 lb)",
+        "Pull-up"
+      ],
+      "seg": [
+        {
+          "k": "open",
+          "cap": 480,
+          "lb": "FOR TIME",
+          "ix": 0
+        }
+      ],
+      "trk": "round",
+      "mv": [
+        "Thruster 43 kg",
+        "Pull-up"
+      ],
+      "rr": [
+        42,
+        30,
+        18
+      ],
+      "rl": [
+        "21 reps",
+        "15 reps",
+        "9 reps"
+      ],
+      "rnd": 3,
+      "sc": {
+        "ty": "time",
+        "rv": 1,
+        "cap": "reps",
+        "man": false
+      },
+      "ld": [
+        {
+          "id": "f0120000-0000-4000-8000-000000000002",
+          "nm": "Thruster",
+          "v": 43,
+          "u": "kg",
+          "c": 1
+        }
+      ],
+      "lv": "Rx",
+      "lvs": [
+        "Rx",
+        "Scaled"
+      ]
+    }
+  ]
+}

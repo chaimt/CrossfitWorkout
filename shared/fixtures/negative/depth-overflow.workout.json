@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "id": "f1000000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "title": "AMRAP 10",
+  "date": "2026-11-03",
+  "scheduleTimeZone": "Asia/Jerusalem",
+  "source": {
+    "kind": "text",
+    "imageRefs": [],
+    "parser": "fixture"
+  },
+  "parts": [
+    {
+      "id": "f1010000-0000-4000-8000-000000000001",
+      "label": "",
+      "kind": "metcon",
+      "format": {
+        "type": "amrap",
+        "durationSec": 600
+      },
+      "body": [
+        {
+          "type": "group",
+          "id": "f9720000-0000-4000-8000-000000000005",
+          "kind": "rounds",
+          "repeat": 2,
+          "repScheme": [],
+          "children": [
+            {
+              "type": "group",
+              "id": "f9720000-0000-4000-8000-000000000004",
+              "kind": "rounds",
+              "repeat": 2,
+              "repScheme": [],
+              "children": [
+                {
+                  "type": "group",
+                  "id": "f9720000-0000-4000-8000-000000000003",
+                  "kind": "rounds",
+                  "repeat": 2,
+                  "repScheme": [],
+                  "children": [
+                    {
+                      "type": "group",
+                      "id": "f9720000-0000-4000-8000-000000000002",
+                      "kind": "rounds",
+                      "repeat": 2,
+                      "repScheme": [],
+                      "children": [
+                        {
+                          "type": "group",
+                          "id": "f9720000-0000-4000-8000-000000000001",
+                          "kind": "rounds",
+                          "repeat": 2,
+                          "repScheme": [],
+                          "children": [
+                            {
+                              "type": "item",
+                              "id": "f9720000-0000-4000-8000-000000000099",
+                              "movementId": "air_squat",
+                              "name": "Air squat",
+                              "measure": {
+                                "kind": "reps",
+                                "value": 1.0,
+                                "labeled": false
+                              },
+                              "count": 1,
+                              "modifiers": [],
+                              "role": "main",
+                              "sets": []
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "scoring": {
+        "type": "rounds_reps",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": []
+    }
+  ],
+  "tags": []
+}

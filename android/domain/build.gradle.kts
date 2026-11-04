@@ -25,7 +25,7 @@ val sharedDir = rootProject.layout.projectDirectory.dir("../shared")
 // bundle them as classpath resources instead of keeping hand copies.
 val syncSharedCatalog by tasks.registering(Sync::class) {
     from(sharedDir) {
-        include("movements.json", "benchmarks.json")
+        include("movements.json", "benchmarks.json", "workout.schema.json")
     }
     into(layout.buildDirectory.dir("generated/shared-resources"))
 }
@@ -50,10 +50,8 @@ tasks.test {
     useJUnitPlatform()
     systemProperty("shared.dir", sharedDir.asFile.absolutePath)
     systemProperty("golden.update", System.getProperty("golden.update") ?: "false")
-    systemProperty(
-        "golden.dir",
-        layout.projectDirectory.dir("src/test/resources/fixtures").asFile.absolutePath,
-    )
+    // Golden workouts/plans live next to their inputs in shared/fixtures (REQ-TS08).
+    systemProperty("golden.dir", sharedDir.dir("fixtures").asFile.absolutePath)
     testLogging {
         events("failed")
         showStandardStreams = false
@@ -78,6 +76,6 @@ tasks.register<JavaExec>("eval") {
     mainClass.set("com.wodcapture.domain.eval.EvalCliKt")
     args = listOf(
         sharedDir.dir("fixtures").asFile.absolutePath,
-        layout.projectDirectory.dir("src/test/resources/fixtures").asFile.absolutePath,
+        sharedDir.dir("fixtures").asFile.absolutePath,
     )
 }

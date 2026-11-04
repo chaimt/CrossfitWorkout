@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "id": "f0600000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "title": "Teams of 2",
+  "date": "2026-11-03",
+  "scheduleTimeZone": "Asia/Jerusalem",
+  "source": {
+    "kind": "text",
+    "imageRefs": [],
+    "parser": "fixture"
+  },
+  "parts": [
+    {
+      "id": "f0610000-0000-4000-8000-000000000001",
+      "label": "",
+      "kind": "metcon",
+      "format": {
+        "type": "for_time",
+        "capSec": 1800,
+        "eachRoundForTime": false
+      },
+      "body": [
+        {
+          "type": "item",
+          "id": "f0620000-0000-4000-8000-000000000001",
+          "movementId": "air_bike",
+          "name": "Bike",
+          "measure": {
+            "kind": "calories",
+            "value": 100.0,
+            "female": 80.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": [],
+          "notes": "split"
+        },
+        {
+          "type": "item",
+          "id": "f0620000-0000-4000-8000-000000000002",
+          "movementId": "burpee_box_jump_over",
+          "name": "Burpee box jump-over",
+          "measure": {
+            "kind": "reps",
+            "value": 60.0,
+            "labeled": false
+          },
+          "height": {
+            "male": {
+              "value": 24.0,
+              "unit": "in"
+            },
+            "female": {
+              "value": 20.0,
+              "unit": "in"
+            },
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [
+            "synchro"
+          ],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f0620000-0000-4000-8000-000000000003",
+          "movementId": "dumbbell_snatch",
+          "name": "DB snatch",
+          "measure": {
+            "kind": "reps",
+            "value": 40.0,
+            "labeled": false
+          },
+          "load": {
+            "kind": "split",
+            "male": {
+              "value": 50.0,
+              "unit": "lb"
+            },
+            "female": {
+              "value": 35.0,
+              "unit": "lb"
+            },
+            "labeled": false,
+            "confirmed": false
+          },
+          "implement": "dumbbell",
+          "count": 1,
+          "side": "alternating",
+          "modifiers": [],
+          "role": "main",
+          "sets": [],
+          "notes": "switch every 10"
+        }
+      ],
+      "scoring": {
+        "type": "time",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": [],
+      "hints": {
+        "partner": {
+          "teamSize": 2,
+          "splitRule": "split as needed",
+          "synchro": true,
+          "notes": "P2 holds plank while P1 snatches"
+        },
+        "chipper": false,
+        "tiebreakAfter": []
+      }
+    }
+  ],
+  "tags": []
+}

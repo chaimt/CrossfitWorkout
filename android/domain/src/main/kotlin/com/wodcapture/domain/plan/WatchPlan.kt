@@ -60,6 +60,8 @@ data class WatchPart(
     val trk: String? = null,
     val mv: List<String>? = null,
     val rr: List<Int>? = null,
+    /** True when the last `rr` entry applies to every later round (constant-round AMRAP). */
+    val rrc: Boolean? = null,
     val rl: List<String>? = null,
     val rnd: Int? = null,
     val sets: List<WatchSet>? = null,

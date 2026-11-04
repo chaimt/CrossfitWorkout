@@ -1,0 +1,202 @@
+{
+  "sv": 1,
+  "id": "f0840000-0000-4000-8000-000000000001",
+  "rev": 1,
+  "wid": "f0800000-0000-4000-8000-000000000001",
+  "wr": 1,
+  "ti": "Superset, wave, ladder",
+  "date": "2026-11-03",
+  "tz": "Asia/Jerusalem",
+  "u": "kg",
+  "p": [
+    {
+      "id": "f0810000-0000-4000-8000-000000000001",
+      "l": "A",
+      "n": "Front squat 4x5",
+      "mode": "manual",
+      "fb": true,
+      "ln": [
+        "Front squat 4x5 @RPE7",
+        "Tempo 32X1",
+        "Strict C2B 4x5-8",
+        "Rest 1:30"
+      ],
+      "seg": [
+        {
+          "k": "open",
+          "lb": "TIMER",
+          "ix": 0
+        }
+      ],
+      "sc": {
+        "ty": "load",
+        "rv": 1,
+        "man": true
+      },
+      "lv": "Rx"
+    },
+    {
+      "id": "f0810000-0000-4000-8000-000000000002",
+      "l": "B",
+      "n": "Bench press 3-2-1-3-2-1",
+      "mode": "strength_sets",
+      "fb": false,
+      "ln": [
+        "Bench press 3-2-1-3-2-1"
+      ],
+      "sets": [
+        {
+          "id": "f0830000-0000-4000-8000-000000000009",
+          "nm": "Bench press",
+          "mv": "bench_press",
+          "r": 3,
+          "rx": "3",
+          "w": {
+            "u": "kg",
+            "c": 1
+          },
+          "rest": 120,
+          "ty": "working"
+        },
+        {
+          "id": "f0830000-0000-4000-8000-000000000010",
+          "nm": "Bench press",
+          "mv": "bench_press",
+          "r": 2,
+          "rx": "2",
+          "w": {
+            "u": "kg",
+            "c": 1
+          },
+          "rest": 120,
+          "ty": "working"
+        },
+        {
+          "id": "f0830000-0000-4000-8000-000000000011",
+          "nm": "Bench press",
+          "mv": "bench_press",
+          "r": 1,
+          "rx": "1",
+          "w": {
+            "u": "kg",
+            "c": 1
+          },
+          "rest": 120,
+          "ty": "working"
+        },
+        {
+          "id": "f0830000-0000-4000-8000-000000000012",
+          "nm": "Bench press",
+          "mv": "bench_press",
+          "r": 3,
+          "rx": "3",
+          "w": {
+            "u": "kg",
+            "c": 1
+          },
+          "rest": 120,
+          "ty": "working"
+        },
+        {
+          "id": "f0830000-0000-4000-8000-000000000013",
+          "nm": "Bench press",
+          "mv": "bench_press",
+          "r": 2,
+          "rx": "2",
+          "w": {
+            "u": "kg",
+            "c": 1
+          },
+          "rest": 120,
+          "ty": "working"
+        },
+        {
+          "id": "f0830000-0000-4000-8000-000000000014",
+          "nm": "Bench press",
+          "mv": "bench_press",
+          "r": 1,
+          "rx": "1",
+          "w": {
+            "u": "kg",
+            "c": 1
+          },
+          "rest": 0,
+          "ty": "working"
+        }
+      ],
+      "sc": {
+        "ty": "load",
+        "rv": 1,
+        "man": false
+      },
+      "lv": "Rx"
+    },
+    {
+      "id": "f0810000-0000-4000-8000-000000000003",
+      "l": "W",
+      "n": "1-2-3...10",
+      "mode": "for_time",
+      "fb": false,
+      "ln": [
+        "For time, cap 12:00",
+        "1-2-3...10 reps of:",
+        "Deadlift 120 kg",
+        "Box jump 30 in"
+      ],
+      "seg": [
+        {
+          "k": "open",
+          "cap": 720,
+          "lb": "FOR TIME",
+          "ix": 0
+        }
+      ],
+      "trk": "round",
+      "mv": [
+        "Deadlift 120 kg",
+        "Box jump 30 in"
+      ],
+      "rr": [
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20
+      ],
+      "rl": [
+        "1 rep",
+        "2 reps",
+        "3 reps",
+        "4 reps",
+        "5 reps",
+        "6 reps",
+        "7 reps",
+        "8 reps",
+        "9 reps",
+        "10 reps"
+      ],
+      "rnd": 10,
+      "sc": {
+        "ty": "time",
+        "rv": 1,
+        "cap": "reps",
+        "man": false
+      },
+      "ld": [
+        {
+          "id": "f0820000-0000-4000-8000-000000000006",
+          "nm": "Deadlift",
+          "v": 120,
+          "u": "kg",
+          "c": 1
+        }
+      ],
+      "lv": "Rx"
+    }
+  ]
+}
