@@ -26,8 +26,17 @@ if ! sim_running; then
 fi
 
 echo "Running tests: $SDK_BIN/monkeydo $TEST_PRG $TEST_DEVICE -t ${TEST_NAME:-}" >&2
-if [ -n "${TEST_NAME:-}" ]; then
-  exec "$SDK_BIN/monkeydo" "$TEST_PRG" "$TEST_DEVICE" -t "$TEST_NAME"
-else
-  exec "$SDK_BIN/monkeydo" "$TEST_PRG" "$TEST_DEVICE" -t
+# monkeydo exits non-zero even when every test passes, so the result line in its
+# output is the source of truth for the exit status. The simulator cannot run tests
+# while the macOS screen is locked (monkeydo hangs), hence the time limit.
+LOG="bin/test-output.log"
+args=("$TEST_PRG" "$TEST_DEVICE" -t)
+[ -n "${TEST_NAME:-}" ] && args+=("$TEST_NAME")
+perl -e 'alarm shift; exec @ARGV' "${TEST_TIMEOUT:-300}" "$SDK_BIN/monkeydo" "${args[@]}" 2>&1 | tee "$LOG" || true
+if grep -q '^PASSED' "$LOG"; then
+  exit 0
 fi
+if ! grep -q '^Ran [0-9]' "$LOG"; then
+  echo "No test results: simulator timed out or is not usable (is the screen locked?)" >&2
+fi
+exit 1
