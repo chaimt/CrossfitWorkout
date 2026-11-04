@@ -15,6 +15,7 @@
 //
 import Toybox.Communications;
 import Toybox.Lang;
+import Toybox.System;
 import Toybox.Time;
 import Toybox.Timer;
 
@@ -58,8 +59,26 @@ class PhoneLink {
 
     //! hello at app start and after sync.req (docs/protocol.md 3.2).
     function sendHello() as Void {
+        // Only the newest inventory matters; don't let hellos pile up while offline.
+        var kept = [] as Array<Dictionary>;
+        for (var i = 0; i < _control.size(); i++) {
+            if (!U.eq(U.str(_control[i], "t"), "hello")) {
+                kept.add(_control[i]);
+            }
+        }
+        _control = kept;
         _control.add(Proto.hello(_kv, _nowSec(), Budget.free(_kv)));
         _flush();
+    }
+
+    //! REQ-SY13: disconnection suspends sending; queued messages wait for the
+    //! next pump tick after the phone reconnects instead of failing transmits.
+    function _linkUp() as Boolean {
+        if (System.getDeviceSettings().phoneConnected) {
+            return true;
+        }
+        lastError = "Phone not connected";
+        return false;
     }
 
     //! Explicit "Sync now" from the home screen.
@@ -97,7 +116,7 @@ class PhoneLink {
 
     //! Sends the next control message, else the next due data message.
     function pump() as Void {
-        if (_busy) {
+        if (_busy || !_linkUp()) {
             return;
         }
         if (_control.size() > 0) {
@@ -120,7 +139,7 @@ class PhoneLink {
     }
 
     function _flush() as Void {
-        if (_busy || _control.size() == 0) {
+        if (_busy || _control.size() == 0 || !_linkUp()) {
             return;
         }
         var msg = _control[0];
