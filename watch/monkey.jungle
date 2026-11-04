@@ -1,0 +1,8 @@
+# Connect IQ build configuration (production UUID, manifest.xml).
+# The SDK default source path compiles every .mc file under the project,
+# including copies in .claude/worktrees. Keep the build on this app only.
+
+project.manifest = manifest.xml
+
+base.sourcePath = source
+base.resourcePath = resources

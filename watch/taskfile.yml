@@ -1,0 +1,35 @@
+# https://taskfile.dev  -  WOD Coach (Connect IQ watch app)
+version: "3"
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  build:
+    desc: Compile a debug .prg for fr965 (pass -- --beta for the beta UUID)
+    cmds:
+      - bash scripts/build.sh {{.CLI_ARGS}}
+
+  test:
+    desc: Compile and run the unit tests in the simulator (starts it if needed)
+    cmds:
+      - bash scripts/test.sh {{.CLI_ARGS}}
+
+  deploy-simulator:
+    desc: Compile, launch the Connect IQ simulator if needed, and run the app
+    interactive: true
+    cmds:
+      - bash scripts/run-simulator.sh {{.CLI_ARGS}}
+
+  deploy-watch:
+    desc: Build and copy the app onto the connected Garmin watch over USB (libmtp)
+    cmds:
+      - task: build
+      - bash scripts/deploy-watch.sh
+
+  package:
+    desc: Build the store/beta .iq package (pass -- --beta for the beta UUID)
+    cmds:
+      - bash scripts/package.sh {{.CLI_ARGS}}
