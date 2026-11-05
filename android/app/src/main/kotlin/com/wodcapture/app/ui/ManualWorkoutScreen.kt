@@ -468,9 +468,10 @@ private fun SetRow(
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Set $number", style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(44.dp))
         when (scheme.loadMode) {
+            // Order is % · Weight · Reps (owner request 2026-11-06): the % of the goal comes first.
             StrengthLoadMode.ABSOLUTE -> {
-                DoubleField("Weight", set.load, Modifier.weight(1f)) { v -> onChange { ManualForms.withSetWeight(it, v, goal) } }
                 if (goal != null) DoubleField("%", set.ofGoal, Modifier.weight(0.8f)) { v -> onChange { ManualForms.withSetPercent(it, v, goal, step) } }
+                DoubleField("Weight", set.load, Modifier.weight(1f)) { v -> onChange { ManualForms.withSetWeight(it, v, goal) } }
             }
             StrengthLoadMode.PERCENT_1RM -> DoubleField("% of 1RM", set.percent, Modifier.weight(1f)) { v -> onChange { it.copy(percent = v) } }
             StrengthLoadMode.NONE -> Unit
