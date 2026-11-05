@@ -188,4 +188,45 @@ class ManualSectionsTest {
         val thrusterLb = ManualTemplates.apply(lbForm, template("For time 21-15-9"), ids).parts.single().movements.first()
         assertEquals(95.0 to 65.0, thrusterLb.load to thrusterLb.loadFemale)
     }
+
+    @Test
+    fun aSetsWeightAndItsPercentOfTheGoalFollowEachOther() {
+        val set = ManualSetForm(id = "s")
+        // % → weight, rounded to the Settings increment (2.5 here).
+        val byPercent = ManualForms.withSetPercent(set, 72.0, goal = 140.0, step = 2.5)
+        assertEquals(72.0 to 100.0, byPercent.ofGoal to byPercent.load)
+        // weight → % of the goal, one decimal.
+        val byWeight = ManualForms.withSetWeight(byPercent, 105.0, goal = 140.0)
+        assertEquals(105.0 to 75.0, byWeight.load to byWeight.ofGoal)
+        // No goal: a weight stands alone and a % changes nothing else.
+        assertEquals(null, ManualForms.withSetWeight(set, 80.0, goal = null).ofGoal)
+        assertEquals(null, ManualForms.withSetPercent(set, 80.0, goal = null, step = 1.0).load)
+    }
+
+    @Test
+    fun changingTheGoalRecomputesPercentSetsAndPercentagesOfWeightSets() {
+        val part = session("back_squat", 60.0 to 5, null to 5).let { p ->
+            p.copy(sets = listOf(p.sets[0], p.sets[1].copy(ofGoal = 80.0)))
+        }
+        val withGoal = ManualForms.withGoal(part, 100.0, step = 1.0)
+        assertEquals(100.0, withGoal.scheme.goalWeight)
+        assertEquals(listOf(60.0, 80.0), withGoal.sets.map { it.load })
+        assertEquals(listOf(60.0, 80.0), withGoal.sets.map { it.ofGoal })
+        val raised = ManualForms.withGoal(withGoal, 120.0, step = 1.0)
+        assertEquals(listOf(72.0, 96.0), raised.sets.map { it.load })
+        // The workout keeps only the weights.
+        val built = builder.build(blank().copy(parts = listOf(raised)))
+        assertTrue(built.canCreate, built.report.blocking.toString())
+        val lift = built.workout.parts.single().body.single() as Item
+        assertEquals(listOf(72.0, 96.0), lift.sets.map { (it.load as AbsoluteLoad).mass.value })
+    }
+
+    @Test
+    fun fiveByThreeIsFiveHeavyTriples() {
+        val part = ManualTemplates.apply(blank(), template("5 × 3 heavy"), ids).parts.single()
+        assertEquals(ManualFormat.STRENGTH, part.format)
+        assertEquals(List(5) { 3 }, part.sets.map { it.reps })
+        assertEquals(List(5) { 85.0 }, part.sets.map { it.percent })
+        assertTrue(builder.build(blank().copy(parts = listOf(part))).canCreate)
+    }
 }

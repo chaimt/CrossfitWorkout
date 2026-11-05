@@ -25,6 +25,7 @@ object ManualTemplates {
 
     val all: List<ManualTemplate> = listOf(
         ManualTemplate("5 × 5 strength", WorkoutSection.WEIGHTS, ::strength5x5),
+        ManualTemplate("5 × 3 heavy", WorkoutSection.WEIGHTS, ::strength5x3),
         ManualTemplate("AMRAP 20", WorkoutSection.METCON, ::amrap20),
         ManualTemplate("EMOM 10", WorkoutSection.METCON, ::emom10),
         ManualTemplate("For time 21-15-9", WorkoutSection.METCON, ::forTime21159),
@@ -109,6 +110,14 @@ object ManualTemplates {
         scheme = StrengthScheme(loadMode = StrengthLoadMode.PERCENT_1RM),
         lift = ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell"),
         sets = List(5) { ManualSetForm(id = ids.newId(), percent = 75.0, reps = 5) },
+    )
+
+    /** Heavy strength (owner request 2026-11-05): back squat 5 sets of 3 reps at 85 % of 1RM. */
+    fun strength5x3(ids: IdSource) = part(ids, ManualFormat.STRENGTH).copy(
+        kind = PartKind.STRENGTH,
+        scheme = StrengthScheme(loadMode = StrengthLoadMode.PERCENT_1RM),
+        lift = ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell"),
+        sets = List(5) { ManualSetForm(id = ids.newId(), percent = 85.0, reps = 3) },
     )
 
     /** Classic Tabata 20/10 × 8 of air squats. */

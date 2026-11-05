@@ -113,7 +113,7 @@ fun ManualWorkoutScreen(vm: AppViewModel, onCreated: (String) -> Unit, back: () 
                 }
                 items(parts, key = { it.id }) { part ->
                     PartCard(
-                        vm.catalog, section, ManualForms.effectiveLabel(form, part), part, form.loadUnit, ids,
+                        vm.catalog, section, ManualForms.effectiveLabel(form, part), part, form.loadUnit, form.loadStep, ids,
                         build.report.issues.filter { it.partId == part.id },
                         onChange = { f -> edit { ManualForms.updatePart(it, part.id, f) } },
                         onRemove = { edit { ManualForms.removePart(it, part.id) } },
@@ -178,6 +178,7 @@ private fun PartCard(
     label: String,
     part: ManualPartForm,
     unit: MassUnit,
+    step: Double,
     ids: IdSource,
     issues: List<ValidationIssue>,
     onChange: PartEdit,
@@ -202,7 +203,7 @@ private fun PartCard(
         }
         FormatFields(part, onChange)
         when (part.format) {
-            ManualFormat.STRENGTH -> StrengthRows(catalog, part, unit, ids, onChange)
+            ManualFormat.STRENGTH -> StrengthRows(catalog, part, unit, step, ids, onChange)
             else -> MovementRows(catalog, part, unit, ids, onChange)
         }
         Issues(issues)
@@ -414,11 +415,13 @@ private fun MovementName(
 }
 
 /**
- * A strength session (owner request 2026-11-05): one lift, load type and rest set once at the
- * top, then one row per set with only its weight and reps. "Add set" repeats the last set.
+ * A strength session (owner request 2026-11-05): one lift and its load type once at the top, an
+ * optional goal weight, then one row per set with its weight and reps. With a goal, each set also
+ * shows its % of the goal; editing the weight or the % updates the other. "Add set" repeats the
+ * last set.
  */
 @Composable
-private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, unit: MassUnit, ids: IdSource, onChange: PartEdit) {
+private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, unit: MassUnit, step: Double, ids: IdSource, onChange: PartEdit) {
     fun editSet(id: String, f: (ManualSetForm) -> ManualSetForm) =
         onChange { p -> p.copy(sets = p.sets.map { if (it.id == id) f(it) else it }) }
     Text("Session", style = MaterialTheme.typography.titleSmall)
@@ -426,12 +429,19 @@ private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, unit: M
     LiftField(catalog, lift?.name.orEmpty(), lift?.movementId, Modifier.fillMaxWidth()) { m ->
         onChange { p -> p.copy(lift = ManualForms.pick(p.lift ?: ManualForms.newLift(ids), m)) }
     }
-    SchemeFields(part.scheme) { f -> onChange { it.copy(scheme = f(it.scheme)) } }
+    val weights = part.scheme.loadMode == StrengthLoadMode.ABSOLUTE
+    Grid {
+        Choice("Load type", part.scheme.loadMode, StrengthLoadMode.entries, ::loadModeName, Modifier) { mode ->
+            onChange { it.copy(scheme = it.scheme.copy(loadMode = mode)) }
+        }
+        if (weights) DoubleField("Goal weight (${unit.wire})", part.scheme.goalWeight, Modifier) { v ->
+            onChange { ManualForms.withGoal(it, v, step) }
+        }
+    }
     // The set row is too narrow for "Weight (kg)", so the Settings unit sits in the heading.
-    val heading = if (part.scheme.loadMode == StrengthLoadMode.ABSOLUTE) "Sets · weight in ${unit.wire}" else "Sets"
-    Text(heading, style = MaterialTheme.typography.titleSmall)
+    Text(if (weights) "Sets · weight in ${unit.wire}" else "Sets", style = MaterialTheme.typography.titleSmall)
     part.sets.forEachIndexed { i, set ->
-        SetRow(i + 1, part.scheme, unit, set, onChange = { f -> editSet(set.id, f) }, onRemove = {
+        SetRow(i + 1, part.scheme, step, set, onChange = { f -> editSet(set.id, f) }, onRemove = {
             onChange { p -> p.copy(sets = p.sets.filter { it.id != set.id }) }
         })
     }
@@ -442,34 +452,30 @@ private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, unit: M
 }
 
 /**
- * Load type, once for the whole session; every set follows it. There is no rest field (owner
- * request 2026-11-05): rest between sets is Settings → Default strength rest.
+ * One set: its weight (in the session's load type and the Settings unit) and reps (REQ-DM06).
+ * With a goal weight it also shows the % of the goal, linked both ways to the weight.
  */
-@Composable
-private fun SchemeFields(scheme: StrengthScheme, onChange: ((StrengthScheme) -> StrengthScheme) -> Unit) {
-    Grid {
-        Choice("Load type", scheme.loadMode, StrengthLoadMode.entries, ::loadModeName, Modifier) { mode -> onChange { it.copy(loadMode = mode) } }
-    }
-}
-
-/** One set: its weight (in the session's load type and the Settings unit) and reps (REQ-DM06). */
 @Composable
 private fun SetRow(
     number: Int,
     scheme: StrengthScheme,
-    unit: MassUnit,
+    step: Double,
     set: ManualSetForm,
     onChange: ((ManualSetForm) -> ManualSetForm) -> Unit,
     onRemove: () -> Unit,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Set $number", style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(48.dp))
+    val goal = scheme.goalWeight
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text("Set $number", style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(44.dp))
         when (scheme.loadMode) {
-            StrengthLoadMode.ABSOLUTE -> DoubleField("Weight", set.load, Modifier.weight(1f)) { v -> onChange { it.copy(load = v) } }
+            StrengthLoadMode.ABSOLUTE -> {
+                DoubleField("Weight", set.load, Modifier.weight(1f)) { v -> onChange { ManualForms.withSetWeight(it, v, goal) } }
+                if (goal != null) DoubleField("%", set.ofGoal, Modifier.weight(0.8f)) { v -> onChange { ManualForms.withSetPercent(it, v, goal, step) } }
+            }
             StrengthLoadMode.PERCENT_1RM -> DoubleField("% of 1RM", set.percent, Modifier.weight(1f)) { v -> onChange { it.copy(percent = v) } }
             StrengthLoadMode.NONE -> Unit
         }
-        IntField("Reps", set.reps, Modifier.weight(1f)) { v -> onChange { it.copy(reps = v) } }
+        IntField("Reps", set.reps, Modifier.weight(0.8f)) { v -> onChange { it.copy(reps = v) } }
         IconButton(onClick = onRemove) { Icon(Icons.Filled.Close, contentDescription = "Remove set $number") }
     }
 }

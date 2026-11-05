@@ -16,6 +16,7 @@ import com.wodcapture.domain.manual.ManualBuild
 import com.wodcapture.domain.manual.ManualForms
 import com.wodcapture.domain.manual.ManualWorkoutBuilder
 import com.wodcapture.domain.manual.ManualWorkoutForm
+import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.ParseResult
 import com.wodcapture.domain.model.SexSelection
 import com.wodcapture.domain.model.Workout
@@ -184,15 +185,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     init {
         // Weights in the form follow Settings → Units, also when it changes while the form is open.
         viewModelScope.launch {
-            settings.map { it.profile.displayUnit }.distinctUntilChanged().collect { unit ->
-                manualForm.update { f -> f?.copy(loadUnit = unit) }
+            settings.map { loadUnitAndStep(it) }.distinctUntilChanged().collect { (unit, step) ->
+                manualForm.update { f -> f?.copy(loadUnit = unit, loadStep = step) }
             }
         }
     }
 
     /** Starts a fresh guided form: today, in the phone's time zone, one For-time part, Settings unit. */
     fun startManual() {
-        manualForm.value = ManualForms.blank(c.ids, LocalDate.now().toString(), ZoneId.systemDefault().id, settings.value.profile.displayUnit)
+        val (unit, step) = loadUnitAndStep(settings.value)
+        manualForm.value = ManualForms.blank(c.ids, LocalDate.now().toString(), ZoneId.systemDefault().id, unit, step)
+    }
+
+    /** Settings → weight unit and its smallest total increment (rounding of computed weights). */
+    private fun loadUnitAndStep(s: AppSettings): Pair<MassUnit, Double> {
+        val p = s.profile
+        return p.displayUnit to if (p.displayUnit == MassUnit.LB) p.barIncrementLb else p.barIncrementKg
     }
 
     fun updateManual(f: (ManualWorkoutForm) -> ManualWorkoutForm) {

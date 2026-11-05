@@ -3,6 +3,7 @@ package com.wodcapture.domain.manual
 import com.wodcapture.domain.IdSource
 import com.wodcapture.domain.catalog.Movement
 import com.wodcapture.domain.catalog.MovementCatalog
+import com.wodcapture.domain.load.MassMath
 import com.wodcapture.domain.model.DistanceUnit
 import com.wodcapture.domain.model.FallbackTimer
 import com.wodcapture.domain.model.LengthUnit
@@ -29,6 +30,11 @@ data class ManualWorkoutForm(
      * Settings → Units ([com.wodcapture.domain.model.Profile.displayUnit]) (owner request 2026-11-05).
      */
     val loadUnit: MassUnit = MassUnit.KG,
+    /**
+     * Rounding step for weights the form computes (a % of the goal weight): Settings → smallest
+     * total increment for [loadUnit].
+     */
+    val loadStep: Double = 1.0,
     val parts: List<ManualPartForm> = emptyList(),
 )
 
@@ -130,6 +136,12 @@ data class ManualPartForm(
  */
 data class StrengthScheme(
     val loadMode: StrengthLoadMode = StrengthLoadMode.ABSOLUTE,
+    /**
+     * Optional goal weight of the session, in the form's unit (owner request 2026-11-05). With it,
+     * each set's weight and its % of the goal are two views of one value: editing either updates
+     * the other ([ManualForms.withSetWeight], [ManualForms.withSetPercent]).
+     */
+    val goalWeight: Double? = null,
 )
 
 /** A movement row of a metcon part (REQ-DM05). */
@@ -183,6 +195,11 @@ data class ManualSetForm(
     val load: Double? = null,
     val percent: Double? = null,
     val reps: Int? = null,
+    /**
+     * Weight mode with a goal weight: [load] as a % of the goal. It is an input aid kept in step
+     * with [load]; the workout stores only the weight.
+     */
+    val ofGoal: Double? = null,
 )
 
 /**
@@ -241,10 +258,44 @@ object ManualForms {
      * A blank form for [date] in [timeZone] with one For-time metcon part (REQ-AC09 defaults);
      * weights are in [loadUnit], the Settings unit.
      */
-    fun blank(ids: IdSource, date: String, timeZone: String, loadUnit: MassUnit = MassUnit.KG): ManualWorkoutForm =
-        ManualWorkoutForm(date = date, timeZone = timeZone, loadUnit = loadUnit, parts = listOf(newPart(ids, 0)))
+    fun blank(ids: IdSource, date: String, timeZone: String, loadUnit: MassUnit = MassUnit.KG, loadStep: Double = 1.0): ManualWorkoutForm =
+        ManualWorkoutForm(date = date, timeZone = timeZone, loadUnit = loadUnit, loadStep = loadStep, parts = listOf(newPart(ids, 0)))
 
     fun newLift(ids: IdSource): ManualStrengthForm = ManualStrengthForm(id = ids.newId())
+
+    /** Typing a set's weight: with a goal weight, its % of the goal follows. */
+    fun withSetWeight(set: ManualSetForm, weight: Double?, goal: Double?): ManualSetForm =
+        set.copy(load = weight, ofGoal = percentOf(weight, goal))
+
+    /**
+     * Typing a set's % of the goal: its weight becomes goal × %, rounded to [step] (Settings →
+     * smallest increment). Without a goal there is nothing to compute, so the weight is kept.
+     */
+    fun withSetPercent(set: ManualSetForm, percent: Double?, goal: Double?, step: Double): ManualSetForm =
+        set.copy(ofGoal = percent, load = weightOf(percent, goal, step) ?: set.load)
+
+    /**
+     * Changing the session goal: sets given as a % get their weight recomputed; sets given only
+     * as a weight get their % of the new goal.
+     */
+    fun withGoal(part: ManualPartForm, goal: Double?, step: Double): ManualPartForm = part.copy(
+        scheme = part.scheme.copy(goalWeight = goal),
+        sets = part.sets.map { s ->
+            val computed = weightOf(s.ofGoal, goal, step)
+            if (computed != null) s.copy(load = computed) else s.copy(ofGoal = percentOf(s.load, goal))
+        },
+    )
+
+    private fun weightOf(percent: Double?, goal: Double?, step: Double): Double? {
+        if (percent == null || goal == null || goal <= 0) return null
+        return MassMath.roundToStep(goal * percent / 100, step.takeIf { it > 0 } ?: 1.0)
+    }
+
+    /** % of [goal], to one decimal; `null` when either is missing. */
+    private fun percentOf(weight: Double?, goal: Double?): Double? {
+        if (weight == null || goal == null || goal <= 0) return null
+        return Math.round(weight / goal * 1000) / 10.0
+    }
 
     /** A new set for [part]: it repeats the last set's weight and reps, so 5 × 5 is five taps. */
     fun newSet(part: ManualPartForm, ids: IdSource): ManualSetForm =
