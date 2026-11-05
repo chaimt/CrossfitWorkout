@@ -65,7 +65,7 @@ fun LibraryScreen(vm: AppViewModel, open: (String) -> Unit, capture: () -> Unit,
         Bar("WOD Capture") {
             WatchChip(sdk) { go(Routes.DEVICE) }
             IconButton(onClick = { go(Routes.RESULTS) }) { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Results") }
-            IconButton(onClick = { go(Routes.TOP_LIFTS) }) { Icon(Icons.Filled.Star, contentDescription = "Top lifts") }
+            IconButton(onClick = { go(Routes.TOP_LIFTS) }) { Icon(Icons.Filled.Star, contentDescription = "1RM") }
             IconButton(onClick = { go(Routes.SETTINGS) }) { Icon(Icons.Filled.Settings, contentDescription = "Settings") }
         }
         LazyColumn(

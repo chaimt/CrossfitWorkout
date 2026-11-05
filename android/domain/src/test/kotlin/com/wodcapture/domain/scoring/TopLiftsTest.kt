@@ -9,6 +9,7 @@ import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.PartScore
 import com.wodcapture.domain.model.PercentOfMax
+import com.wodcapture.domain.model.RepMax
 import com.wodcapture.domain.model.RepTarget
 import com.wodcapture.domain.model.ResultSource
 import com.wodcapture.domain.model.ResultStatus
@@ -159,5 +160,49 @@ class TopLiftsTest {
             p.copy(parts = p.parts.map { part -> part.copy(body = listOf(Item("i", "back_squat", "Back squat", sets = listOf(StrengthSet("s", load = PercentOfMax(80.0)))))) })
         }
         assertTrue(top(emptyList(), w).isEmpty())
+    }
+
+    @Test
+    fun manualRepMaxShowsWithoutAnyWorkout() {
+        val rm = RepMax("back_squat", 1, Mass(140.0, MassUnit.KG), "2026-10-15")
+        val lift = TopLifts.compute(emptyList(), emptyList(), TestSupport.catalog, MassUnit.KG, ZoneOffset.UTC, listOf(rm)).single()
+        assertEquals("back_squat", lift.key)
+        assertEquals(Mass(140.0, MassUnit.KG), lift.load)
+        assertEquals(1, lift.reps)
+        assertEquals(LocalDate.of(2026, 10, 15), lift.date)
+        assertTrue(lift.manual)
+        assertNull(lift.workoutId)
+    }
+
+    @Test
+    fun heavierWorkoutWeightBeatsManualRepMaxForTheSameLift() {
+        val a = planned("a", "back_squat", "Back squat", "2026-10-20", 150.0)
+        val rm = RepMax("back_squat", 1, Mass(140.0, MassUnit.KG), "2026-10-15")
+        val lift = TopLifts.compute(listOf(a), emptyList(), TestSupport.catalog, MassUnit.KG, ZoneOffset.UTC, listOf(rm)).single()
+        assertEquals(Mass(150.0, MassUnit.KG), lift.load)
+        assertEquals("a", lift.workoutId)
+        assertTrue(!lift.manual)
+    }
+
+    @Test
+    fun manualEntryDefaultsToOneRepTodayAndRejectsMissingFields() {
+        val today = LocalDate.of(2026, 11, 6)
+        assertEquals(RepMax("deadlift", 1, Mass(180.0, MassUnit.KG), "2026-11-06"), TopLifts.manualEntry("deadlift", "180", "", "", MassUnit.KG, today))
+        assertEquals(RepMax("deadlift", 3, Mass(102.5, MassUnit.LB), "2026-11-01"), TopLifts.manualEntry("deadlift", "102,5", "3", "2026-11-01", MassUnit.LB, today))
+        assertNull(TopLifts.manualEntry(null, "180", "1", "", MassUnit.KG, today))
+        assertNull(TopLifts.manualEntry("deadlift", "", "1", "", MassUnit.KG, today))
+        assertNull(TopLifts.manualEntry("deadlift", "180", "0", "", MassUnit.KG, today))
+        assertNull(TopLifts.manualEntry("deadlift", "180", "1", "6/11", MassUnit.KG, today))
+    }
+
+    @Test
+    fun addingReplacesTheSameLiftAndRepCountAndRemovingDropsIt() {
+        val old = RepMax("deadlift", 1, Mass(170.0, MassUnit.KG), "2026-10-01")
+        val fiveRm = RepMax("deadlift", 5, Mass(150.0, MassUnit.KG))
+        val new = RepMax("deadlift", 1, Mass(180.0, MassUnit.KG), "2026-11-06")
+        val list = TopLifts.withEntry(listOf(old, fiveRm), new)
+        assertEquals(listOf(fiveRm, new), list)
+        val row = TopLifts.compute(emptyList(), emptyList(), TestSupport.catalog, MassUnit.KG, ZoneOffset.UTC, list).single()
+        assertEquals(listOf(fiveRm), TopLifts.withoutEntry(list, row))
     }
 }

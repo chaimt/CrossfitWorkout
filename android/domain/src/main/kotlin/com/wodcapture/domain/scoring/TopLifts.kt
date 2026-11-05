@@ -9,6 +9,7 @@ import com.wodcapture.domain.model.Item
 import com.wodcapture.domain.model.Mass
 import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.Part
+import com.wodcapture.domain.model.RepMax
 import com.wodcapture.domain.model.ResultSource
 import com.wodcapture.domain.model.ResultStatus
 import com.wodcapture.domain.model.Score
@@ -19,7 +20,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-/** Heaviest weight for one lift across the workouts (REQ-AL07). [load] is per implement, in the display unit. */
+/** Heaviest weight for one lift (REQ-AL07). [load] is per implement, in the display unit. */
 data class TopLift(
     /** Catalog movement ID, or the lower-cased name of a free-text lift. */
     val key: String,
@@ -27,21 +28,30 @@ data class TopLift(
     val load: Mass,
     /** Reps of the set that set the record; `null` for a manual load score without sets. */
     val reps: Int?,
-    val date: LocalDate,
-    val workoutId: String,
-    val workoutTitle: String,
+    /** `null` only for a rep max entered without a date (Settings). */
+    val date: LocalDate?,
+    /** The workout it was lifted in; `null` for a manually entered rep max. */
+    val workoutId: String?,
+    val workoutTitle: String?,
+    /** Entered by hand (a profile [RepMax]) rather than taken from a workout. */
+    val manual: Boolean = false,
 )
 
 /**
- * Top weight per lift across the workout list (REQ-AL07). Every workout's strength sets with an
- * absolute weight count, dated by the workout's scheduled date (else its creation day). Logged
- * results add to that: their completed sets (status done and at least the prescribed reps, the
- * same rule as [ScoreCalculator.bestLoad]) and a load score for a part that has a single lift, so
- * a weight heavier than planned still shows. Ties go to more reps, then the earliest date — the
- * day the weight was first reached.
+ * Top weight per lift across the workout list and the hand-entered rep maxes (REQ-AL07). Every
+ * workout's strength sets with an absolute weight count, dated by the workout's scheduled date
+ * (else its creation day). Logged results add to that: their completed sets (status done and at
+ * least the prescribed reps, the same rule as [ScoreCalculator.bestLoad]) and a load score for a
+ * part that has a single lift, so a weight heavier than planned still shows. A manual rep max
+ * (profile [RepMax]) competes like any other set. Ties go to more reps, then the earliest date —
+ * the day the weight was first reached.
  */
 object TopLifts {
-    private data class Candidate(val item: Item, val kg: Double, val load: Mass, val reps: Int?, val date: LocalDate, val workout: Workout)
+    private data class Candidate(val item: Item, val kg: Double, val load: Mass, val reps: Int?, val date: LocalDate?, val workout: Workout?)
+
+    private val order = compareByDescending<Candidate> { it.kg }
+        .thenByDescending { it.reps ?: 0 }
+        .thenBy(nullsLast()) { it.date }
 
     /** [workouts] are the library's saved workouts; results of workouts not in it are ignored. */
     fun compute(
@@ -50,25 +60,57 @@ object TopLifts {
         catalog: MovementCatalog,
         unit: MassUnit,
         zone: ZoneId = ZoneId.systemDefault(),
+        repMaxes: List<RepMax> = emptyList(),
     ): List<TopLift> {
         val byId = workouts.associateBy { it.id }
         val planned = workouts.flatMap { planned(it, zone) }
         val logged = results.flatMap { r -> byId[r.workoutId]?.let { candidates(r, it, zone) }.orEmpty() }
-        return (planned + logged)
+        val entered = repMaxes.mapNotNull { manual(it, catalog) }
+        return (planned + logged + entered)
             .groupBy { key(it.item) }
             .map { (key, group) ->
-                val best = group.sortedWith(compareByDescending<Candidate> { it.kg }.thenByDescending { it.reps ?: 0 }.thenBy { it.date }).first()
+                val best = group.sortedWith(order).first()
                 TopLift(
                     key = key,
                     name = catalog.byId(best.item.movementId)?.name ?: best.item.displayName ?: best.item.name,
                     load = MassMath.convertPhysical(best.load, unit).let { Mass(MassMath.clean(it.value), unit) },
                     reps = best.reps,
                     date = best.date,
-                    workoutId = best.workout.id,
-                    workoutTitle = best.workout.title,
+                    workoutId = best.workout?.id,
+                    workoutTitle = best.workout?.title,
+                    manual = best.workout == null,
                 )
             }
             .sortedBy { it.name.lowercase() }
+    }
+
+    /**
+     * The rep max of the 1RM screen's "Add manual" form: a lift from the catalog list, a positive
+     * weight in [unit], reps (blank = 1) and an ISO date (blank = [today]). `null` while any of
+     * them is missing or invalid.
+     */
+    fun manualEntry(movementId: String?, weight: String, reps: String, date: String, unit: MassUnit, today: LocalDate): RepMax? {
+        val id = movementId?.takeIf { it.isNotBlank() } ?: return null
+        val kg = weight.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 } ?: return null
+        val count = if (reps.isBlank()) 1 else reps.trim().toIntOrNull()?.takeIf { it >= 1 } ?: return null
+        val day = if (date.isBlank()) today else runCatching { LocalDate.parse(date.trim()) }.getOrNull() ?: return null
+        return RepMax(id, count, Mass(kg, unit), day.toString())
+    }
+
+    /** Adds [rm], replacing an earlier entry for the same lift and rep count. */
+    fun withEntry(repMaxes: List<RepMax>, rm: RepMax): List<RepMax> =
+        repMaxes.filterNot { it.movementId == rm.movementId && it.reps == rm.reps } + rm
+
+    /** Removes the manual entry a [TopLift] row shows. */
+    fun withoutEntry(repMaxes: List<RepMax>, lift: TopLift): List<RepMax> =
+        repMaxes.filterNot { it.movementId == lift.key && it.reps == lift.reps }
+
+    /** A rep max typed by the athlete, keyed by its catalog movement like the workout lifts. */
+    private fun manual(rm: RepMax, catalog: MovementCatalog): Candidate? {
+        if (rm.movementId.isBlank() || !rm.load.isMeasured()) return null
+        val item = Item(id = "rm-${rm.movementId}", movementId = rm.movementId, name = catalog.byId(rm.movementId)?.name ?: rm.movementId)
+        val date = rm.date?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        return Candidate(item, MassMath.toKgPhysical(rm.load), rm.load, rm.reps, date, null)
     }
 
     /** The workout's own set weights; a set without a load inherits the item's. */
