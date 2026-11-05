@@ -99,7 +99,7 @@ class ManualWorkoutBuilderTest {
         val part = ManualTemplates.strength5x5(ids).let { s ->
             s.copy(
                 scheme = s.scheme.copy(loadMode = StrengthLoadMode.ABSOLUTE),
-                strength = listOf(s.strength[0].copy(load = 100.0)),
+                sets = s.sets.map { it.copy(load = 100.0) },
             )
         }
         val built = builder.build(form(part))
@@ -173,7 +173,7 @@ class ManualWorkoutBuilderTest {
     fun emptyPartBlocks() {
         val empty = ManualForms.newPart(ids, 0, ManualFormat.FOR_TIME).copy(movements = emptyList())
         assertTrue(builder.build(form(empty)).report.blocking.any { it.code == "empty_body" })
-        val noSets = ManualForms.newPart(ids, 0, ManualFormat.STRENGTH).copy(strength = emptyList())
+        val noSets = ManualForms.newPart(ids, 0, ManualFormat.STRENGTH).copy(sets = emptyList())
         assertTrue(builder.build(form(noSets)).report.blocking.any { it.code == "missing_sets" })
         assertTrue(builder.build(form()).report.blocking.any { it.code == "no_parts" })
     }

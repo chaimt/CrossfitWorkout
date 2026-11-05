@@ -116,18 +116,21 @@ data class ManualPartForm(
     val customText: String = "",
     val customTimer: FallbackTimer = FallbackTimer.COUNT_UP,
     val movements: List<ManualMovementForm> = emptyList(),
-    /** Strength sets: one scheme for the whole part, set above the lifts (owner request 2026-11-05). */
+    /**
+     * Strength sets: one lift per session, its load type and rest set once, then one row per set
+     * with only weight and reps (owner request 2026-11-05).
+     */
     val scheme: StrengthScheme = StrengthScheme(),
-    val strength: List<ManualStrengthForm> = emptyList(),
+    val lift: ManualStrengthForm? = null,
+    val sets: List<ManualSetForm> = emptyList(),
 )
 
 /**
- * Sets, load type and rest of a strength part. It is set once per session, before the lifts, and
- * every lift of the part follows it, so a lift needs only its weight and reps (owner request
- * 2026-11-05).
+ * Load type and rest of a strength session. They are set once, above the sets, and every set
+ * follows them, so a set needs only its weight and reps (owner request 2026-11-05). The number of
+ * sets is the number of set rows.
  */
 data class StrengthScheme(
-    val sets: Int? = 5,
     val loadMode: StrengthLoadMode = StrengthLoadMode.ABSOLUTE,
     /** Rest after each set; the compiler drops it after the last set. */
     val restText: String = "2:00",
@@ -165,20 +168,24 @@ data class ManualMovementForm(
     val heightIsTarget: Boolean = false,
 )
 
-/**
- * A lift of a strength part (REQ-DM06): the lift, its reps per set and its load in the part's
- * [StrengthScheme] load type — a weight ([load], in the form's unit) or a percentage of 1RM
- * ([percent]). Everything else (sets, load type, rest, unit) is per session.
- */
+/** The one lift of a strength session (REQ-DM06), picked from the list once for the whole session. */
 data class ManualStrengthForm(
     /** Becomes the item ID. */
     val id: String,
     val name: String = "",
     val movementId: String? = null,
     val implement: String? = null,
+)
+
+/**
+ * One set of a strength session: its reps and its load in the session's [StrengthScheme] load
+ * type — a weight ([load], in the form's unit) or a percentage of 1RM ([percent]).
+ */
+data class ManualSetForm(
+    /** Becomes the set ID. */
+    val id: String,
     val load: Double? = null,
     val percent: Double? = null,
-    /** Reps of every set of this lift. */
     val reps: Int? = null,
 )
 
@@ -225,7 +232,7 @@ object ManualForms {
     /** True for a part nobody has typed into yet (so a template may replace it). */
     fun isUntouched(part: ManualPartForm): Boolean =
         part.name.isBlank() && part.label.isBlank() && part.customText.isBlank() &&
-            part.movements.all { it.name.isBlank() } && part.strength.all { it.name.isBlank() }
+            part.movements.all { it.name.isBlank() } && part.lift?.name.isNullOrBlank()
 
     fun newMovement(ids: IdSource, measure: MeasureKind = MeasureKind.REPS): ManualMovementForm =
         ManualMovementForm(id = ids.newId(), measure = measure)
@@ -241,12 +248,16 @@ object ManualForms {
     fun blank(ids: IdSource, date: String, timeZone: String, loadUnit: MassUnit = MassUnit.KG): ManualWorkoutForm =
         ManualWorkoutForm(date = date, timeZone = timeZone, loadUnit = loadUnit, parts = listOf(newPart(ids, 0)))
 
-    fun newStrengthRow(ids: IdSource): ManualStrengthForm = ManualStrengthForm(id = ids.newId())
+    fun newLift(ids: IdSource): ManualStrengthForm = ManualStrengthForm(id = ids.newId())
+
+    /** A new set for [part]: it repeats the last set's weight and reps, so 5 × 5 is five taps. */
+    fun newSet(part: ManualPartForm, ids: IdSource): ManualSetForm =
+        part.sets.lastOrNull()?.copy(id = ids.newId()) ?: ManualSetForm(id = ids.newId())
 
     /**
      * Switches [part] to [format]: kind follows the format's section (weights → strength unless
      * already accessory; metcon → metcon unless warm-up/skill/…), and a strength part gets its
-     * first row so the form never shows an empty card.
+     * lift and a first set so the form never shows an empty card.
      */
     fun withFormat(part: ManualPartForm, format: ManualFormat, ids: IdSource): ManualPartForm {
         val kind = when {
@@ -254,11 +265,13 @@ object ManualForms {
             format.section == WorkoutSection.WEIGHTS -> PartKind.STRENGTH
             else -> PartKind.METCON
         }
-        val strength = if (format == ManualFormat.STRENGTH && part.strength.isEmpty()) listOf(newStrengthRow(ids)) else part.strength
+        val strength = format == ManualFormat.STRENGTH
+        val lift = if (strength && part.lift == null) newLift(ids) else part.lift
+        val sets = if (strength && part.sets.isEmpty()) listOf(ManualSetForm(id = ids.newId())) else part.sets
         val movements = if (format != ManualFormat.STRENGTH && format != ManualFormat.CUSTOM && part.movements.isEmpty()) {
             listOf(newMovement(ids))
         } else part.movements
-        return part.copy(format = format, kind = kind, strength = strength, movements = movements)
+        return part.copy(format = format, kind = kind, lift = lift, sets = sets, movements = movements)
     }
 
     /** Whether movement rows of [part] take their reps from a part rep scheme. */
@@ -294,7 +307,7 @@ object ManualForms {
         )
     }
 
-    /** Applies a catalog pick to a strength row. */
+    /** Applies a catalog pick to the session lift. */
     fun pick(row: ManualStrengthForm, m: Movement): ManualStrengthForm =
         row.copy(name = m.name, movementId = m.id, implement = implementOf(m))
 

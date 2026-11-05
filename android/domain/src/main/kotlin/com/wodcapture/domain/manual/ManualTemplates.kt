@@ -57,7 +57,7 @@ object ManualTemplates {
         }
         return part.copy(
             movements = part.movements.map { m -> m.copy(load = convert(m.implement, m.load), loadFemale = convert(m.implement, m.loadFemale)) },
-            strength = part.strength.map { s -> s.copy(load = convert(s.implement, s.load)) },
+            sets = part.sets.map { s -> s.copy(load = convert(part.lift?.implement, s.load)) },
         )
     }
 
@@ -107,10 +107,9 @@ object ManualTemplates {
     /** Back squat 5 × 5 at 75 % of 1RM, 2:00 rest. */
     fun strength5x5(ids: IdSource) = part(ids, ManualFormat.STRENGTH).copy(
         kind = PartKind.STRENGTH,
-        scheme = StrengthScheme(sets = 5, loadMode = StrengthLoadMode.PERCENT_1RM, restText = "2:00"),
-        strength = listOf(
-            ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell", percent = 75.0, reps = 5),
-        ),
+        scheme = StrengthScheme(loadMode = StrengthLoadMode.PERCENT_1RM, restText = "2:00"),
+        lift = ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell"),
+        sets = List(5) { ManualSetForm(id = ids.newId(), percent = 75.0, reps = 5) },
     )
 
     /** Deadlift: work up to a heavy single, 15:00 window. */

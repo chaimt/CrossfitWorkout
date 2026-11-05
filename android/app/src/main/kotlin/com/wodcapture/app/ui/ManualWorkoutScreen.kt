@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -52,7 +53,7 @@ import com.wodcapture.domain.manual.ManualForms
 import com.wodcapture.domain.manual.ManualFormat
 import com.wodcapture.domain.manual.ManualMovementForm
 import com.wodcapture.domain.manual.ManualPartForm
-import com.wodcapture.domain.manual.ManualStrengthForm
+import com.wodcapture.domain.manual.ManualSetForm
 import com.wodcapture.domain.manual.ManualTemplates
 import com.wodcapture.domain.manual.ManualWorkoutForm
 import com.wodcapture.domain.manual.MaxEffortMeasure
@@ -439,59 +440,61 @@ private fun LiftRow(catalog: MovementCatalog, name: String, movementId: String?,
     }
 }
 
+/**
+ * A strength session (owner request 2026-11-05): one lift, load type and rest set once at the
+ * top, then one row per set with only its weight and reps. "Add set" repeats the last set.
+ */
 @Composable
 private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, unit: MassUnit, ids: IdSource, onChange: PartEdit) {
-    fun editRow(id: String, f: (ManualStrengthForm) -> ManualStrengthForm) =
-        onChange { p -> p.copy(strength = p.strength.map { if (it.id == id) f(it) else it }) }
+    fun editSet(id: String, f: (ManualSetForm) -> ManualSetForm) =
+        onChange { p -> p.copy(sets = p.sets.map { if (it.id == id) f(it) else it }) }
+    Text("Session", style = MaterialTheme.typography.titleSmall)
+    val lift = part.lift
+    LiftField(catalog, lift?.name.orEmpty(), lift?.movementId, Modifier.fillMaxWidth()) { m ->
+        onChange { p -> p.copy(lift = ManualForms.pick(p.lift ?: ManualForms.newLift(ids), m)) }
+    }
     SchemeFields(part.scheme) { f -> onChange { it.copy(scheme = f(it.scheme)) } }
-    Text("Lifts", style = MaterialTheme.typography.titleSmall)
-    part.strength.forEach { row ->
-        StrengthRow(catalog, part.scheme, unit, row, onChange = { f -> editRow(row.id, f) }, onRemove = {
-            onChange { p -> p.copy(strength = p.strength.filter { it.id != row.id }) }
+    Text("Sets", style = MaterialTheme.typography.titleSmall)
+    part.sets.forEachIndexed { i, set ->
+        SetRow(i + 1, part.scheme, unit, set, onChange = { f -> editSet(set.id, f) }, onRemove = {
+            onChange { p -> p.copy(sets = p.sets.filter { it.id != set.id }) }
         })
     }
-    TextButton(onClick = { onChange { p -> p.copy(strength = p.strength + ManualForms.newStrengthRow(ids)) } }) {
+    TextButton(onClick = { onChange { p -> p.copy(sets = p.sets + ManualForms.newSet(p, ids)) } }) {
         Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 4.dp))
-        Text("Add lift")
+        Text("Add set")
     }
 }
 
-/**
- * Sets, load type and rest for the whole session, before the lifts (owner request 2026-11-05):
- * every lift, including one added later, follows it; a lift carries only its weight and reps.
- */
+/** Load type and rest, once for the whole session; every set follows them. */
 @Composable
 private fun SchemeFields(scheme: StrengthScheme, onChange: ((StrengthScheme) -> StrengthScheme) -> Unit) {
-    Text("Session (every lift)", style = MaterialTheme.typography.titleSmall)
     Grid {
         val cell = Modifier
-        IntField("Sets", scheme.sets, cell) { v -> onChange { it.copy(sets = v) } }
         Choice("Load type", scheme.loadMode, StrengthLoadMode.entries, ::loadModeName, cell) { mode -> onChange { it.copy(loadMode = mode) } }
         Field("Rest", scheme.restText, cell, placeholder = "2:00") { v -> onChange { it.copy(restText = v) } }
     }
 }
 
-/** A lift of a strength part: the lift from the list, its weight (in the part's load type) and reps (REQ-DM06). */
+/** One set: its weight (in the session's load type and the Settings unit) and reps (REQ-DM06). */
 @Composable
-private fun StrengthRow(
-    catalog: MovementCatalog,
+private fun SetRow(
+    number: Int,
     scheme: StrengthScheme,
     unit: MassUnit,
-    row: ManualStrengthForm,
-    onChange: ((ManualStrengthForm) -> ManualStrengthForm) -> Unit,
+    set: ManualSetForm,
+    onChange: ((ManualSetForm) -> ManualSetForm) -> Unit,
     onRemove: () -> Unit,
 ) {
-    RowBox {
-        LiftRow(catalog, row.name, row.movementId, onRemove) { m -> onChange { ManualForms.pick(it, m) } }
-        Grid {
-            val cell = Modifier
-            when (scheme.loadMode) {
-                StrengthLoadMode.ABSOLUTE -> DoubleField("Weight (${unit.wire})", row.load, cell) { v -> onChange { it.copy(load = v) } }
-                StrengthLoadMode.PERCENT_1RM -> DoubleField("% of 1RM", row.percent, cell) { v -> onChange { it.copy(percent = v) } }
-                StrengthLoadMode.NONE -> Unit
-            }
-            IntField("Reps", row.reps, cell) { v -> onChange { it.copy(reps = v) } }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Set $number", style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(48.dp))
+        when (scheme.loadMode) {
+            StrengthLoadMode.ABSOLUTE -> DoubleField("Weight (${unit.wire})", set.load, Modifier.weight(1f)) { v -> onChange { it.copy(load = v) } }
+            StrengthLoadMode.PERCENT_1RM -> DoubleField("% of 1RM", set.percent, Modifier.weight(1f)) { v -> onChange { it.copy(percent = v) } }
+            StrengthLoadMode.NONE -> Unit
         }
+        IntField("Reps", set.reps, Modifier.weight(1f)) { v -> onChange { it.copy(reps = v) } }
+        IconButton(onClick = onRemove) { Icon(Icons.Filled.Close, contentDescription = "Remove set $number") }
     }
 }
 

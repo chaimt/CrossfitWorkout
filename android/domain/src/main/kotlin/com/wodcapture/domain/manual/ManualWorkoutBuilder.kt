@@ -85,11 +85,9 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             createdAt = nowSec,
             updatedAt = nowSec,
         )
-        // A lift's reps are one form field, so one "enter the reps" finding replaces the
-        // validator's per-set "needs a rep target" for that lift.
-        val liftsMissingReps = issues.filter { it.path == "reps" }.mapNotNull { it.nodeId }.toSet()
-        val setsMissingReps = parts.flatMap { it.body }.filterIsInstance<Item>().filter { it.id in liftsMissingReps }
-            .flatMap { lift -> lift.sets.map { it.id } }.toSet()
+        // A set row's empty Reps field is already reported in form terms; drop the validator's
+        // duplicate "needs a rep target" for the same set.
+        val setsMissingReps = issues.filter { it.path == "reps" }.mapNotNull { it.nodeId }.toSet()
         val validation = WorkoutValidator.validate(workout).issues
             .filterNot { it.nodeId in setsMissingReps && it.path?.endsWith(".reps") == true }
         return ManualBuild(workout, ValidationReport(issues + validation))
@@ -278,36 +276,38 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             return SplitLength(Length(male, m.heightUnit), female?.let { Length(it, m.heightUnit) }, labeled = female != null)
         }
 
-        /** Every lift follows the part scheme; it is checked once, not per lift. */
+        /**
+         * One lift per session: a single item whose sets are the set rows, each with its own
+         * weight and reps; load type and rest come from the session.
+         */
         private fun strengthBody(): List<BodyNode> {
-            val scheme = form.scheme
-            val count = scheme.sets ?: 0
-            if (count !in 1..WatchLimits.SETS) {
-                issues += blocking("invalid_bounds", "Sets must be 1–${WatchLimits.SETS}", form.id, path = "scheme.sets")
+            val lift = form.lift ?: ManualStrengthForm(id = form.id + "-lift")
+            requireListedLift(lift.id, lift.movementId)
+            // No sets at all is the validator's "missing_sets"; only the watch limit is checked here.
+            if (form.sets.size > WatchLimits.SETS) {
+                issues += blocking("invalid_bounds", "At most ${WatchLimits.SETS} sets", form.id, path = "sets")
             }
-            val rest = time(scheme.restText, "Rest", "scheme.restText")
-            return form.strength.map { strengthItem(it, count.coerceIn(0, WatchLimits.SETS), rest) }
+            val rest = time(form.scheme.restText, "Rest", "scheme.restText")
+            val sets = form.sets.take(WatchLimits.SETS).map { strengthSet(it, rest) }
+            return listOf(Item(id = lift.id, movementId = lift.movementId, name = lift.name.trim(), implement = lift.implement, sets = sets))
         }
 
-        private fun strengthItem(s: ManualStrengthForm, count: Int, rest: Int?): Item {
-            requireListedLift(s.id, s.movementId)
-            val load = strengthLoad(s)
+        private fun strengthSet(s: ManualSetForm, rest: Int?): StrengthSet {
             val reps = s.reps?.takeIf { it > 0 } ?: run {
-                issues += blocking("missing_value", "Enter the reps of this lift", form.id, s.id, "reps")
+                issues += blocking("missing_value", "Enter the reps of each set", form.id, s.id, "reps")
                 null
             }
-            val sets = (0 until count).map { StrengthSet(ids.newId(), RepTarget(reps), load = load, restSec = rest) }
-            return Item(id = s.id, movementId = s.movementId, name = s.name.trim(), implement = s.implement, sets = sets)
+            return StrengthSet(s.id, RepTarget(reps), load = strengthLoad(s), restSec = rest)
         }
 
-        private fun strengthLoad(s: ManualStrengthForm): LoadSpec? = when (form.scheme.loadMode) {
+        private fun strengthLoad(s: ManualSetForm): LoadSpec? = when (form.scheme.loadMode) {
             StrengthLoadMode.NONE -> null
             StrengthLoadMode.ABSOLUTE -> s.load?.let { AbsoluteLoad(Mass(it, unit)) } ?: run {
-                issues += blocking("missing_value", "Enter a load or choose no load", form.id, s.id, "load")
+                issues += blocking("missing_value", "Enter the weight of each set or choose no load", form.id, s.id, "load")
                 null
             }
             StrengthLoadMode.PERCENT_1RM -> s.percent?.let { PercentOfMax(it) } ?: run {
-                issues += blocking("missing_value", "Enter a percentage of 1RM", form.id, s.id, "percent")
+                issues += blocking("missing_value", "Enter a percentage of 1RM for each set", form.id, s.id, "percent")
                 null
             }
         }
