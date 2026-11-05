@@ -96,12 +96,7 @@ class ManualWorkoutBuilderTest {
 
     @Test
     fun fiveByFiveBackSquatRestsOnAllButTheLastSet() {
-        val part = ManualTemplates.strength5x5(ids).let { s ->
-            s.copy(
-                scheme = s.scheme.copy(loadMode = StrengthLoadMode.ABSOLUTE),
-                sets = s.sets.map { it.copy(load = 100.0) },
-            )
-        }
+        val part = ManualTemplates.strength5x5(ids).let { s -> s.copy(sets = s.sets.map { it.copy(load = 100.0, ofGoal = null) }) }
         val built = builder.build(form(part))
         val item = built.workout.parts[0].body.single() as Item
         assertEquals(AbsoluteLoad(com.wodcapture.domain.model.Mass(100.0, MassUnit.KG)), item.sets[0].load)
@@ -227,8 +222,10 @@ class ManualWorkoutBuilderTest {
     @TestFactory
     fun everyTemplateValidatesAndFitsTheWatch() = ManualTemplates.all.map { t ->
         DynamicTest.dynamicTest(t.name) {
-            val f = ManualTemplates.apply(form(), t, ids)
-            assertEquals(t.name, f.title)
+            val applied = ManualTemplates.apply(form(), t, ids)
+            assertEquals(t.name, applied.title)
+            // A weights quick start needs the athlete's goal weight, as a session needs its lift.
+            val f = applied.copy(parts = applied.parts.map { p -> if (p.format == ManualFormat.STRENGTH) ManualForms.withGoal(p, 100.0, 1.0) else p })
             val built = builder.build(f)
             assertTrue(built.report.issues.none { it.severity == Severity.BLOCKING }, "${t.name}: ${built.report.blocking}")
             when (val r = compiler.compile(built.workout, TestSupport.profile, identity, options)) {

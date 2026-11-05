@@ -10,6 +10,7 @@ import com.wodcapture.app.data.ParseJobEntity
 import com.wodcapture.app.data.PlanEntity
 import com.wodcapture.app.data.WorkoutEntity
 import com.wodcapture.app.image.ImagePreprocessor
+import com.wodcapture.app.update.UpdateController
 import com.wodcapture.app.work.ParseWorker
 import com.wodcapture.domain.DomainJson
 import com.wodcapture.domain.manual.ManualBuild
@@ -179,6 +180,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** The open "New workout" form (REQ-AC09); kept here so it survives rotation and navigation. */
     val manualForm = MutableStateFlow<ManualWorkoutForm?>(null)
+
+    /** In-app update check, download and install (REQ-AP07). */
+    val updates = UpdateController(app, c.updater, viewModelScope)
     private val manualBuilder by lazy { ManualWorkoutBuilder(c.ids) }
 
     // Declared after manualForm: the collector starts immediately and must see it initialised.

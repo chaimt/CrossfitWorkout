@@ -16,7 +16,7 @@ import com.wodcapture.domain.model.WorkoutSection
 data class ManualTemplate(val name: String, val section: WorkoutSection, val build: (IdSource) -> ManualPartForm)
 
 /**
- * Prefilled format skeletons ("5 × 5 strength", "AMRAP 20", "EMOM 10", "For time 21-15-9", …),
+ * Prefilled format skeletons ("5 × 5 · 70–80%", "AMRAP 20", "EMOM 10", "For time 21-15-9", …),
  * grouped by section. Each produces one ready-to-create part with fresh row IDs; the athlete edits
  * from there. A weights template and a metcon template combine into a typical class day.
  */
@@ -24,8 +24,9 @@ object ManualTemplates {
     private const val TITLE_JOIN = " + "
 
     val all: List<ManualTemplate> = listOf(
-        ManualTemplate("5 × 5 strength", WorkoutSection.WEIGHTS, ::strength5x5),
-        ManualTemplate("5 × 3 heavy", WorkoutSection.WEIGHTS, ::strength5x3),
+        ManualTemplate("5 × 5 · 70–80%", WorkoutSection.WEIGHTS, ::strength5x5),
+        ManualTemplate("5 × 3 · 80–85%", WorkoutSection.WEIGHTS, ::strength5x3),
+        ManualTemplate("3 × 5 · 70–80%", WorkoutSection.WEIGHTS, ::strength3x5),
         ManualTemplate("AMRAP 20", WorkoutSection.METCON, ::amrap20),
         ManualTemplate("EMOM 10", WorkoutSection.METCON, ::emom10),
         ManualTemplate("For time 21-15-9", WorkoutSection.METCON, ::forTime21159),
@@ -39,7 +40,7 @@ object ManualTemplates {
     /**
      * Applies [template] to [form]: replaces the parts of the template's section and keeps the
      * other section, dropping only parts nobody has typed into. The title is filled while it is
-     * blank or still made of template names ("5 × 5 strength + AMRAP 20"); a typed title is kept.
+     * blank or still made of template names ("5 × 5 · 70–80% + AMRAP 20"); a typed title is kept.
      */
     fun apply(form: ManualWorkoutForm, template: ManualTemplate, ids: IdSource): ManualWorkoutForm {
         val kept = form.parts.filter { ManualForms.sectionOf(it) != template.section && !ManualForms.isUntouched(it) }
@@ -104,21 +105,30 @@ object ManualTemplates {
         ),
     )
 
-    /** Back squat 5 × 5 at 75 % of 1RM; rest between sets is the Settings default. */
-    fun strength5x5(ids: IdSource) = part(ids, ManualFormat.STRENGTH).copy(
-        kind = PartKind.STRENGTH,
-        scheme = StrengthScheme(loadMode = StrengthLoadMode.PERCENT_1RM),
-        lift = ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell"),
-        sets = List(5) { ManualSetForm(id = ids.newId(), percent = 75.0, reps = 5) },
-    )
+    /** 5 sets of 5 ramping 70 → 80 % of the goal weight. */
+    fun strength5x5(ids: IdSource) = percentSession(ids, sets = 5, reps = 5, from = 70.0, to = 80.0)
 
-    /** Heavy strength (owner request 2026-11-05): back squat 5 sets of 3 reps at 85 % of 1RM. */
-    fun strength5x3(ids: IdSource) = part(ids, ManualFormat.STRENGTH).copy(
-        kind = PartKind.STRENGTH,
-        scheme = StrengthScheme(loadMode = StrengthLoadMode.PERCENT_1RM),
-        lift = ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell"),
-        sets = List(5) { ManualSetForm(id = ids.newId(), percent = 85.0, reps = 3) },
-    )
+    /** Heavy strength: 5 sets of 3 ramping 80 → 85 % of the goal weight. */
+    fun strength5x3(ids: IdSource) = percentSession(ids, sets = 5, reps = 3, from = 80.0, to = 85.0)
+
+    /** 3 sets of 5 ramping 70 → 80 % of the goal weight. */
+    fun strength3x5(ids: IdSource) = percentSession(ids, sets = 3, reps = 5, from = 70.0, to = 80.0)
+
+    /**
+     * A strength quick start is the same session the manual form builds (owner request
+     * 2026-11-06): weight load type, a goal weight to fill in, and set rows of % · weight · reps
+     * whose % ramps evenly from [from] to [to] (to 0.5 %). Entering the goal fills every weight.
+     */
+    private fun percentSession(ids: IdSource, sets: Int, reps: Int, from: Double, to: Double) =
+        part(ids, ManualFormat.STRENGTH).copy(
+            kind = PartKind.STRENGTH,
+            scheme = StrengthScheme(loadMode = StrengthLoadMode.ABSOLUTE),
+            lift = ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell"),
+            sets = List(sets) { i ->
+                val pct = if (sets == 1) from else from + (to - from) * i / (sets - 1)
+                ManualSetForm(id = ids.newId(), ofGoal = MassMath.roundToStep(pct, 0.5), reps = reps)
+            },
+        )
 
     /** Classic Tabata 20/10 × 8 of air squats. */
     fun tabata(ids: IdSource) = part(ids, ManualFormat.TABATA).copy(

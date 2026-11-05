@@ -266,6 +266,8 @@ fun SettingsScreen(vm: AppViewModel, back: () -> Unit) {
             OutlinedButton(onClick = vm::testKey) { Text("Test key") }
         }
         Text("Estimated cost: about $%.2f per photo parse, $%.2f per text parse (your own key).".format(CostEstimator.typicalParseUsd(1), CostEstimator.typicalParseUsd(0)), style = MaterialTheme.typography.bodySmall)
+        SectionTitle("App")
+        UpdateSettings(vm.updates)
         SectionTitle("Data")
         Button(onClick = { confirmWipe = true }) { Text("Delete all data") }
     }

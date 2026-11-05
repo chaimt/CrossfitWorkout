@@ -75,6 +75,7 @@ fun LibraryScreen(vm: AppViewModel, open: (String) -> Unit, capture: () -> Unit,
                 // REQ-AP03: "no watch" mode with a clear banner; everything else keeps working.
                 Banner("No watch connected. Capture, review and history still work.", error = true)
             }
+            item { UpdateBanner(vm.updates) }
             item { StartActions(capture, newWorkout) }
             item {
                 OutlinedTextField(

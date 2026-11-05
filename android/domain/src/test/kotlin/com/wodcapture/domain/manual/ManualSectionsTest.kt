@@ -43,12 +43,13 @@ class ManualSectionsTest {
 
     @Test
     fun weightsAndMetconTemplatesCombine() {
-        val strength = ManualTemplates.apply(blank(), template("5 × 5 strength"), ids)
+        val strength = ManualTemplates.apply(blank(), template("5 × 5 · 70–80%"), ids)
+            .let { f -> f.copy(parts = f.parts.map { ManualForms.withGoal(it, 100.0, 1.0) }) }
         // The untouched default For-time part gives way to the template.
         assertEquals(listOf(ManualFormat.STRENGTH), strength.parts.map { it.format })
         val day = ManualTemplates.apply(strength, template("AMRAP 20"), ids)
         assertEquals(listOf(ManualFormat.STRENGTH, ManualFormat.AMRAP), day.parts.map { it.format })
-        assertEquals("5 × 5 strength + AMRAP 20", day.title)
+        assertEquals("5 × 5 · 70–80% + AMRAP 20", day.title)
         val built = builder.build(day)
         assertEquals(true, built.canCreate, built.report.blocking.toString())
         assertEquals(listOf(WorkoutSection.WEIGHTS, WorkoutSection.METCON), built.workout.parts.map(WorkoutSection::of))
@@ -222,11 +223,22 @@ class ManualSectionsTest {
     }
 
     @Test
-    fun fiveByThreeIsFiveHeavyTriples() {
-        val part = ManualTemplates.apply(blank(), template("5 × 3 heavy"), ids).parts.single()
-        assertEquals(ManualFormat.STRENGTH, part.format)
-        assertEquals(List(5) { 3 }, part.sets.map { it.reps })
-        assertEquals(List(5) { 85.0 }, part.sets.map { it.percent })
-        assertTrue(builder.build(blank().copy(parts = listOf(part))).canCreate)
+    fun strengthQuickStartsArePercentOfGoalSessions() {
+        fun percents(name: String) = ManualTemplates.apply(blank(), template(name), ids).parts.single()
+        val fiveByFive = percents("5 × 5 · 70–80%")
+        assertEquals(StrengthLoadMode.ABSOLUTE, fiveByFive.scheme.loadMode)
+        assertEquals(null, fiveByFive.scheme.goalWeight)
+        assertEquals(listOf(70.0, 72.5, 75.0, 77.5, 80.0), fiveByFive.sets.map { it.ofGoal })
+        assertEquals(List(5) { 5 }, fiveByFive.sets.map { it.reps })
+        val fiveByThree = percents("5 × 3 · 80–85%")
+        assertEquals(listOf(80.0, 81.0, 82.5, 83.5, 85.0), fiveByThree.sets.map { it.ofGoal })
+        assertEquals(List(5) { 3 }, fiveByThree.sets.map { it.reps })
+        val threeByFive = percents("3 × 5 · 70–80%")
+        assertEquals(listOf(70.0, 75.0, 80.0), threeByFive.sets.map { it.ofGoal })
+        assertEquals(List(3) { 5 }, threeByFive.sets.map { it.reps })
+        // Entering the goal fills every weight, rounded to the Settings increment.
+        val filled = ManualForms.withGoal(fiveByThree, 140.0, 2.5)
+        assertEquals(listOf(112.5, 112.5, 115.0, 117.5, 120.0), filled.sets.map { it.load })
+        assertTrue(builder.build(blank().copy(parts = listOf(filled))).canCreate)
     }
 }

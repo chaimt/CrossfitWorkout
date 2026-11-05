@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Optional: sync/parse-ready notifications (REQ-AX16); the app works without it. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- REQ-AP07: install app updates downloaded from GitHub Releases (the user confirms each). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- WorkManager merges WAKE_LOCK, ACCESS_NETWORK_STATE and RECEIVE_BOOT_COMPLETED (normal,
          install-time) for queued parses (REQ-AX16). We never run foreground work, so drop this one. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
@@ -55,6 +57,11 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+
+        <!-- REQ-AP07: result of an in-app update install session. -->
+        <receiver
+            android:name=".update.InstallResultReceiver"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
