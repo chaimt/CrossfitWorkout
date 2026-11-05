@@ -72,6 +72,17 @@ class ManualSectionsTest {
     }
 
     @Test
+    fun aWeightsPartIsAlwaysStrengthWithNoLabelOrName() {
+        assertEquals(listOf(PartKind.STRENGTH), kindsFor(WorkoutSection.WEIGHTS))
+        val named = ManualForms.newPart(ids, 0, ManualFormat.AMRAP).copy(label = "B", name = "Cindy", kind = PartKind.WARMUP)
+        listOf(ManualFormat.STRENGTH, ManualFormat.BUILD_TO_MAX).forEach { f ->
+            val weights = ManualForms.withFormat(named, f, ids)
+            assertEquals(PartKind.STRENGTH, weights.kind, f.toString())
+            assertEquals("" to "", weights.label to weights.name, f.toString())
+        }
+    }
+
+    @Test
     fun canonicalPartsMapToSections() {
         assertEquals(WorkoutSection.WEIGHTS, WorkoutSection.of(Part(id = "p", kind = PartKind.METCON, format = StrengthSets())))
         assertEquals(WorkoutSection.METCON, WorkoutSection.of(Part(id = "p", format = Amrap(durationSec = 600))))

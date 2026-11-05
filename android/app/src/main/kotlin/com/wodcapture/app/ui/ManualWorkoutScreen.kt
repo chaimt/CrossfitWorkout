@@ -191,7 +191,9 @@ private fun PartCard(
             IconButton(onClick = onRemove) { Icon(Icons.Filled.Delete, contentDescription = "Remove part $label") }
         }
         FormatChips(section, part.format) { f -> onChange { ManualForms.withFormat(it, f, ids) } }
-        Grid {
+        // Weights parts are always strength and need no label or name (owner request 2026-11-05):
+        // the lift says what it is and the builder letters the part.
+        if (section != WorkoutSection.WEIGHTS) Grid {
             Field("Label", part.label, Modifier.weight(1f), placeholder = label.ifBlank { "auto" }) { v -> onChange { it.copy(label = v) } }
             Field("Name (optional)", part.name, Modifier.weight(1f), placeholder = "e.g. Fran") { v -> onChange { it.copy(name = v) } }
             Choice("Type", part.kind, kindsFor(section), ::kindName, Modifier.weight(1f)) { k -> onChange { it.copy(kind = k) } }

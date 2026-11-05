@@ -61,11 +61,12 @@ data class LiftGroup(val title: String, val lifts: List<Movement>)
 val MANUAL_SECTIONS: List<WorkoutSection> = listOf(WorkoutSection.WEIGHTS, WorkoutSection.METCON)
 
 /**
- * Part kinds offered in each form section (the section itself comes from the format). Warm-up,
- * skill and cool-down pieces are timed like a metcon, so they live in the metcon section.
+ * Part kinds offered in each form section (the section itself comes from the format). A weights
+ * part is always strength (owner request 2026-11-05: no accessory choice). Warm-up, skill and
+ * cool-down pieces are timed like a metcon, so they live in the metcon section.
  */
 fun kindsFor(section: WorkoutSection): List<PartKind> = when (section) {
-    WorkoutSection.WEIGHTS -> listOf(PartKind.STRENGTH, PartKind.ACCESSORY)
+    WorkoutSection.WEIGHTS -> listOf(PartKind.STRENGTH)
     WorkoutSection.METCON, WorkoutSection.OTHER ->
         listOf(PartKind.METCON, PartKind.WARMUP, PartKind.SKILL, PartKind.COOLDOWN, PartKind.OTHER)
 }
@@ -255,9 +256,10 @@ object ManualForms {
         part.sets.lastOrNull()?.copy(id = ids.newId()) ?: ManualSetForm(id = ids.newId())
 
     /**
-     * Switches [part] to [format]: kind follows the format's section (weights → strength unless
-     * already accessory; metcon → metcon unless warm-up/skill/…), and a strength part gets its
-     * lift and a first set so the form never shows an empty card.
+     * Switches [part] to [format]: kind follows the format's section (weights → always strength;
+     * metcon → metcon unless warm-up/skill/…), and a strength part gets its lift and a first set so
+     * the form never shows an empty card. Weights parts have no label or name of their own (owner
+     * request 2026-11-05), so moving a part there clears them rather than keeping hidden values.
      */
     fun withFormat(part: ManualPartForm, format: ManualFormat, ids: IdSource): ManualPartForm {
         val kind = when {
@@ -271,7 +273,16 @@ object ManualForms {
         val movements = if (format != ManualFormat.STRENGTH && format != ManualFormat.CUSTOM && part.movements.isEmpty()) {
             listOf(newMovement(ids))
         } else part.movements
-        return part.copy(format = format, kind = kind, lift = lift, sets = sets, movements = movements)
+        val weights = format.section == WorkoutSection.WEIGHTS
+        return part.copy(
+            format = format,
+            kind = kind,
+            label = if (weights) "" else part.label,
+            name = if (weights) "" else part.name,
+            lift = lift,
+            sets = sets,
+            movements = movements,
+        )
     }
 
     /** Whether movement rows of [part] take their reps from a part rep scheme. */
