@@ -124,14 +124,12 @@ data class ManualPartForm(
 )
 
 /**
- * Load type and rest of a strength session. They are set once, above the sets, and every set
- * follows them, so a set needs only its weight and reps (owner request 2026-11-05). The number of
- * sets is the number of set rows.
+ * Load type of a strength session, set once above the sets; every set follows it, so a set needs
+ * only its weight and reps (owner request 2026-11-05). The number of sets is the number of set
+ * rows, and rest between sets is not asked for: the compiler uses Settings → Default strength rest.
  */
 data class StrengthScheme(
     val loadMode: StrengthLoadMode = StrengthLoadMode.ABSOLUTE,
-    /** Rest after each set; the compiler drops it after the last set. */
-    val restText: String = "2:00",
 )
 
 /** A movement row of a metcon part (REQ-DM05). */

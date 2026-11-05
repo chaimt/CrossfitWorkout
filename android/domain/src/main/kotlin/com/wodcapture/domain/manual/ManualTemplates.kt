@@ -103,10 +103,10 @@ object ManualTemplates {
         ),
     )
 
-    /** Back squat 5 × 5 at 75 % of 1RM, 2:00 rest. */
+    /** Back squat 5 × 5 at 75 % of 1RM; rest between sets is the Settings default. */
     fun strength5x5(ids: IdSource) = part(ids, ManualFormat.STRENGTH).copy(
         kind = PartKind.STRENGTH,
-        scheme = StrengthScheme(loadMode = StrengthLoadMode.PERCENT_1RM, restText = "2:00"),
+        scheme = StrengthScheme(loadMode = StrengthLoadMode.PERCENT_1RM),
         lift = ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell"),
         sets = List(5) { ManualSetForm(id = ids.newId(), percent = 75.0, reps = 5) },
     )

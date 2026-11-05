@@ -264,7 +264,8 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
 
         /**
          * One lift per session: a single item whose sets are the set rows, each with its own
-         * weight and reps; load type and rest come from the session.
+         * weight and reps; the load type comes from the session. Sets carry no rest, so the
+         * compiler applies the profile's default strength rest (Settings).
          */
         private fun strengthBody(): List<BodyNode> {
             val lift = form.lift ?: ManualStrengthForm(id = form.id + "-lift")
@@ -273,17 +274,16 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             if (form.sets.size > WatchLimits.SETS) {
                 issues += blocking("invalid_bounds", "At most ${WatchLimits.SETS} sets", form.id, path = "sets")
             }
-            val rest = time(form.scheme.restText, "Rest", "scheme.restText")
-            val sets = form.sets.take(WatchLimits.SETS).map { strengthSet(it, rest) }
+            val sets = form.sets.take(WatchLimits.SETS).map { strengthSet(it) }
             return listOf(Item(id = lift.id, movementId = lift.movementId, name = lift.name.trim(), implement = lift.implement, sets = sets))
         }
 
-        private fun strengthSet(s: ManualSetForm, rest: Int?): StrengthSet {
+        private fun strengthSet(s: ManualSetForm): StrengthSet {
             val reps = s.reps?.takeIf { it > 0 } ?: run {
                 issues += blocking("missing_value", "Enter the reps of each set", form.id, s.id, "reps")
                 null
             }
-            return StrengthSet(s.id, RepTarget(reps), load = strengthLoad(s), restSec = rest)
+            return StrengthSet(s.id, RepTarget(reps), load = strengthLoad(s))
         }
 
         private fun strengthLoad(s: ManualSetForm): LoadSpec? = when (form.scheme.loadMode) {

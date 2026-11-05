@@ -104,11 +104,10 @@ class ManualSectionsTest {
     }
 
     /** A strength session on [liftId] with [sets] (weight, reps) rows. */
-    private fun session(liftId: String, vararg sets: Pair<Double?, Int?>, rest: String = "2:00"): ManualPartForm =
+    private fun session(liftId: String, vararg sets: Pair<Double?, Int?>): ManualPartForm =
         ManualForms.newPart(ids, 0, ManualFormat.STRENGTH).let { p ->
             p.copy(
                 lift = ManualForms.pick(p.lift!!, TestSupport.catalog.byId(liftId)!!),
-                scheme = StrengthScheme(restText = rest),
                 sets = sets.map { (w, r) -> ManualSetForm(id = ids.newId(), load = w, reps = r) },
             )
         }
@@ -127,14 +126,15 @@ class ManualSectionsTest {
 
     @Test
     fun aSessionIsOneLiftAndEachSetIsWeightAndReps() {
-        val part = session("back_squat", 60.0 to 5, 80.0 to 5, 100.0 to 3, rest = "1:30")
+        val part = session("back_squat", 60.0 to 5, 80.0 to 5, 100.0 to 3)
         val built = builder.build(blank().copy(parts = listOf(part)))
         assertTrue(built.canCreate, built.report.blocking.toString())
         val lift = built.workout.parts.single().body.single() as Item
         assertEquals("back_squat", lift.movementId)
         assertEquals(listOf(5, 5, 3), lift.sets.map { it.reps.value })
         assertEquals(listOf(60.0, 80.0, 100.0), lift.sets.map { (it.load as AbsoluteLoad).mass.value })
-        assertTrue(lift.sets.all { it.restSec == 90 })
+        // No rest per session or set: the compiler applies Settings → Default strength rest.
+        assertTrue(lift.sets.all { it.restSec == null })
         assertEquals(part.sets.map { it.id }, lift.sets.map { it.id })
     }
 

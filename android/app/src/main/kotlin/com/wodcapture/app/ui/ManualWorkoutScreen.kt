@@ -441,13 +441,14 @@ private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, unit: M
     }
 }
 
-/** Load type and rest, once for the whole session; every set follows them. */
+/**
+ * Load type, once for the whole session; every set follows it. There is no rest field (owner
+ * request 2026-11-05): rest between sets is Settings → Default strength rest.
+ */
 @Composable
 private fun SchemeFields(scheme: StrengthScheme, onChange: ((StrengthScheme) -> StrengthScheme) -> Unit) {
     Grid {
-        val cell = Modifier
-        Choice("Load type", scheme.loadMode, StrengthLoadMode.entries, ::loadModeName, cell) { mode -> onChange { it.copy(loadMode = mode) } }
-        Field("Rest", scheme.restText, cell, placeholder = "2:00") { v -> onChange { it.copy(restText = v) } }
+        Choice("Load type", scheme.loadMode, StrengthLoadMode.entries, ::loadModeName, Modifier) { mode -> onChange { it.copy(loadMode = mode) } }
     }
 }
 
