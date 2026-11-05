@@ -72,6 +72,7 @@ object Routes {
     const val REVIEW = "review/{id}"
     const val RESULTS = "results"
     const val RESULTS_ROUTE = "results?log={log}"
+    const val TOP_LIFTS = "lifts"
     const val MANUAL = "manual"
     const val DEVICE = "device"
     const val SETTINGS = "settings"
@@ -121,6 +122,7 @@ fun AppRoot(vm: AppViewModel) {
             ) { entry ->
                 ResultsScreen(vm, back = { nav.popBackStack() }, logFor = entry.arguments?.getString("log"))
             }
+            composable(Routes.TOP_LIFTS) { TopLiftsScreen(vm, back = { nav.popBackStack() }, open = { nav.navigate(Routes.review(it)) }) }
             composable(Routes.DEVICE) { DeviceScreen(vm, back = { nav.popBackStack() }) }
             composable(Routes.SETTINGS) { SettingsScreen(vm, back = { nav.popBackStack() }) }
         }

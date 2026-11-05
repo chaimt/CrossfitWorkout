@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.wodcapture.domain.model.AthleteProfile
+import com.wodcapture.domain.model.ConversionMode
 import com.wodcapture.domain.parser.CloudParserConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -49,8 +50,13 @@ class SettingsStore(private val context: Context) {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
-        p[key]?.let { runCatching { json.decodeFromString(AppSettings.serializer(), it) }.getOrNull() } ?: AppSettings()
+        (p[key]?.let { runCatching { json.decodeFromString(AppSettings.serializer(), it) }.getOrNull() } ?: AppSettings()).migrated()
     }
+
+    /** The Conversion choice left Settings (REQ-AG01); an old "arithmetic" pick must not linger unseen. */
+    private fun AppSettings.migrated(): AppSettings =
+        if (profile.conversionMode == ConversionMode.EQUIVALENTS) this
+        else copy(profile = profile.copy(conversionMode = ConversionMode.EQUIVALENTS))
 
     suspend fun current(): AppSettings = settings.first()
 

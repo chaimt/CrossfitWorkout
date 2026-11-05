@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import com.wodcapture.app.ciq.SdkState
 import com.wodcapture.domain.DomainJson
 import com.wodcapture.domain.load.MassMath
-import com.wodcapture.domain.model.ConversionMode
 import com.wodcapture.domain.model.Mass
 import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.PartScore
@@ -229,12 +228,15 @@ fun SettingsScreen(vm: AppViewModel, back: () -> Unit) {
             Choice("Weight unit", p.displayUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }) { u -> profile { it.copy(displayUnit = u) } }
             Choice("Board unit", p.boardUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }) { u -> profile { it.copy(boardUnit = u) } }
             Choice("Split loads", p.sex, SexSelection.entries, { it.name.lowercase() }) { x -> profile { it.copy(sex = x) } }
-            Choice("Conversion", p.conversionMode, ConversionMode.entries, { it.name.lowercase() }) { m -> profile { it.copy(conversionMode = m) } }
         }
         DoubleField("Bodyweight (${p.displayUnit.wire})", p.bodyweight?.value) { v -> profile { it.copy(bodyweight = v?.let { x -> Mass(x, it.displayUnit) }) } }
         DoubleField("Bar weight (kg)", p.selectedBar?.weight?.value) { v -> v?.let { w -> profile { pr -> pr.copy(bars = pr.bars.map { b -> if (b.id == pr.selectedBarId) b.copy(weight = Mass(w, MassUnit.KG)) else b }) } } }
-        DoubleField("Smallest total increment kg", p.barIncrementKg) { v -> v?.let { x -> profile { it.copy(barIncrementKg = x) } } }
-        DoubleField("Smallest total increment lb", p.barIncrementLb) { v -> v?.let { x -> profile { it.copy(barIncrementLb = x) } } }
+        // Only the increment of the chosen weight unit is shown; the other keeps its value (owner request 2026-11-06).
+        if (p.displayUnit == MassUnit.LB) {
+            DoubleField("Smallest total increment (lb)", p.barIncrementLb) { v -> v?.let { x -> profile { it.copy(barIncrementLb = x) } } }
+        } else {
+            DoubleField("Smallest total increment (kg)", p.barIncrementKg) { v -> v?.let { x -> profile { it.copy(barIncrementKg = x) } } }
+        }
         TimeField("Default strength rest", p.defaultRestSec) { v -> v?.let { x -> profile { it.copy(defaultRestSec = x) } } }
         SectionTitle("Rep maxes (measured, never guessed)")
         p.repMaxes.forEach { rm ->
