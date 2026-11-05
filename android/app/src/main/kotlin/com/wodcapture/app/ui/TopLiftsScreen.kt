@@ -31,7 +31,7 @@ fun TopLiftsScreen(vm: AppViewModel, back: () -> Unit, open: (String) -> Unit) {
         Bar("Top lifts", back)
         if (lifts.isEmpty()) {
             Hint(
-                "No lifts yet. Weights sets you finish on the watch, or a load you log as a manual result, show up here.",
+                "No lifts yet. The weights of the strength sets in your saved workouts show up here.",
                 Modifier.padding(horizontal = Gutter),
             )
         }

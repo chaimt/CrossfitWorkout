@@ -1,12 +1,14 @@
 package com.wodcapture.domain.scoring
 
 import com.wodcapture.domain.TestSupport
+import com.wodcapture.domain.model.AbsoluteLoad
 import com.wodcapture.domain.model.BuildToMax
 import com.wodcapture.domain.model.Item
 import com.wodcapture.domain.model.Mass
 import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.PartScore
+import com.wodcapture.domain.model.PercentOfMax
 import com.wodcapture.domain.model.RepTarget
 import com.wodcapture.domain.model.ResultSource
 import com.wodcapture.domain.model.ResultStatus
@@ -24,7 +26,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** REQ-AL07: heaviest completed set per lift, with the day it was done. */
+/** REQ-AL07: heaviest weight per lift across the workouts and their results, with its day. */
 class TopLiftsTest {
     private val day1 = 1_793_000_000L // 2026-10-26 UTC
     private val day2 = day1 + 86_400
@@ -49,7 +51,17 @@ class TopLiftsTest {
         )
 
     private fun top(results: List<WorkoutResult>, vararg w: Workout, unit: MassUnit = MassUnit.KG) =
-        TopLifts.compute(results, w.associateBy { it.id }, TestSupport.catalog, unit, ZoneOffset.UTC)
+        TopLifts.compute(w.toList(), results, TestSupport.catalog, unit, ZoneOffset.UTC)
+
+    private fun planned(id: String, movementId: String, name: String, date: String?, vararg kg: Double, createdAt: Long? = null) = Workout(
+        id = id, title = "W $id", date = date, createdAt = createdAt,
+        parts = listOf(
+            Part(
+                id = "p", format = StrengthSets(),
+                body = listOf(Item("i", movementId, name, sets = kg.mapIndexed { n, v -> StrengthSet("$id-s$n", reps = RepTarget(3), load = AbsoluteLoad(Mass(v, MassUnit.KG))) })),
+            ),
+        ),
+    )
 
     @Test
     fun heaviestCompletedSetWinsAcrossWorkouts() {
@@ -113,5 +125,39 @@ class TopLiftsTest {
         val a = strength("a", "back_squat", "Back squat", 1)
         val lift = top(listOf(result("r", a, day1, listOf(set("a-s1", 100.0, null, target = null)))), a).single()
         assertNull(lift.reps)
+    }
+
+    @Test
+    fun workoutWeightsCountWithoutAnyResult() {
+        val a = planned("a", "back_squat", "Back squat", "2026-10-20", 100.0, 120.0, 110.0)
+        val b = planned("b", "back_squat", "Back squat", "2026-10-22", 115.0)
+        val lift = top(emptyList(), a, b).single()
+        assertEquals(Mass(120.0, MassUnit.KG), lift.load)
+        assertEquals(3, lift.reps)
+        assertEquals(LocalDate.of(2026, 10, 20), lift.date)
+        assertEquals("a", lift.workoutId)
+    }
+
+    @Test
+    fun unscheduledWorkoutIsDatedByItsCreationDay() {
+        val a = planned("a", "deadlift", "Deadlift", null, 140.0, createdAt = day1)
+        assertEquals(LocalDate.of(2026, 10, 26), top(emptyList(), a).single().date)
+    }
+
+    @Test
+    fun loggedWeightHeavierThanPlannedWins() {
+        val a = planned("a", "back_squat", "Back squat", "2026-10-20", 100.0)
+        val logged = result("r", a, day2, listOf(set("a-s0", 105.0, 3, target = 3)))
+        val lift = top(listOf(logged), a).single()
+        assertEquals(Mass(105.0, MassUnit.KG), lift.load)
+        assertEquals(LocalDate.of(2026, 10, 27), lift.date)
+    }
+
+    @Test
+    fun percentOfMaxSetsHaveNoWeightToShow() {
+        val w = planned("a", "back_squat", "Back squat", "2026-10-20", 100.0).let { p ->
+            p.copy(parts = p.parts.map { part -> part.copy(body = listOf(Item("i", "back_squat", "Back squat", sets = listOf(StrengthSet("s", load = PercentOfMax(80.0)))))) })
+        }
+        assertTrue(top(emptyList(), w).isEmpty())
     }
 }
