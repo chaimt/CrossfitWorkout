@@ -19,6 +19,7 @@ import com.wodcapture.domain.manual.ManualWorkoutBuilder
 import com.wodcapture.domain.manual.ManualWorkoutForm
 import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.ParseResult
+import com.wodcapture.domain.model.RepMax
 import com.wodcapture.domain.model.SexSelection
 import com.wodcapture.domain.model.Workout
 import com.wodcapture.domain.model.WorkoutResult
@@ -70,13 +71,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         .map { l -> l.mapNotNull { runCatching { DomainJson.lenient.decodeFromString(WorkoutResult.serializer(), it.resultJson) }.getOrNull() } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    /** Heaviest weight per lift across the saved workouts and their results, in the display unit (REQ-AL07). */
+    /** Heaviest weight per lift across the saved workouts, their results and the manual rep maxes, in the display unit (REQ-AL07). */
     val topLifts: StateFlow<List<TopLift>> = combine(results, library, settings) { r, l, s ->
         // Drafts and unreviewed parses are not the owner's workouts yet (REQ-AE01).
         val workouts = l.filter { it.status == "saved" }.mapNotNull { e ->
             runCatching { DomainJson.decodeWorkout(e.workoutJson) }.getOrNull()?.let { it.copy(createdAt = it.createdAt ?: e.createdAt) }
         }
-        TopLifts.compute(workouts, r, c.catalog, s.profile.displayUnit)
+        TopLifts.compute(workouts, r, c.catalog, s.profile.displayUnit, repMaxes = s.profile.repMaxes)
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val outbox = c.outboxState
     val devices = c.ciq.devices
@@ -250,6 +251,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun deleteResult(id: String) = viewModelScope.launch(Dispatchers.IO) { c.workouts.deleteResult(id) }
 
     fun updateSettings(f: (AppSettings) -> AppSettings) = viewModelScope.launch { c.settings.update(f) }
+
+    /** A lift entered by hand on the 1RM screen; stored as a profile rep max so % 1RM loads use it too (REQ-AL07, DM10). */
+    fun addRepMax(rm: RepMax) = updateRepMaxes { TopLifts.withEntry(it, rm) }.also { message.value = "Lift saved" }
+    fun removeRepMax(lift: TopLift) = updateRepMaxes { TopLifts.withoutEntry(it, lift) }
+
+    private fun updateRepMaxes(f: (List<RepMax>) -> List<RepMax>) = updateSettings {
+        it.copy(profile = it.profile.copy(repMaxes = f(it.profile.repMaxes)), profileRevision = it.profileRevision + 1)
+    }
 
     fun saveApiKey(key: String) = viewModelScope.launch(Dispatchers.IO) { c.secrets.saveApiKey(key.trim()); message.value = "API key stored encrypted" }
     fun hasApiKey() = c.secrets.hasApiKey()
