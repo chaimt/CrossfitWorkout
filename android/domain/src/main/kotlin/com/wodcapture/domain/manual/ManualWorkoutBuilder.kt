@@ -21,6 +21,7 @@ import com.wodcapture.domain.model.Item
 import com.wodcapture.domain.model.Length
 import com.wodcapture.domain.model.LoadSpec
 import com.wodcapture.domain.model.Mass
+import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.MaxEffort
 import com.wodcapture.domain.model.Measure
 import com.wodcapture.domain.model.MeasureKind
@@ -73,7 +74,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
     fun build(form: ManualWorkoutForm, nowSec: Long? = null): ManualBuild {
         val issues = mutableListOf<ValidationIssue>()
         checkSchedule(form, issues)
-        val parts = form.parts.mapIndexed { i, p -> PartBuilder(p, ManualForms.defaultLabel(i, form.parts.size), issues).build() }
+        val parts = form.parts.mapIndexed { i, p -> PartBuilder(p, ManualForms.defaultLabel(i, form.parts.size), form.loadUnit, issues).build() }
         val workout = Workout(
             id = ids.newId(),
             title = form.title.trim().ifBlank { defaultTitle(parts) },
@@ -84,7 +85,13 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             createdAt = nowSec,
             updatedAt = nowSec,
         )
+        // A lift's reps are one form field, so one "enter the reps" finding replaces the
+        // validator's per-set "needs a rep target" for that lift.
+        val liftsMissingReps = issues.filter { it.path == "reps" }.mapNotNull { it.nodeId }.toSet()
+        val setsMissingReps = parts.flatMap { it.body }.filterIsInstance<Item>().filter { it.id in liftsMissingReps }
+            .flatMap { lift -> lift.sets.map { it.id } }.toSet()
         val validation = WorkoutValidator.validate(workout).issues
+            .filterNot { it.nodeId in setsMissingReps && it.path?.endsWith(".reps") == true }
         return ManualBuild(workout, ValidationReport(issues + validation))
     }
 
@@ -106,6 +113,8 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
     private inner class PartBuilder(
         private val form: ManualPartForm,
         private val fallbackLabel: String,
+        /** The form-wide weight unit (Settings → Units); no entry carries its own. */
+        private val unit: MassUnit,
         private val issues: MutableList<ValidationIssue>,
     ) {
         fun build(): Part {
@@ -259,8 +268,8 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
         private fun load(m: ManualMovementForm): LoadSpec? {
             val male = m.load ?: return null
             val female = m.loadFemale.takeIf { m.maleFemale }
-            return if (female != null) SplitLoad(Mass(male, m.loadUnit), Mass(female, m.loadUnit), labeled = true)
-            else AbsoluteLoad(Mass(male, m.loadUnit))
+            return if (female != null) SplitLoad(Mass(male, unit), Mass(female, unit), labeled = true)
+            else AbsoluteLoad(Mass(male, unit))
         }
 
         private fun height(m: ManualMovementForm): SplitLength? {
@@ -283,13 +292,17 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
         private fun strengthItem(s: ManualStrengthForm, count: Int, rest: Int?): Item {
             requireListedLift(s.id, s.movementId)
             val load = strengthLoad(s)
-            val sets = (0 until count).map { StrengthSet(ids.newId(), RepTarget(form.scheme.reps), load = load, restSec = rest) }
+            val reps = s.reps?.takeIf { it > 0 } ?: run {
+                issues += blocking("missing_value", "Enter the reps of this lift", form.id, s.id, "reps")
+                null
+            }
+            val sets = (0 until count).map { StrengthSet(ids.newId(), RepTarget(reps), load = load, restSec = rest) }
             return Item(id = s.id, movementId = s.movementId, name = s.name.trim(), implement = s.implement, sets = sets)
         }
 
         private fun strengthLoad(s: ManualStrengthForm): LoadSpec? = when (form.scheme.loadMode) {
             StrengthLoadMode.NONE -> null
-            StrengthLoadMode.ABSOLUTE -> s.load?.let { AbsoluteLoad(Mass(it, form.scheme.loadUnit)) } ?: run {
+            StrengthLoadMode.ABSOLUTE -> s.load?.let { AbsoluteLoad(Mass(it, unit)) } ?: run {
                 issues += blocking("missing_value", "Enter a load or choose no load", form.id, s.id, "load")
                 null
             }

@@ -38,8 +38,8 @@ class ManualWorkoutBuilderTest {
     private val identity = PlanIdentity("c0000000-0000-4000-8000-000000000001", 1)
     private val options = CompileOptions(defaultDate = "2026-11-03", defaultTimeZone = "Asia/Jerusalem")
 
-    private fun form(vararg parts: ManualPartForm, title: String = "") =
-        ManualWorkoutForm(title = title, date = "2026-11-04", timeZone = "Asia/Jerusalem", parts = parts.toList())
+    private fun form(vararg parts: ManualPartForm, title: String = "", unit: MassUnit = MassUnit.KG) =
+        ManualWorkoutForm(title = title, date = "2026-11-04", timeZone = "Asia/Jerusalem", loadUnit = unit, parts = parts.toList())
 
     private fun compile(form: ManualWorkoutForm): WatchPlan {
         val built = builder.build(form, nowSec = 1)
@@ -59,7 +59,8 @@ class ManualWorkoutBuilderTest {
     @Test
     fun manualFranCompilesToTheH1GoldenPart() {
         val fran = ManualTemplates.forTime21159(ids).copy(label = "WOD", name = "Fran")
-        val plan = compile(form(fran, title = "Fran"))
+        // Template loads are written in lb (95/65), as in the golden plan.
+        val plan = compile(form(fran, title = "Fran", unit = MassUnit.LB))
         val golden = WireJson.decodeFromString(WatchPlan.serializer(), File(TestSupport.goldenDir, "H1/plan.json").readText())
         assertEquals(normalized(golden.p.single()), normalized(plan.p.single()))
     }
@@ -97,7 +98,7 @@ class ManualWorkoutBuilderTest {
     fun fiveByFiveBackSquatRestsOnAllButTheLastSet() {
         val part = ManualTemplates.strength5x5(ids).let { s ->
             s.copy(
-                scheme = s.scheme.copy(loadMode = StrengthLoadMode.ABSOLUTE, loadUnit = MassUnit.KG),
+                scheme = s.scheme.copy(loadMode = StrengthLoadMode.ABSOLUTE),
                 strength = listOf(s.strength[0].copy(load = 100.0)),
             )
         }

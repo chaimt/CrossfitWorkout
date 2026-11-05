@@ -112,7 +112,7 @@ fun ManualWorkoutScreen(vm: AppViewModel, onCreated: (String) -> Unit, back: () 
                 }
                 items(parts, key = { it.id }) { part ->
                     PartCard(
-                        vm.catalog, section, ManualForms.effectiveLabel(form, part), part, ids,
+                        vm.catalog, section, ManualForms.effectiveLabel(form, part), part, form.loadUnit, ids,
                         build.report.issues.filter { it.partId == part.id },
                         onChange = { f -> edit { ManualForms.updatePart(it, part.id, f) } },
                         onRemove = { edit { ManualForms.removePart(it, part.id) } },
@@ -174,6 +174,7 @@ private fun PartCard(
     section: WorkoutSection,
     label: String,
     part: ManualPartForm,
+    unit: MassUnit,
     ids: IdSource,
     issues: List<ValidationIssue>,
     onChange: PartEdit,
@@ -196,8 +197,8 @@ private fun PartCard(
         }
         FormatFields(part, onChange)
         when (part.format) {
-            ManualFormat.STRENGTH -> StrengthRows(catalog, part, ids, onChange)
-            else -> MovementRows(catalog, part, ids, onChange)
+            ManualFormat.STRENGTH -> StrengthRows(catalog, part, unit, ids, onChange)
+            else -> MovementRows(catalog, part, unit, ids, onChange)
         }
         Issues(issues)
     }
@@ -300,7 +301,7 @@ private fun RowBox(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun MovementRows(catalog: MovementCatalog, part: ManualPartForm, ids: IdSource, onChange: PartEdit) {
+private fun MovementRows(catalog: MovementCatalog, part: ManualPartForm, unit: MassUnit, ids: IdSource, onChange: PartEdit) {
     fun editRow(id: String, f: (ManualMovementForm) -> ManualMovementForm) =
         onChange { p -> p.copy(movements = p.movements.map { if (it.id == id) f(it) else it }) }
     val single = part.format == ManualFormat.BUILD_TO_MAX
@@ -314,7 +315,7 @@ private fun MovementRows(catalog: MovementCatalog, part: ManualPartForm, ids: Id
     )
     part.movements.forEach { row ->
         MovementRow(
-            catalog, row, schemePart = ManualForms.usesScheme(part), nameOnly = single,
+            catalog, row, unit, schemePart = ManualForms.usesScheme(part), nameOnly = single,
             onChange = { f -> editRow(row.id, f) },
             onRemove = { onChange { p -> p.copy(movements = p.movements.filter { it.id != row.id }) } },
         )
@@ -332,6 +333,7 @@ private fun MovementRows(catalog: MovementCatalog, part: ManualPartForm, ids: Id
 private fun MovementRow(
     catalog: MovementCatalog,
     row: ManualMovementForm,
+    unit: MassUnit,
     schemePart: Boolean,
     nameOnly: Boolean,
     onChange: ((ManualMovementForm) -> ManualMovementForm) -> Unit,
@@ -346,7 +348,7 @@ private fun MovementRow(
             MovementName(catalog, row.name, row.movementId, onName = { v ->
                 onChange { it.copy(name = v, movementId = it.movementId.takeIf { id -> catalog.byId(id)?.name == v }) }
             }, onPick = { m -> onChange { ManualForms.pick(it, m, schemePart) } }, onRemove = onRemove)
-            MovementDetails(catalog.byId(row.movementId), row, onChange)
+            MovementDetails(catalog.byId(row.movementId), row, unit, onChange)
         }
     }
 }
@@ -356,6 +358,7 @@ private fun MovementRow(
 private fun MovementDetails(
     catalogMovement: Movement?,
     row: ManualMovementForm,
+    unit: MassUnit,
     onChange: ((ManualMovementForm) -> ManualMovementForm) -> Unit,
 ) {
     Grid {
@@ -376,9 +379,9 @@ private fun MovementDetails(
     }
     if (catalogMovement?.loadable != "N") Grid {
         val cell = Modifier
-        DoubleField(if (row.maleFemale) "Load (M)" else "Load", row.load, cell) { v -> onChange { it.copy(load = v) } }
-        if (row.maleFemale) DoubleField("Load (F)", row.loadFemale, cell) { v -> onChange { it.copy(loadFemale = v) } }
-        Choice("Unit", row.loadUnit, listOf(MassUnit.KG, MassUnit.LB, MassUnit.POOD), { it.wire }, cell) { u -> onChange { it.copy(loadUnit = u) } }
+        // The unit is the app setting (Settings → Units), not chosen per movement.
+        DoubleField(if (row.maleFemale) "Load (M, ${unit.wire})" else "Load (${unit.wire})", row.load, cell) { v -> onChange { it.copy(load = v) } }
+        if (row.maleFemale) DoubleField("Load (F, ${unit.wire})", row.loadFemale, cell) { v -> onChange { it.copy(loadFemale = v) } }
         if (row.load != null) Choice("Implements", row.implementCount, listOf(1, 2), { if (it == 1) "Single" else "Double" }, cell) { n ->
             onChange { it.copy(implementCount = n) }
         }
@@ -437,13 +440,13 @@ private fun LiftRow(catalog: MovementCatalog, name: String, movementId: String?,
 }
 
 @Composable
-private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, ids: IdSource, onChange: PartEdit) {
+private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, unit: MassUnit, ids: IdSource, onChange: PartEdit) {
     fun editRow(id: String, f: (ManualStrengthForm) -> ManualStrengthForm) =
         onChange { p -> p.copy(strength = p.strength.map { if (it.id == id) f(it) else it }) }
     SchemeFields(part.scheme) { f -> onChange { it.copy(scheme = f(it.scheme)) } }
     Text("Lifts", style = MaterialTheme.typography.titleSmall)
     part.strength.forEach { row ->
-        StrengthRow(catalog, part.scheme, row, onChange = { f -> editRow(row.id, f) }, onRemove = {
+        StrengthRow(catalog, part.scheme, unit, row, onChange = { f -> editRow(row.id, f) }, onRemove = {
             onChange { p -> p.copy(strength = p.strength.filter { it.id != row.id }) }
         })
     }
@@ -454,43 +457,40 @@ private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, ids: Id
 }
 
 /**
- * Sets × reps, load type and rest for the whole part, before the lifts (owner request
- * 2026-11-05): every lift, including one added later, follows it.
+ * Sets, load type and rest for the whole session, before the lifts (owner request 2026-11-05):
+ * every lift, including one added later, follows it; a lift carries only its weight and reps.
  */
 @Composable
 private fun SchemeFields(scheme: StrengthScheme, onChange: ((StrengthScheme) -> StrengthScheme) -> Unit) {
-    Text("Sets & reps (every lift)", style = MaterialTheme.typography.titleSmall)
+    Text("Session (every lift)", style = MaterialTheme.typography.titleSmall)
     Grid {
         val cell = Modifier
         IntField("Sets", scheme.sets, cell) { v -> onChange { it.copy(sets = v) } }
-        IntField("Reps", scheme.reps, cell) { v -> onChange { it.copy(reps = v) } }
         Choice("Load type", scheme.loadMode, StrengthLoadMode.entries, ::loadModeName, cell) { mode -> onChange { it.copy(loadMode = mode) } }
-        if (scheme.loadMode == StrengthLoadMode.ABSOLUTE) {
-            Choice("Unit", scheme.loadUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }, cell) { u -> onChange { it.copy(loadUnit = u) } }
-        }
         Field("Rest", scheme.restText, cell, placeholder = "2:00") { v -> onChange { it.copy(restText = v) } }
     }
 }
 
-/** A lift of a strength part: the lift from the list and its load in the part's load type (REQ-DM06). */
+/** A lift of a strength part: the lift from the list, its weight (in the part's load type) and reps (REQ-DM06). */
 @Composable
 private fun StrengthRow(
     catalog: MovementCatalog,
     scheme: StrengthScheme,
+    unit: MassUnit,
     row: ManualStrengthForm,
     onChange: ((ManualStrengthForm) -> ManualStrengthForm) -> Unit,
     onRemove: () -> Unit,
 ) {
     RowBox {
         LiftRow(catalog, row.name, row.movementId, onRemove) { m -> onChange { ManualForms.pick(it, m) } }
-        when (scheme.loadMode) {
-            StrengthLoadMode.ABSOLUTE -> Grid {
-                DoubleField("Weight (${scheme.loadUnit.wire})", row.load, Modifier) { v -> onChange { it.copy(load = v) } }
+        Grid {
+            val cell = Modifier
+            when (scheme.loadMode) {
+                StrengthLoadMode.ABSOLUTE -> DoubleField("Weight (${unit.wire})", row.load, cell) { v -> onChange { it.copy(load = v) } }
+                StrengthLoadMode.PERCENT_1RM -> DoubleField("% of 1RM", row.percent, cell) { v -> onChange { it.copy(percent = v) } }
+                StrengthLoadMode.NONE -> Unit
             }
-            StrengthLoadMode.PERCENT_1RM -> Grid {
-                DoubleField("% of 1RM", row.percent, Modifier) { v -> onChange { it.copy(percent = v) } }
-            }
-            StrengthLoadMode.NONE -> Unit
+            IntField("Reps", row.reps, cell) { v -> onChange { it.copy(reps = v) } }
         }
     }
 }

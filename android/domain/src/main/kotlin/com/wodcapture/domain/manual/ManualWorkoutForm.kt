@@ -24,6 +24,11 @@ data class ManualWorkoutForm(
     val date: String,
     /** IANA zone of [date] (default: the phone's zone). */
     val timeZone: String,
+    /**
+     * Unit of every weight typed in the form. It is not chosen per entry: it follows the app's
+     * Settings → Units ([com.wodcapture.domain.model.Profile.displayUnit]) (owner request 2026-11-05).
+     */
+    val loadUnit: MassUnit = MassUnit.KG,
     val parts: List<ManualPartForm> = emptyList(),
 )
 
@@ -117,14 +122,13 @@ data class ManualPartForm(
 )
 
 /**
- * Sets × reps, load type and rest of a strength part. It is set once, before the lifts, and
- * every lift of the part follows it, so a new lift needs only the lift and its weight.
+ * Sets, load type and rest of a strength part. It is set once per session, before the lifts, and
+ * every lift of the part follows it, so a lift needs only its weight and reps (owner request
+ * 2026-11-05).
  */
 data class StrengthScheme(
     val sets: Int? = 5,
-    val reps: Int? = 5,
     val loadMode: StrengthLoadMode = StrengthLoadMode.ABSOLUTE,
-    val loadUnit: MassUnit = MassUnit.KG,
     /** Rest after each set; the compiler drops it after the last set. */
     val restText: String = "2:00",
 )
@@ -143,9 +147,11 @@ data class ManualMovementForm(
     val distanceUnit: DistanceUnit = DistanceUnit.M,
     /** Duration measure as m:ss. */
     val durationText: String = "",
-    /** Load (per implement). With [maleFemale] it is the male value of an explicit M/F pair. */
+    /**
+     * Load (per implement), in the form's [ManualWorkoutForm.loadUnit]. With [maleFemale] it is the
+     * male value of an explicit M/F pair.
+     */
     val load: Double? = null,
-    val loadUnit: MassUnit = MassUnit.KG,
     /** Explicit M/F prescription: the female fields below are used and the pair is labelled. */
     val maleFemale: Boolean = false,
     val amountFemale: Double? = null,
@@ -160,8 +166,9 @@ data class ManualMovementForm(
 )
 
 /**
- * A lift of a strength part (REQ-DM06): the lift and its load in the part's [StrengthScheme]
- * load type — a weight ([load], in the scheme unit) or a percentage of 1RM ([percent]).
+ * A lift of a strength part (REQ-DM06): the lift, its reps per set and its load in the part's
+ * [StrengthScheme] load type — a weight ([load], in the form's unit) or a percentage of 1RM
+ * ([percent]). Everything else (sets, load type, rest, unit) is per session.
  */
 data class ManualStrengthForm(
     /** Becomes the item ID. */
@@ -171,6 +178,8 @@ data class ManualStrengthForm(
     val implement: String? = null,
     val load: Double? = null,
     val percent: Double? = null,
+    /** Reps of every set of this lift. */
+    val reps: Int? = null,
 )
 
 /**
@@ -225,9 +234,12 @@ object ManualForms {
     fun newMovementFor(part: ManualPartForm, ids: IdSource): ManualMovementForm =
         newMovement(ids, if (usesScheme(part)) MeasureKind.REP_SCHEME else MeasureKind.REPS)
 
-    /** A blank form for [date] in [timeZone] with one For-time metcon part (REQ-AC09 defaults). */
-    fun blank(ids: IdSource, date: String, timeZone: String): ManualWorkoutForm =
-        ManualWorkoutForm(date = date, timeZone = timeZone, parts = listOf(newPart(ids, 0)))
+    /**
+     * A blank form for [date] in [timeZone] with one For-time metcon part (REQ-AC09 defaults);
+     * weights are in [loadUnit], the Settings unit.
+     */
+    fun blank(ids: IdSource, date: String, timeZone: String, loadUnit: MassUnit = MassUnit.KG): ManualWorkoutForm =
+        ManualWorkoutForm(date = date, timeZone = timeZone, loadUnit = loadUnit, parts = listOf(newPart(ids, 0)))
 
     fun newStrengthRow(ids: IdSource): ManualStrengthForm = ManualStrengthForm(id = ids.newId())
 

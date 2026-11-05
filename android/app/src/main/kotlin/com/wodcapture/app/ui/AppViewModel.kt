@@ -37,8 +37,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -178,9 +180,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val manualForm = MutableStateFlow<ManualWorkoutForm?>(null)
     private val manualBuilder by lazy { ManualWorkoutBuilder(c.ids) }
 
-    /** Starts a fresh guided form: today, in the phone's time zone, one For-time part. */
+    // Declared after manualForm: the collector starts immediately and must see it initialised.
+    init {
+        // Weights in the form follow Settings → Units, also when it changes while the form is open.
+        viewModelScope.launch {
+            settings.map { it.profile.displayUnit }.distinctUntilChanged().collect { unit ->
+                manualForm.update { f -> f?.copy(loadUnit = unit) }
+            }
+        }
+    }
+
+    /** Starts a fresh guided form: today, in the phone's time zone, one For-time part, Settings unit. */
     fun startManual() {
-        manualForm.value = ManualForms.blank(c.ids, LocalDate.now().toString(), ZoneId.systemDefault().id)
+        manualForm.value = ManualForms.blank(c.ids, LocalDate.now().toString(), ZoneId.systemDefault().id, settings.value.profile.displayUnit)
     }
 
     fun updateManual(f: (ManualWorkoutForm) -> ManualWorkoutForm) {

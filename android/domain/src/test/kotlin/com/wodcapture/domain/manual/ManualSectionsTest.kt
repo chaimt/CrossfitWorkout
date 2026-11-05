@@ -2,7 +2,10 @@ package com.wodcapture.domain.manual
 
 import com.wodcapture.domain.IdSource
 import com.wodcapture.domain.TestSupport
+import com.wodcapture.domain.model.AbsoluteLoad
 import com.wodcapture.domain.model.Amrap
+import com.wodcapture.domain.model.Mass
+import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.PartKind
 import com.wodcapture.domain.model.StrengthSets
@@ -94,25 +97,64 @@ class ManualSectionsTest {
         assertTrue("lift_not_in_list" in codes, codes.toString())
         assertFalse("missing_name" in codes, codes.toString())
         val back = TestSupport.catalog.byId("back_squat")!!
-        val picked = typed.copy(strength = typed.strength.map { ManualForms.pick(it, back).copy(load = 100.0) })
+        val picked = typed.copy(strength = typed.strength.map { ManualForms.pick(it, back).copy(load = 100.0, reps = 5) })
         assertTrue(builder.build(blank().copy(parts = listOf(picked))).canCreate)
     }
 
     @Test
-    fun everyLiftFollowsThePartScheme() {
+    fun everyLiftFollowsTheSessionSchemeWithItsOwnWeightAndReps() {
         val catalog = TestSupport.catalog
         val part = ManualForms.newPart(ids, 0, ManualFormat.STRENGTH).let { p ->
-            val first = ManualForms.pick(p.strength.single(), catalog.byId("back_squat")!!).copy(load = 100.0)
-            // A lift added later carries no sets/reps of its own: it takes the part's.
-            val added = ManualForms.pick(ManualForms.newStrengthRow(ids), catalog.byId("bench_press")!!).copy(load = 60.0)
-            p.copy(scheme = StrengthScheme(sets = 3, reps = 8, restText = "1:30"), strength = listOf(first, added))
+            val first = ManualForms.pick(p.strength.single(), catalog.byId("back_squat")!!).copy(load = 100.0, reps = 5)
+            // A lift added later carries only its weight and reps: sets and rest come from the session.
+            val added = ManualForms.pick(ManualForms.newStrengthRow(ids), catalog.byId("bench_press")!!).copy(load = 60.0, reps = 8)
+            p.copy(scheme = StrengthScheme(sets = 3, restText = "1:30"), strength = listOf(first, added))
         }
         val built = builder.build(blank().copy(parts = listOf(part)))
         assertTrue(built.canCreate, built.report.blocking.toString())
         val lifts = built.workout.parts.single().body.filterIsInstance<com.wodcapture.domain.model.Item>()
         assertEquals(listOf(3, 3), lifts.map { it.sets.size })
-        assertTrue(lifts.all { l -> l.sets.all { it.reps.value == 8 && it.restSec == 90 } })
+        assertTrue(lifts.all { l -> l.sets.all { it.restSec == 90 } })
+        assertEquals(listOf(5, 8), lifts.map { l -> l.sets.map { it.reps.value }.distinct().single() })
         val badSets = builder.build(blank().copy(parts = listOf(part.copy(scheme = part.scheme.copy(sets = 0))))).report.blocking
         assertEquals(1, badSets.count { it.code == "invalid_bounds" })
+    }
+
+    @Test
+    fun aLiftWithoutRepsBlocksCreate() {
+        val part = ManualForms.newPart(ids, 0, ManualFormat.STRENGTH).let { p ->
+            p.copy(strength = listOf(ManualForms.pick(p.strength.single(), TestSupport.catalog.byId("back_squat")!!).copy(load = 100.0)))
+        }
+        val blocking = builder.build(blank().copy(parts = listOf(part))).report.blocking
+        assertEquals(listOf("reps"), blocking.filter { it.code == "missing_value" }.map { it.path })
+    }
+
+    @Test
+    fun everyWeightIsInTheSettingsUnit() {
+        val catalog = TestSupport.catalog
+        val lift = ManualForms.newPart(ids, 0, ManualFormat.STRENGTH).let { p ->
+            p.copy(strength = listOf(ManualForms.pick(p.strength.single(), catalog.byId("back_squat")!!).copy(load = 225.0, reps = 5)))
+        }
+        val metcon = ManualForms.newPart(ids, 1, ManualFormat.AMRAP).copy(
+            durationText = "10:00",
+            movements = listOf(
+                ManualForms.pick(ManualForms.newMovement(ids), catalog.byId("thruster")!!, schemePart = false).copy(amount = 10.0, load = 95.0),
+            ),
+        )
+        val form = ManualForms.blank(ids, "2026-11-05", "Asia/Jerusalem", MassUnit.LB).copy(parts = listOf(lift, metcon))
+        val items = builder.build(form).workout.parts.flatMap { it.body }.filterIsInstance<com.wodcapture.domain.model.Item>()
+        val loads = items.map { it.load ?: it.sets.first().load }
+        assertEquals(listOf(AbsoluteLoad(Mass(225.0, MassUnit.LB)), AbsoluteLoad(Mass(95.0, MassUnit.LB))), loads)
+    }
+
+    @Test
+    fun templateLoadsAreGivenInTheSettingsUnit() {
+        val thrusterKg = ManualTemplates.apply(blank(), template("For time 21-15-9"), ids).parts.single().movements.first()
+        assertEquals(43.0 to 29.0, thrusterKg.load to thrusterKg.loadFemale)
+        val swingKg = ManualTemplates.apply(blank(), template("EMOM 10"), ids).parts.single().movements.first()
+        assertEquals(24.0 to 16.0, swingKg.load to swingKg.loadFemale)
+        val lbForm = ManualForms.blank(ids, "2026-11-05", "Asia/Jerusalem", MassUnit.LB)
+        val thrusterLb = ManualTemplates.apply(lbForm, template("For time 21-15-9"), ids).parts.single().movements.first()
+        assertEquals(95.0 to 65.0, thrusterLb.load to thrusterLb.loadFemale)
     }
 }

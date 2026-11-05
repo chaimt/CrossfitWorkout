@@ -1,13 +1,18 @@
 package com.wodcapture.domain.manual
 
 import com.wodcapture.domain.IdSource
+import com.wodcapture.domain.load.Equivalents
+import com.wodcapture.domain.load.MassMath
 import com.wodcapture.domain.model.FallbackTimer
 import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.MeasureKind
 import com.wodcapture.domain.model.PartKind
 import com.wodcapture.domain.model.WorkoutSection
 
-/** A one-tap skeleton for one section of the manual form (REQ-AC09). */
+/**
+ * A one-tap skeleton for one section of the manual form (REQ-AC09). Its prescribed loads are in
+ * lb (the rulebook standard); [ManualTemplates.apply] converts them to the form's unit.
+ */
 data class ManualTemplate(val name: String, val section: WorkoutSection, val build: (IdSource) -> ManualPartForm)
 
 /**
@@ -40,7 +45,19 @@ object ManualTemplates {
         val kept = form.parts.filter { ManualForms.sectionOf(it) != template.section && !ManualForms.isUntouched(it) }
         return form.copy(
             title = title(form.title, template),
-            parts = ManualForms.ordered(kept + template.build(ids)),
+            parts = ManualForms.ordered(kept + inUnit(template.build(ids), form.loadUnit)),
+        )
+    }
+
+    /** Template loads are written in lb; give them in the Settings unit, rulebook equivalents first. */
+    private fun inUnit(part: ManualPartForm, unit: MassUnit): ManualPartForm {
+        if (unit == MassUnit.LB) return part
+        fun convert(implement: String?, lb: Double?): Double? = lb?.let {
+            Equivalents.lookup(implement, it, MassUnit.LB, unit) ?: MassMath.roundToStep(MassMath.fromKg(it * MassMath.KG_PER_LB, unit), 0.5)
+        }
+        return part.copy(
+            movements = part.movements.map { m -> m.copy(load = convert(m.implement, m.load), loadFemale = convert(m.implement, m.loadFemale)) },
+            strength = part.strength.map { s -> s.copy(load = convert(s.implement, s.load)) },
         )
     }
 
@@ -68,7 +85,7 @@ object ManualTemplates {
         intervalCount = 10,
         movements = listOf(
             reps(ids, "american_kettlebell_swing", "Kettlebell swing", 15.0).copy(
-                implement = "kettlebell", load = 24.0, loadFemale = 16.0, maleFemale = true, loadUnit = MassUnit.KG,
+                implement = "kettlebell", load = 53.0, loadFemale = 35.0, maleFemale = true,
             ),
             reps(ids, "burpee", "Burpee", 10.0),
         ),
@@ -81,7 +98,7 @@ object ManualTemplates {
         movements = listOf(
             ManualMovementForm(
                 id = ids.newId(), name = "Thruster", movementId = "thruster", implement = "barbell", measure = MeasureKind.REP_SCHEME,
-                load = 95.0, loadFemale = 65.0, maleFemale = true, loadUnit = MassUnit.LB,
+                load = 95.0, loadFemale = 65.0, maleFemale = true,
             ),
             ManualMovementForm(id = ids.newId(), name = "Pull-up", movementId = "pull_up", measure = MeasureKind.REP_SCHEME),
         ),
@@ -90,9 +107,9 @@ object ManualTemplates {
     /** Back squat 5 × 5 at 75 % of 1RM, 2:00 rest. */
     fun strength5x5(ids: IdSource) = part(ids, ManualFormat.STRENGTH).copy(
         kind = PartKind.STRENGTH,
-        scheme = StrengthScheme(sets = 5, reps = 5, loadMode = StrengthLoadMode.PERCENT_1RM, restText = "2:00"),
+        scheme = StrengthScheme(sets = 5, loadMode = StrengthLoadMode.PERCENT_1RM, restText = "2:00"),
         strength = listOf(
-            ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell", percent = 75.0),
+            ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell", percent = 75.0, reps = 5),
         ),
     )
 
