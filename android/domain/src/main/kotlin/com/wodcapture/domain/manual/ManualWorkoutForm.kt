@@ -38,7 +38,6 @@ data class ManualWorkoutForm(
  */
 enum class ManualFormat(val label: String, val section: WorkoutSection) {
     STRENGTH("Strength sets", WorkoutSection.WEIGHTS),
-    BUILD_TO_MAX("Build to max", WorkoutSection.WEIGHTS),
     FOR_TIME("For time", WorkoutSection.METCON),
     AMRAP("AMRAP", WorkoutSection.METCON),
     EMOM("EMOM / E#MOM", WorkoutSection.METCON),
@@ -96,7 +95,7 @@ data class ManualPartForm(
     val format: ManualFormat = ManualFormat.FOR_TIME,
     /** For time: optional cap. */
     val capText: String = "",
-    /** AMRAP duration; max-effort / build-to-max window; Custom countdown length or count-up cap. */
+    /** AMRAP duration; max-effort window; Custom countdown length or count-up cap. */
     val durationText: String = "",
     /** For time / Tabata / Intervals rounds. `null` = format default. */
     val rounds: Int? = null,
@@ -109,10 +108,8 @@ data class ManualPartForm(
     val workText: String = "",
     val restText: String = "",
     val maxMeasure: MaxEffortMeasure = MaxEffortMeasure.REPS,
-    /** Max-effort attempts or build-to-max attempt limit. */
+    /** Max-effort attempts. */
     val attempts: Int? = null,
-    /** Build to max: reps per attempt. */
-    val repsPerSet: Int? = 1,
     /** Custom: the instructions, one watch line per text line. */
     val customText: String = "",
     val customTimer: FallbackTimer = FallbackTimer.COUNT_UP,

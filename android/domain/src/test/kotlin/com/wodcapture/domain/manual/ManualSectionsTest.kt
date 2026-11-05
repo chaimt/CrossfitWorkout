@@ -26,7 +26,7 @@ class ManualSectionsTest {
 
     @Test
     fun everyFormatBelongsToOneSection() {
-        assertEquals(listOf(ManualFormat.STRENGTH, ManualFormat.BUILD_TO_MAX), ManualFormat.of(WorkoutSection.WEIGHTS))
+        assertEquals(listOf(ManualFormat.STRENGTH), ManualFormat.of(WorkoutSection.WEIGHTS))
         assertEquals(ManualFormat.entries.size, MANUAL_SECTIONS.sumOf { ManualFormat.of(it).size })
         assertEquals(MANUAL_SECTIONS.toSet(), ManualTemplates.all.map { it.section }.toSet())
     }
@@ -75,7 +75,7 @@ class ManualSectionsTest {
     fun aWeightsPartIsAlwaysStrengthWithNoLabelOrName() {
         assertEquals(listOf(PartKind.STRENGTH), kindsFor(WorkoutSection.WEIGHTS))
         val named = ManualForms.newPart(ids, 0, ManualFormat.AMRAP).copy(label = "B", name = "Cindy", kind = PartKind.WARMUP)
-        listOf(ManualFormat.STRENGTH, ManualFormat.BUILD_TO_MAX).forEach { f ->
+        listOf(ManualFormat.STRENGTH).forEach { f ->
             val weights = ManualForms.withFormat(named, f, ids)
             assertEquals(PartKind.STRENGTH, weights.kind, f.toString())
             assertEquals("" to "", weights.label to weights.name, f.toString())

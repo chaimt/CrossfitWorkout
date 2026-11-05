@@ -6,7 +6,6 @@ import com.wodcapture.domain.model.AggregationOp
 import com.wodcapture.domain.model.Amrap
 import com.wodcapture.domain.model.BodyNode
 import com.wodcapture.domain.model.BodyTree
-import com.wodcapture.domain.model.BuildToMax
 import com.wodcapture.domain.model.CustomSegments
 import com.wodcapture.domain.model.Emom
 import com.wodcapture.domain.model.Fallback
@@ -151,11 +150,6 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
                 inner = InnerMode.AMRAP,
             )
             ManualFormat.STRENGTH -> StrengthSets()
-            ManualFormat.BUILD_TO_MAX -> BuildToMax(
-                repsPerSet = form.repsPerSet ?: 1,
-                windowSec = time(form.durationText, "Window", "durationText"),
-                attemptLimit = form.attempts,
-            )
             ManualFormat.MAX_EFFORT -> MaxEffort(
                 windowSec = time(form.durationText, "Window", "durationText"),
                 attempts = form.attempts,
@@ -178,7 +172,6 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
         private fun body(): List<BodyNode> = when (form.format) {
             ManualFormat.FOR_TIME -> forTimeBody()
             ManualFormat.STRENGTH -> strengthBody()
-            ManualFormat.BUILD_TO_MAX -> buildToMaxBody()
             ManualFormat.CUSTOM -> customLines() + form.movements.map(::item)
             else -> form.movements.map(::item)
         }
@@ -208,13 +201,6 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             return values.filterNotNull()
         }
 
-        private fun buildToMaxBody(): List<BodyNode> {
-            if (form.movements.size > 1) {
-                issues += blocking("invalid_bounds", "Build to max takes exactly one movement", form.id, path = "movements")
-            }
-            return form.movements.take(1).map { m -> requireListedLift(m.id, m.movementId); item(m).copy(measure = null, load = null) }
-        }
-
         /** Custom instructions: one free-text line each so every watch line is previewed (REQ-DM18). */
         private fun customLines(): List<BodyNode> =
             form.customText.lines().map { it.trim() }.filter { it.isNotEmpty() }.map { Item(ids.newId(), name = it, rawText = it) }
@@ -224,7 +210,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
          * a catalog ID blocks; this replaces the generic missing-name message for lifts.
          */
         private fun requireListedLift(rowId: String, movementId: String?) {
-            if (movementId == null) issues += blocking("lift_not_in_list", "Choose each lift from the list", form.id, rowId, "movementId")
+            if (movementId == null) issues += blocking("lift_not_in_list", "Choose the lift from the list", form.id, rowId, "movementId")
         }
 
         private val weights: Boolean get() = form.format.section == WorkoutSection.WEIGHTS
@@ -325,7 +311,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             ManualFormat.EMOM -> Scoring(ScoreType.COMPLETION, manual = true)
             ManualFormat.TABATA -> Scoring(ScoreType.REPS, manual = mixedMeasures())
             ManualFormat.INTERVALS -> Scoring(ScoreType.ROUNDS_REPS, aggregation = AggregationOp.SUM)
-            ManualFormat.STRENGTH, ManualFormat.BUILD_TO_MAX -> Scoring(ScoreType.LOAD)
+            ManualFormat.STRENGTH -> Scoring(ScoreType.LOAD)
             ManualFormat.MAX_EFFORT -> Scoring(form.maxMeasure.score)
             ManualFormat.CUSTOM -> Scoring(ScoreType.TEXT, manual = true)
         }
