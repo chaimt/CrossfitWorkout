@@ -96,7 +96,10 @@ class ManualWorkoutBuilderTest {
     @Test
     fun fiveByFiveBackSquatRestsOnAllButTheLastSet() {
         val part = ManualTemplates.strength5x5(ids).let { s ->
-            s.copy(strength = listOf(s.strength[0].copy(loadMode = StrengthLoadMode.ABSOLUTE, load = 100.0, loadUnit = MassUnit.KG)))
+            s.copy(
+                scheme = s.scheme.copy(loadMode = StrengthLoadMode.ABSOLUTE, loadUnit = MassUnit.KG),
+                strength = listOf(s.strength[0].copy(load = 100.0)),
+            )
         }
         val built = builder.build(form(part))
         val item = built.workout.parts[0].body.single() as Item

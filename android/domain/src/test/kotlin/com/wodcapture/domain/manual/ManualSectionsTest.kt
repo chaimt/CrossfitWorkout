@@ -97,4 +97,22 @@ class ManualSectionsTest {
         val picked = typed.copy(strength = typed.strength.map { ManualForms.pick(it, back).copy(load = 100.0) })
         assertTrue(builder.build(blank().copy(parts = listOf(picked))).canCreate)
     }
+
+    @Test
+    fun everyLiftFollowsThePartScheme() {
+        val catalog = TestSupport.catalog
+        val part = ManualForms.newPart(ids, 0, ManualFormat.STRENGTH).let { p ->
+            val first = ManualForms.pick(p.strength.single(), catalog.byId("back_squat")!!).copy(load = 100.0)
+            // A lift added later carries no sets/reps of its own: it takes the part's.
+            val added = ManualForms.pick(ManualForms.newStrengthRow(ids), catalog.byId("bench_press")!!).copy(load = 60.0)
+            p.copy(scheme = StrengthScheme(sets = 3, reps = 8, restText = "1:30"), strength = listOf(first, added))
+        }
+        val built = builder.build(blank().copy(parts = listOf(part)))
+        assertTrue(built.canCreate, built.report.blocking.toString())
+        val lifts = built.workout.parts.single().body.filterIsInstance<com.wodcapture.domain.model.Item>()
+        assertEquals(listOf(3, 3), lifts.map { it.sets.size })
+        assertTrue(lifts.all { l -> l.sets.all { it.reps.value == 8 && it.restSec == 90 } })
+        val badSets = builder.build(blank().copy(parts = listOf(part.copy(scheme = part.scheme.copy(sets = 0))))).report.blocking
+        assertEquals(1, badSets.count { it.code == "invalid_bounds" })
+    }
 }

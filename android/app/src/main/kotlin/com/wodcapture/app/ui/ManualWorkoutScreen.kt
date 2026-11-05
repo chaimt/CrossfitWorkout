@@ -57,6 +57,7 @@ import com.wodcapture.domain.manual.ManualTemplates
 import com.wodcapture.domain.manual.ManualWorkoutForm
 import com.wodcapture.domain.manual.MaxEffortMeasure
 import com.wodcapture.domain.manual.StrengthLoadMode
+import com.wodcapture.domain.manual.StrengthScheme
 import com.wodcapture.domain.manual.kindsFor
 import com.wodcapture.domain.model.DistanceUnit
 import com.wodcapture.domain.model.FallbackTimer
@@ -439,9 +440,10 @@ private fun LiftRow(catalog: MovementCatalog, name: String, movementId: String?,
 private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, ids: IdSource, onChange: PartEdit) {
     fun editRow(id: String, f: (ManualStrengthForm) -> ManualStrengthForm) =
         onChange { p -> p.copy(strength = p.strength.map { if (it.id == id) f(it) else it }) }
+    SchemeFields(part.scheme) { f -> onChange { it.copy(scheme = f(it.scheme)) } }
     Text("Lifts", style = MaterialTheme.typography.titleSmall)
     part.strength.forEach { row ->
-        StrengthRow(catalog, row, onChange = { f -> editRow(row.id, f) }, onRemove = {
+        StrengthRow(catalog, part.scheme, row, onChange = { f -> editRow(row.id, f) }, onRemove = {
             onChange { p -> p.copy(strength = p.strength.filter { it.id != row.id }) }
         })
     }
@@ -451,30 +453,44 @@ private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, ids: Id
     }
 }
 
-/** Strength row: sets × reps @ load (absolute or % 1RM), rest (REQ-DM06). */
+/**
+ * Sets × reps, load type and rest for the whole part, before the lifts (owner request
+ * 2026-11-05): every lift, including one added later, follows it.
+ */
+@Composable
+private fun SchemeFields(scheme: StrengthScheme, onChange: ((StrengthScheme) -> StrengthScheme) -> Unit) {
+    Text("Sets & reps (every lift)", style = MaterialTheme.typography.titleSmall)
+    Grid {
+        val cell = Modifier
+        IntField("Sets", scheme.sets, cell) { v -> onChange { it.copy(sets = v) } }
+        IntField("Reps", scheme.reps, cell) { v -> onChange { it.copy(reps = v) } }
+        Choice("Load type", scheme.loadMode, StrengthLoadMode.entries, ::loadModeName, cell) { mode -> onChange { it.copy(loadMode = mode) } }
+        if (scheme.loadMode == StrengthLoadMode.ABSOLUTE) {
+            Choice("Unit", scheme.loadUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }, cell) { u -> onChange { it.copy(loadUnit = u) } }
+        }
+        Field("Rest", scheme.restText, cell, placeholder = "2:00") { v -> onChange { it.copy(restText = v) } }
+    }
+}
+
+/** A lift of a strength part: the lift from the list and its load in the part's load type (REQ-DM06). */
 @Composable
 private fun StrengthRow(
     catalog: MovementCatalog,
+    scheme: StrengthScheme,
     row: ManualStrengthForm,
     onChange: ((ManualStrengthForm) -> ManualStrengthForm) -> Unit,
     onRemove: () -> Unit,
 ) {
     RowBox {
         LiftRow(catalog, row.name, row.movementId, onRemove) { m -> onChange { ManualForms.pick(it, m) } }
-        Grid {
-            val cell = Modifier
-            IntField("Sets", row.sets, cell) { v -> onChange { it.copy(sets = v) } }
-            IntField("Reps", row.reps, cell) { v -> onChange { it.copy(reps = v) } }
-            Choice("Load", row.loadMode, StrengthLoadMode.entries, ::loadModeName, cell) { mode -> onChange { it.copy(loadMode = mode) } }
-            when (row.loadMode) {
-                StrengthLoadMode.ABSOLUTE -> {
-                    DoubleField("Weight", row.load, cell) { v -> onChange { it.copy(load = v) } }
-                    Choice("Unit", row.loadUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }, cell) { u -> onChange { it.copy(loadUnit = u) } }
-                }
-                StrengthLoadMode.PERCENT_1RM -> DoubleField("% of 1RM", row.percent, cell) { v -> onChange { it.copy(percent = v) } }
-                StrengthLoadMode.NONE -> Unit
+        when (scheme.loadMode) {
+            StrengthLoadMode.ABSOLUTE -> Grid {
+                DoubleField("Weight (${scheme.loadUnit.wire})", row.load, Modifier) { v -> onChange { it.copy(load = v) } }
             }
-            Field("Rest", row.restText, cell, placeholder = "2:00") { v -> onChange { it.copy(restText = v) } }
+            StrengthLoadMode.PERCENT_1RM -> Grid {
+                DoubleField("% of 1RM", row.percent, Modifier) { v -> onChange { it.copy(percent = v) } }
+            }
+            StrengthLoadMode.NONE -> Unit
         }
     }
 }

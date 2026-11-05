@@ -170,7 +170,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
 
         private fun body(): List<BodyNode> = when (form.format) {
             ManualFormat.FOR_TIME -> forTimeBody()
-            ManualFormat.STRENGTH -> form.strength.map(::strengthItem)
+            ManualFormat.STRENGTH -> strengthBody()
             ManualFormat.BUILD_TO_MAX -> buildToMaxBody()
             ManualFormat.CUSTOM -> customLines() + form.movements.map(::item)
             else -> form.movements.map(::item)
@@ -269,24 +269,27 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             return SplitLength(Length(male, m.heightUnit), female?.let { Length(it, m.heightUnit) }, labeled = female != null)
         }
 
-        private fun strengthItem(s: ManualStrengthForm): Item {
-            val name = s.name.trim()
-            requireListedLift(s.id, s.movementId)
-            val count = s.sets ?: 0
+        /** Every lift follows the part scheme; it is checked once, not per lift. */
+        private fun strengthBody(): List<BodyNode> {
+            val scheme = form.scheme
+            val count = scheme.sets ?: 0
             if (count !in 1..WatchLimits.SETS) {
-                issues += blocking("invalid_bounds", "Sets must be 1–${WatchLimits.SETS}", form.id, s.id, "sets")
+                issues += blocking("invalid_bounds", "Sets must be 1–${WatchLimits.SETS}", form.id, path = "scheme.sets")
             }
-            val load = strengthLoad(s)
-            val rest = time(s.restText, "Rest", "restText")
-            val sets = (0 until count.coerceIn(0, WatchLimits.SETS)).map {
-                StrengthSet(ids.newId(), RepTarget(s.reps), load = load, restSec = rest)
-            }
-            return Item(id = s.id, movementId = s.movementId, name = name, implement = s.implement, sets = sets)
+            val rest = time(scheme.restText, "Rest", "scheme.restText")
+            return form.strength.map { strengthItem(it, count.coerceIn(0, WatchLimits.SETS), rest) }
         }
 
-        private fun strengthLoad(s: ManualStrengthForm): LoadSpec? = when (s.loadMode) {
+        private fun strengthItem(s: ManualStrengthForm, count: Int, rest: Int?): Item {
+            requireListedLift(s.id, s.movementId)
+            val load = strengthLoad(s)
+            val sets = (0 until count).map { StrengthSet(ids.newId(), RepTarget(form.scheme.reps), load = load, restSec = rest) }
+            return Item(id = s.id, movementId = s.movementId, name = s.name.trim(), implement = s.implement, sets = sets)
+        }
+
+        private fun strengthLoad(s: ManualStrengthForm): LoadSpec? = when (form.scheme.loadMode) {
             StrengthLoadMode.NONE -> null
-            StrengthLoadMode.ABSOLUTE -> s.load?.let { AbsoluteLoad(Mass(it, s.loadUnit)) } ?: run {
+            StrengthLoadMode.ABSOLUTE -> s.load?.let { AbsoluteLoad(Mass(it, form.scheme.loadUnit)) } ?: run {
                 issues += blocking("missing_value", "Enter a load or choose no load", form.id, s.id, "load")
                 null
             }

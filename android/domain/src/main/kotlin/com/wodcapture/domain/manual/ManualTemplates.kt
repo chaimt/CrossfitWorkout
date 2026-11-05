@@ -90,11 +90,9 @@ object ManualTemplates {
     /** Back squat 5 × 5 at 75 % of 1RM, 2:00 rest. */
     fun strength5x5(ids: IdSource) = part(ids, ManualFormat.STRENGTH).copy(
         kind = PartKind.STRENGTH,
+        scheme = StrengthScheme(sets = 5, reps = 5, loadMode = StrengthLoadMode.PERCENT_1RM, restText = "2:00"),
         strength = listOf(
-            ManualStrengthForm(
-                id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell",
-                sets = 5, reps = 5, loadMode = StrengthLoadMode.PERCENT_1RM, percent = 75.0, restText = "2:00",
-            ),
+            ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell", percent = 75.0),
         ),
     )
 

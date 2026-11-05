@@ -111,7 +111,22 @@ data class ManualPartForm(
     val customText: String = "",
     val customTimer: FallbackTimer = FallbackTimer.COUNT_UP,
     val movements: List<ManualMovementForm> = emptyList(),
+    /** Strength sets: one scheme for the whole part, set above the lifts (owner request 2026-11-05). */
+    val scheme: StrengthScheme = StrengthScheme(),
     val strength: List<ManualStrengthForm> = emptyList(),
+)
+
+/**
+ * Sets × reps, load type and rest of a strength part. It is set once, before the lifts, and
+ * every lift of the part follows it, so a new lift needs only the lift and its weight.
+ */
+data class StrengthScheme(
+    val sets: Int? = 5,
+    val reps: Int? = 5,
+    val loadMode: StrengthLoadMode = StrengthLoadMode.ABSOLUTE,
+    val loadUnit: MassUnit = MassUnit.KG,
+    /** Rest after each set; the compiler drops it after the last set. */
+    val restText: String = "2:00",
 )
 
 /** A movement row of a metcon part (REQ-DM05). */
@@ -144,21 +159,18 @@ data class ManualMovementForm(
     val heightIsTarget: Boolean = false,
 )
 
-/** A strength row: movement + sets × reps @ load + rest (REQ-DM06). */
+/**
+ * A lift of a strength part (REQ-DM06): the lift and its load in the part's [StrengthScheme]
+ * load type — a weight ([load], in the scheme unit) or a percentage of 1RM ([percent]).
+ */
 data class ManualStrengthForm(
     /** Becomes the item ID. */
     val id: String,
     val name: String = "",
     val movementId: String? = null,
     val implement: String? = null,
-    val sets: Int? = 5,
-    val reps: Int? = 5,
-    val loadMode: StrengthLoadMode = StrengthLoadMode.ABSOLUTE,
     val load: Double? = null,
-    val loadUnit: MassUnit = MassUnit.KG,
     val percent: Double? = null,
-    /** Rest after each set; the compiler drops it after the last set. */
-    val restText: String = "2:00",
 )
 
 /**
