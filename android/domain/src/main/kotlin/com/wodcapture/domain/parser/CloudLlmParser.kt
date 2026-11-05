@@ -41,6 +41,9 @@ data class CloudParserConfig(
 
     companion object {
         const val DEFAULT_MODEL = "claude-opus-5-5"
+
+        /** Models offered in the Settings → Model dropdown (REQ-AG03), default first. */
+        val MODELS: List<String> = listOf(DEFAULT_MODEL, "claude-sonnet-5-5", "claude-haiku-5-5", "claude-fable-5-1")
         const val FALLBACK_BETA = "server-side-fallback-2026-07-01"
     }
 }

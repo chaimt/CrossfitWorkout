@@ -54,6 +54,12 @@ class CloudLlmParserTest {
     }
 
     @Test
+    fun settingsOfferTheFourClaudeModelsDefaultFirst() {
+        assertEquals(listOf("claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-fable-5-1"), CloudParserConfig.MODELS)
+        assertEquals(CloudParserConfig.DEFAULT_MODEL, CloudParserConfig.MODELS.first())
+    }
+
+    @Test
     fun requestFollowsTheMessagesApiContract() {
         val img = ImageInput(byteArrayOf(1, 2, 3))
         val body = parser(Scripted()).buildRequestBody(ParseInput(images = listOf(img), hint = "loads are kg"))
