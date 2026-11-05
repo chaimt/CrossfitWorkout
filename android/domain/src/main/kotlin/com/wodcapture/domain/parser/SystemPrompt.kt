@@ -8,7 +8,7 @@ import com.wodcapture.domain.catalog.MovementCatalog
  * per-request data so prompt caching applies; bump [VERSION] whenever the text changes.
  */
 object SystemPrompt {
-    const val VERSION = "wod-parse-v1"
+    const val VERSION = "wod-parse-v2"
 
     fun build(catalog: MovementCatalog): String = buildString {
         append(INSTRUCTIONS.trimIndent()).append("\n\n")
@@ -19,12 +19,21 @@ object SystemPrompt {
             if (aliases.isNotEmpty()) append(" | ").append(aliases)
             append('\n')
         }
-        append('\n').append(GLOSSARY.trimIndent()).append("\n\n").append(EXAMPLES.trimIndent()).append('\n')
+        append('\n').append(GLOSSARY.trimIndent()).append("\n\n").append(EXAMPLES.trimIndent()).append("\n\n")
+        append(RESPONSE_FORMAT.trimIndent()).append('\n').append(StructuredSchema.promptText()).append('\n')
     }
+
+    // The schema travels in the prompt, not as a decoding grammar: it is too large to compile.
+    private const val RESPONSE_FORMAT = """
+        # Response format
+        Reply with exactly one JSON object and nothing else - no prose, no markdown code fence. It
+        must validate against this JSON Schema (root = ParseResult; `body` trees nest at most 4
+        levels). Omit optional fields you have no value for instead of writing null.
+    """
 
     private const val INSTRUCTIONS = """
         You convert CrossFit whiteboard photos and pasted workout text into the canonical workout JSON
-        defined by the response schema. Output only data that the board states or that you list as an
+        defined by the JSON Schema at the end of this prompt. Output only data that the board states or that you list as an
         assumption. Never drop text: anything you cannot map goes to `unparsed` verbatim, non-English
         text goes to `notes`.
 

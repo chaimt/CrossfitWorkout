@@ -70,10 +70,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         .map { l -> l.mapNotNull { runCatching { DomainJson.lenient.decodeFromString(WorkoutResult.serializer(), it.resultJson) }.getOrNull() } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    /** Heaviest completed set per lift, in the display unit (REQ-AL07). */
+    /** Heaviest weight per lift across the saved workouts and their results, in the display unit (REQ-AL07). */
     val topLifts: StateFlow<List<TopLift>> = combine(results, library, settings) { r, l, s ->
-        val workouts = l.mapNotNull { runCatching { DomainJson.decodeWorkout(it.workoutJson) }.getOrNull() }.associateBy { it.id }
-        TopLifts.compute(r, workouts, c.catalog, s.profile.displayUnit)
+        // Drafts and unreviewed parses are not the owner's workouts yet (REQ-AE01).
+        val workouts = l.filter { it.status == "saved" }.mapNotNull { e ->
+            runCatching { DomainJson.decodeWorkout(e.workoutJson) }.getOrNull()?.let { it.copy(createdAt = it.createdAt ?: e.createdAt) }
+        }
+        TopLifts.compute(workouts, r, c.catalog, s.profile.displayUnit)
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val outbox = c.outboxState
     val devices = c.ciq.devices

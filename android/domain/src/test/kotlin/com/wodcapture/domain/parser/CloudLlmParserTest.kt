@@ -67,8 +67,9 @@ class CloudLlmParserTest {
         assertEquals("adaptive", body["thinking"]!!.jsonObject["type"]!!.jsonPrimitive.content)
         val oc = body["output_config"]!!.jsonObject
         assertEquals("medium", oc["effort"]!!.jsonPrimitive.content)
-        assertEquals("json_schema", oc["format"]!!.jsonObject["type"]!!.jsonPrimitive.content)
+        assertFalse(oc.containsKey("format"), "the workout schema is too large for a structured-output grammar")
         val system = body["system"]!!.jsonArray[0].jsonObject
+        assertTrue(system["text"]!!.jsonPrimitive.content.endsWith(StructuredSchema.promptText() + "\n"), "schema travels in the prompt")
         assertEquals("ephemeral", system["cache_control"]!!.jsonObject["type"]!!.jsonPrimitive.content)
         val content = body["messages"]!!.jsonArray[0].jsonObject["content"]!!.jsonArray
         val image = content[0].jsonObject
@@ -97,34 +98,22 @@ class CloudLlmParserTest {
     }
 
     @Test
-    fun structuredSchemaHasNoRecursionAndClosedObjects() {
-        val s = StructuredSchema.forParser()
+    fun promptSchemaIsRootedAtParseResultAndByteStable() {
+        val s = StructuredSchema.forPrompt()
+        assertEquals("#/\$defs/ParseResult", s["\$ref"]!!.jsonPrimitive.content)
         val defs = s["\$defs"]!!.jsonObject
-        assertFalse(defs.containsKey("BodyNode"))
-        assertTrue(defs.containsKey("BodyNode4") && !defs.containsKey("Group4"))
-        // Acyclic: walk the ref graph.
-        fun refsOf(name: String) = StructuredSchema.refs(defs.getValue(name)).map { it.removePrefix("#/\$defs/") }
-        val visiting = mutableSetOf<String>()
-        val done = mutableSetOf<String>()
-        fun dfs(n: String) {
-            check(n !in visiting) { "cycle through $n" }
-            if (n in done) return
-            visiting += n; refsOf(n).forEach(::dfs); visiting -= n; done += n
-        }
-        defs.keys.forEach(::dfs)
-        fun walk(e: kotlinx.serialization.json.JsonElement) {
-            when (e) {
-                is JsonObject -> {
-                    if (e["type"] == JsonPrimitive("object")) assertEquals(JsonPrimitive(false), e["additionalProperties"])
-                    listOf("minimum", "maxLength", "minItems", "pattern").forEach { k -> assertFalse(e.containsKey(k) && e[k] !is JsonObject, "unsupported $k") }
-                    e.forEach { (k, v) -> if (k == "properties") (v as JsonObject).values.forEach(::walk) else walk(v) }
-                }
-                is JsonArray -> e.forEach(::walk)
-                else -> Unit
-            }
-        }
-        walk(s)
-        assertEquals(StructuredSchema.forParser().toString(), s.toString(), "byte-stable")
+        assertTrue(defs.containsKey("Workout") && defs.containsKey("BodyNode"))
+        assertFalse(s.toString().contains("\"\$id\""), "file identifiers are dropped")
+        assertTrue(defs.getValue("Workout").jsonObject["properties"]!!.jsonObject.containsKey("title"), "a property named title survives")
+        assertEquals(StructuredSchema.promptText(), StructuredSchema.forPrompt().toString(), "byte-stable")
+    }
+
+    @Test
+    fun replyInACodeFenceStillParses() {
+        val fenced = "```json\n" + modelOutput() + "\n```"
+        assertIs<ParseOutcome.Success>(parser(Scripted({ ok(fenced) })).parse(ParseInput(text = "EMOM 16 ...")))
+        val prose = parser(Scripted({ ok("I could not read the board.") })).parse(ParseInput(text = "x"))
+        assertIs<ParseError.SchemaInvalid>((prose as ParseOutcome.Failure).error)
     }
 
     @Test

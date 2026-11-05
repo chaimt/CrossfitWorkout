@@ -59,8 +59,8 @@ fun interface Sleeper {
 
 /**
  * Cloud parser on the Anthropic Messages API over plain HTTP (REQ-AX02–AX04): image blocks or
- * text, JSON-schema structured output (`output_config.format`), adaptive thinking with an explicit
- * effort, byte-stable cached system prompt, `stop_reason` checked before consuming output, and at
+ * text, the response JSON Schema in the system prompt (see [StructuredSchema] for why it is not
+ * `output_config.format`), adaptive thinking with an explicit effort, byte-stable cached system prompt, `stop_reason` checked before consuming output, and at
  * most [CloudParserConfig.maxRetries] retries on network/429/5xx with Retry-After/backoff.
  */
 class CloudLlmParser(
@@ -72,20 +72,13 @@ class CloudLlmParser(
 ) : WorkoutParser {
     override val id: String = "cloud:${config.model}"
     private val systemPrompt = SystemPrompt.build(catalog)
-    private val schema = StructuredSchema.forParser()
 
     /** Request body, exposed for tests and token counting. */
     fun buildRequestBody(input: ParseInput): JsonObject = buildJsonObject {
         put("model", config.model)
         put("max_tokens", config.maxTokens)
         putJsonObject("thinking") { put("type", "adaptive") }
-        putJsonObject("output_config") {
-            put("effort", config.effort)
-            putJsonObject("format") {
-                put("type", "json_schema")
-                put("schema", schema)
-            }
-        }
+        putJsonObject("output_config") { put("effort", config.effort) }
         putJsonArray("system") {
             addJsonObject {
                 put("type", "text")
@@ -180,14 +173,21 @@ class CloudLlmParser(
             .filterIsInstance<JsonObject>()
             .filter { it["type"]?.jsonPrimitive?.contentOrNull == "text" }
             .joinToString("") { it["text"]?.jsonPrimitive?.contentOrNull.orEmpty() }
-        if (text.isBlank()) return ParseOutcome.Failure(ParseError.SchemaInvalid("No text output"), attempt)
+        val jsonText = jsonObjectText(text) ?: return ParseOutcome.Failure(ParseError.SchemaInvalid("No JSON object in the reply"), attempt)
         val parsed = try {
-            DomainJson.decodeParseResult(text)
+            DomainJson.decodeParseResult(jsonText)
         } catch (e: Exception) {
             return ParseOutcome.Failure(ParseError.SchemaInvalid(e.message?.lineSequence()?.firstOrNull() ?: "decode failed"), attempt)
         }
         if (parsed.workout.parts.isEmpty()) return ParseOutcome.Failure(ParseError.SchemaInvalid("No parts"), attempt)
         return ParseOutcome.Success(finish(parsed, input), usage(json), attempt)
+    }
+
+    /** The reply's JSON object; tolerates a code fence or a stray sentence around it. */
+    private fun jsonObjectText(text: String): String? {
+        val start = text.indexOf('{')
+        val end = text.lastIndexOf('}')
+        return if (start < 0 || end <= start) null else text.substring(start, end + 1)
     }
 
     private fun finish(r: ParseResult, input: ParseInput): ParseResult {
