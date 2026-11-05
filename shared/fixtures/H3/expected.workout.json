@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "id": "f0300000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "title": "EMOM 16",
+  "date": "2026-11-03",
+  "scheduleTimeZone": "Asia/Jerusalem",
+  "source": {
+    "kind": "text",
+    "imageRefs": [],
+    "parser": "fixture"
+  },
+  "parts": [
+    {
+      "id": "f0310000-0000-4000-8000-000000000001",
+      "label": "",
+      "kind": "metcon",
+      "format": {
+        "type": "emom",
+        "intervalSec": 60,
+        "intervalCount": 16,
+        "stations": [
+          {
+            "nodeId": "f0320000-0000-4000-8000-000000000001"
+          },
+          {
+            "nodeId": "f0320000-0000-4000-8000-000000000002"
+          },
+          {
+            "nodeId": "f0320000-0000-4000-8000-000000000003",
+            "workSec": 40
+          },
+          {}
+        ],
+        "remainder": "none"
+      },
+      "body": [
+        {
+          "type": "item",
+          "id": "f0320000-0000-4000-8000-000000000001",
+          "movementId": "row",
+          "name": "Row",
+          "measure": {
+            "kind": "calories",
+            "value": 15.0,
+            "female": 12.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f0320000-0000-4000-8000-000000000002",
+          "movementId": "toes_to_bar",
+          "name": "Toes-to-bar",
+          "measure": {
+            "kind": "reps",
+            "value": 12.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f0320000-0000-4000-8000-000000000003",
+          "movementId": "double_under",
+          "name": "Double-under",
+          "measure": {
+            "kind": "max",
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        }
+      ],
+      "scoring": {
+        "type": "completion",
+        "manual": true,
+        "ruleVersion": 1
+      },
+      "levels": []
+    }
+  ],
+  "tags": []
+}

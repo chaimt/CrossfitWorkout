@@ -1,0 +1,59 @@
+# https://taskfile.dev  -  WOD Coach (Connect IQ watch app)
+# Needs the Connect IQ SDK (auto-detected by scripts/lib-sdk.sh) and watch/developer_key.
+version: "3"
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  _require-key:
+    internal: true
+    silent: true
+    preconditions:
+      - sh: test -f developer_key
+        msg: "watch/developer_key is missing (git-ignored). Copy your Connect IQ developer key there."
+
+  build:
+    desc: Compile a debug .prg for fr965 (production UUID) -> watch/bin/wodcoach.prg
+    cmds:
+      - task: _require-key
+      - bash scripts/build.sh {{.CLI_ARGS}}
+
+  build:beta:
+    desc: Compile a debug .prg with the beta UUID (manifest-beta.xml)
+    cmds:
+      - task: _require-key
+      - bash scripts/build.sh --beta
+
+  test:
+    desc: Compile and run the unit tests in the simulator (starts it; screen must be unlocked)
+    cmds:
+      - task: _require-key
+      - bash scripts/test.sh {{.CLI_ARGS}}
+
+  deploy-simulator:
+    desc: Build and run WOD Coach in the Connect IQ simulator (starts it if needed)
+    interactive: true
+    cmds:
+      - task: _require-key
+      - bash scripts/run-simulator.sh {{.CLI_ARGS}}
+
+  deploy-watch:
+    desc: Build and copy WOD Coach onto the USB-connected watch (MTP via libmtp)
+    cmds:
+      - task: build
+      - bash scripts/deploy-watch.sh
+
+  package:
+    desc: Build the store .iq package (production UUID) -> watch/bin/wodcoach.iq
+    cmds:
+      - task: _require-key
+      - bash scripts/package.sh {{.CLI_ARGS}}
+
+  package:beta:
+    desc: Build the Connect IQ beta .iq package (beta UUID)
+    cmds:
+      - task: _require-key
+      - bash scripts/package.sh --beta

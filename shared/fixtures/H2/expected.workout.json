@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "id": "f0200000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "title": "Squat + E2MOM",
+  "date": "2026-11-03",
+  "scheduleTimeZone": "Asia/Jerusalem",
+  "source": {
+    "kind": "text",
+    "imageRefs": [],
+    "parser": "fixture"
+  },
+  "parts": [
+    {
+      "id": "f0210000-0000-4000-8000-000000000001",
+      "label": "A",
+      "kind": "strength",
+      "format": {
+        "type": "strength_sets",
+        "setRefs": []
+      },
+      "body": [
+        {
+          "type": "item",
+          "id": "f0220000-0000-4000-8000-000000000001",
+          "movementId": "back_squat",
+          "name": "Back squat",
+          "implement": "barbell",
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": [
+            {
+              "id": "f0230000-0000-4000-8000-000000000001",
+              "reps": {
+                "value": 3,
+                "max": false,
+                "perSide": false
+              },
+              "load": {
+                "kind": "percent_1rm",
+                "percent": 80.0,
+                "repMax": 1
+              },
+              "restSec": 120,
+              "setType": "working"
+            },
+            {
+              "id": "f0230000-0000-4000-8000-000000000002",
+              "reps": {
+                "value": 3,
+                "max": false,
+                "perSide": false
+              },
+              "load": {
+                "kind": "percent_1rm",
+                "percent": 80.0,
+                "repMax": 1
+              },
+              "restSec": 120,
+              "setType": "working"
+            },
+            {
+              "id": "f0230000-0000-4000-8000-000000000003",
+              "reps": {
+                "value": 3,
+                "max": false,
+                "perSide": false
+              },
+              "load": {
+                "kind": "percent_1rm",
+                "percent": 80.0,
+                "repMax": 1
+              },
+              "restSec": 120,
+              "setType": "working"
+            },
+            {
+              "id": "f0230000-0000-4000-8000-000000000004",
+              "reps": {
+                "value": 3,
+                "max": false,
+                "perSide": false
+              },
+              "load": {
+                "kind": "percent_1rm",
+                "percent": 80.0,
+                "repMax": 1
+              },
+              "restSec": 120,
+              "setType": "working"
+            },
+            {
+              "id": "f0230000-0000-4000-8000-000000000005",
+              "reps": {
+                "value": 3,
+                "max": false,
+                "perSide": false
+              },
+              "load": {
+                "kind": "percent_1rm",
+                "percent": 80.0,
+                "repMax": 1
+              },
+              "restSec": 120,
+              "setType": "working"
+            }
+          ]
+        }
+      ],
+      "scoring": {
+        "type": "load",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": []
+    },
+    {
+      "id": "f0210000-0000-4000-8000-000000000002",
+      "label": "B",
+      "kind": "strength",
+      "format": {
+        "type": "emom",
+        "intervalSec": 120,
+        "intervalCount": 6,
+        "stations": [],
+        "remainder": "none"
+      },
+      "body": [
+        {
+          "type": "group",
+          "id": "f0220000-0000-4000-8000-000000000002",
+          "kind": "complex",
+          "repeat": 1,
+          "repScheme": [],
+          "children": [
+            {
+              "type": "item",
+              "id": "f0220000-0000-4000-8000-000000000003",
+              "movementId": "power_clean",
+              "name": "Power clean",
+              "measure": {
+                "kind": "reps",
+                "value": 3.0,
+                "labeled": false
+              },
+              "load": {
+                "kind": "athlete_choice",
+                "text": "build"
+              },
+              "implement": "barbell",
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            },
+            {
+              "type": "item",
+              "id": "f0220000-0000-4000-8000-000000000004",
+              "movementId": "push_jerk",
+              "name": "Push jerk",
+              "measure": {
+                "kind": "reps",
+                "value": 1.0,
+                "labeled": false
+              },
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            }
+          ]
+        }
+      ],
+      "scoring": {
+        "type": "load",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": []
+    }
+  ],
+  "tags": []
+}

@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "id": "f0500000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "title": "3 rounds each for time",
+  "date": "2026-11-03",
+  "scheduleTimeZone": "Asia/Jerusalem",
+  "source": {
+    "kind": "text",
+    "imageRefs": [],
+    "parser": "fixture"
+  },
+  "parts": [
+    {
+      "id": "f0510000-0000-4000-8000-000000000001",
+      "label": "",
+      "kind": "metcon",
+      "format": {
+        "type": "for_time",
+        "eachRoundForTime": true
+      },
+      "body": [
+        {
+          "type": "group",
+          "id": "f0520000-0000-4000-8000-000000000001",
+          "kind": "rounds",
+          "repeat": 3,
+          "repScheme": [],
+          "children": [
+            {
+              "type": "item",
+              "id": "f0520000-0000-4000-8000-000000000002",
+              "movementId": "run",
+              "name": "Run",
+              "measure": {
+                "kind": "distance",
+                "value": 400.0,
+                "labeled": false,
+                "unit": "m"
+              },
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            },
+            {
+              "type": "item",
+              "id": "f0520000-0000-4000-8000-000000000003",
+              "movementId": "american_kettlebell_swing",
+              "name": "Kettlebell swing",
+              "measure": {
+                "kind": "reps",
+                "value": 21.0,
+                "labeled": false
+              },
+              "load": {
+                "kind": "split",
+                "male": {
+                  "value": 24.0,
+                  "unit": "kg"
+                },
+                "female": {
+                  "value": 16.0,
+                  "unit": "kg"
+                },
+                "labeled": false,
+                "confirmed": false
+              },
+              "implement": "kettlebell",
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            },
+            {
+              "type": "item",
+              "id": "f0520000-0000-4000-8000-000000000004",
+              "movementId": "chest_to_bar_pull_up",
+              "name": "Chest-to-bar pull-up",
+              "measure": {
+                "kind": "reps",
+                "value": 12.0,
+                "labeled": false
+              },
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            },
+            {
+              "type": "rest",
+              "id": "f0520000-0000-4000-8000-000000000005",
+              "sec": 180,
+              "inClock": false,
+              "betweenOnly": true
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "id": "f0520000-0000-4000-8000-000000000006",
+          "movementId": "ghd_sit_up",
+          "name": "GHD sit-up",
+          "measure": {
+            "kind": "reps",
+            "value": 50.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "cash_out",
+          "sets": []
+        }
+      ],
+      "scoring": {
+        "type": "time",
+        "aggregation": "each",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": []
+    }
+  ],
+  "tags": []
+}

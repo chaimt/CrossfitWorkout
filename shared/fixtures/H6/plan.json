@@ -1,0 +1,54 @@
+{
+  "sv": 1,
+  "id": "f0640000-0000-4000-8000-000000000001",
+  "rev": 1,
+  "wid": "f0600000-0000-4000-8000-000000000001",
+  "wr": 1,
+  "ti": "Teams of 2",
+  "date": "2026-11-03",
+  "tz": "Asia/Jerusalem",
+  "u": "kg",
+  "p": [
+    {
+      "id": "f0610000-0000-4000-8000-000000000001",
+      "l": "W",
+      "n": "For time",
+      "mode": "manual",
+      "fb": true,
+      "ln": [
+        "For time, cap 30:00",
+        "Teams of 2",
+        "100/80 cal Bike (split)",
+        "60 synchro BBJO 24 in",
+        "40 DB snatch 22.5 kg (switch",
+        "every 10)",
+        "P2 holds plank while P1",
+        "snatches"
+      ],
+      "seg": [
+        {
+          "k": "open",
+          "cap": 1800,
+          "lb": "TIMER",
+          "ix": 0
+        }
+      ],
+      "sc": {
+        "ty": "time",
+        "rv": 1,
+        "cap": "text",
+        "man": true
+      },
+      "ld": [
+        {
+          "id": "f0620000-0000-4000-8000-000000000003",
+          "nm": "DB snatch",
+          "v": 22.5,
+          "u": "kg",
+          "c": 1
+        }
+      ],
+      "lv": "Rx"
+    }
+  ]
+}

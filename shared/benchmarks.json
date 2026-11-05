@@ -1,0 +1,805 @@
+{
+  "schemaVersion": 1,
+  "kind": "benchmarks",
+  "items": [
+    {
+      "id": "angie",
+      "name": "Angie",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "100 pull-ups, 100 push-ups, 100 sit-ups, 100 squats",
+      "rx": "bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "barbara",
+      "name": "Barbara",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "5 rounds, 3:00 rest between: 20 pull-ups, 30 push-ups, 40 sit-ups, 50 squats",
+      "rx": "bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "chelsea",
+      "name": "Chelsea",
+      "aliases": [],
+      "category": "girl",
+      "format": "emom",
+      "scheme": "EMOM 30: 5 pull-ups, 10 push-ups, 15 squats",
+      "rx": "bodyweight",
+      "score": "rounds"
+    },
+    {
+      "id": "cindy",
+      "name": "Cindy",
+      "aliases": [],
+      "category": "girl",
+      "format": "amrap",
+      "scheme": "AMRAP 20: 5 pull-ups, 10 push-ups, 15 squats",
+      "rx": "bodyweight",
+      "score": "rounds_reps"
+    },
+    {
+      "id": "diane",
+      "name": "Diane",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "21-15-9 deadlift, handstand push-up",
+      "rx": "225/155 lb",
+      "score": "time"
+    },
+    {
+      "id": "elizabeth",
+      "name": "Elizabeth",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "21-15-9 clean, ring dip",
+      "rx": "135/95 lb",
+      "score": "time"
+    },
+    {
+      "id": "fran",
+      "name": "Fran",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "21-15-9 thruster, pull-up",
+      "rx": "95/65 lb",
+      "score": "time"
+    },
+    {
+      "id": "grace",
+      "name": "Grace",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "30 clean and jerks",
+      "rx": "135/95 lb",
+      "score": "time"
+    },
+    {
+      "id": "helen",
+      "name": "Helen",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "3 RFT: 400 m run, 21 kettlebell swings, 12 pull-ups",
+      "rx": "KB 53/35 lb",
+      "score": "time"
+    },
+    {
+      "id": "isabel",
+      "name": "Isabel",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "30 snatches",
+      "rx": "135/95 lb",
+      "score": "time"
+    },
+    {
+      "id": "jackie",
+      "name": "Jackie",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "1000 m row, 50 thrusters, 30 pull-ups",
+      "rx": "45/35 lb",
+      "score": "time"
+    },
+    {
+      "id": "karen",
+      "name": "Karen",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "150 wall-ball shots",
+      "rx": "20/14 lb to 10/9 ft",
+      "score": "time"
+    },
+    {
+      "id": "linda",
+      "name": "Linda",
+      "aliases": [
+        "Three Bars of Death"
+      ],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "10-9-...-1: deadlift 1.5xBW, bench press BW, squat clean 0.75xBW",
+      "rx": "% bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "mary",
+      "name": "Mary",
+      "aliases": [],
+      "category": "girl",
+      "format": "amrap",
+      "scheme": "AMRAP 20: 5 HSPU, 10 pistols, 15 pull-ups",
+      "rx": "bodyweight",
+      "score": "rounds_reps"
+    },
+    {
+      "id": "nancy",
+      "name": "Nancy",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "5 RFT: 400 m run, 15 overhead squats",
+      "rx": "95/65 lb",
+      "score": "time"
+    },
+    {
+      "id": "annie",
+      "name": "Annie",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "50-40-30-20-10 double-under, sit-up",
+      "rx": "bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "eva",
+      "name": "Eva",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "5 RFT: 800 m run, 30 kettlebell swings, 30 pull-ups",
+      "rx": "KB 2/1.5 pood",
+      "score": "time"
+    },
+    {
+      "id": "kelly",
+      "name": "Kelly",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "5 RFT: 400 m run, 30 box jumps, 30 wall-ball shots",
+      "rx": "box 24/20 in; ball 20/14 lb",
+      "score": "time"
+    },
+    {
+      "id": "lynne",
+      "name": "Lynne",
+      "aliases": [],
+      "category": "girl",
+      "format": "max_effort",
+      "scheme": "5 rounds for max reps: bodyweight bench press, pull-ups",
+      "rx": "bodyweight",
+      "score": "reps"
+    },
+    {
+      "id": "nicole",
+      "name": "Nicole",
+      "aliases": [],
+      "category": "girl",
+      "format": "amrap",
+      "scheme": "AMRAP 20: 400 m run, max pull-ups",
+      "rx": "bodyweight",
+      "score": "reps"
+    },
+    {
+      "id": "amanda",
+      "name": "Amanda",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "9-7-5 muscle-up, snatch",
+      "rx": "135/95 lb",
+      "score": "time"
+    },
+    {
+      "id": "gwen",
+      "name": "Gwen",
+      "aliases": [],
+      "category": "girl",
+      "format": "strength_sets",
+      "scheme": "clean and jerk 15-12-9, touch-and-go, same load",
+      "rx": "athlete's choice",
+      "score": "load"
+    },
+    {
+      "id": "marguerita",
+      "name": "Marguerita",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "50 reps: burpee + push-up + jumping jack + sit-up + handstand",
+      "rx": "bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "candy",
+      "name": "Candy",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "5 RFT: 20 pull-ups, 40 push-ups, 60 squats",
+      "rx": "bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "maggie",
+      "name": "Maggie",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "5 RFT: 20 HSPU, 40 pull-ups, 60 alternating pistols",
+      "rx": "bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "hope",
+      "name": "Hope",
+      "aliases": [],
+      "category": "girl",
+      "format": "intervals",
+      "scheme": "3 rounds, 1:00 stations, 1:00 rest: burpees, power snatch, box jump, thruster, C2B",
+      "rx": "75 lb, 24 in box",
+      "score": "reps"
+    },
+    {
+      "id": "grettel",
+      "name": "Grettel",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "10 RFT: 3 clean and jerks, 3 burpees over the bar",
+      "rx": "135/95 lb",
+      "score": "time"
+    },
+    {
+      "id": "ingrid",
+      "name": "Ingrid",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "10 RFT: 3 snatches, 3 burpees over the bar",
+      "rx": "135/95 lb",
+      "score": "time"
+    },
+    {
+      "id": "barbara_ann",
+      "name": "Barbara Ann",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "5 rounds each for time, 3:00 rest: 20 HSPU, 30 deadlifts, 40 sit-ups, 50 DU",
+      "rx": "135/95 lb",
+      "score": "time"
+    },
+    {
+      "id": "lyla",
+      "name": "Lyla",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "10-9-...-1 muscle-up, bodyweight clean and jerk",
+      "rx": "bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "ellen",
+      "name": "Ellen",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "3 RFT: 20 burpees, 21 DB snatches, 12 DB thrusters",
+      "rx": "50/35 lb",
+      "score": "time"
+    },
+    {
+      "id": "andi",
+      "name": "Andi",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "100 hang power snatches, 100 push presses, 100 SDHP, 100 front squats",
+      "rx": "65/45 lb",
+      "score": "time"
+    },
+    {
+      "id": "lane",
+      "name": "Lane",
+      "aliases": [],
+      "category": "girl",
+      "format": "max_effort",
+      "scheme": "5 rounds for max reps: hang power snatch 3/4 BW, HSPU",
+      "rx": "3/4 bodyweight",
+      "score": "reps"
+    },
+    {
+      "id": "nasty_girls",
+      "name": "Nasty Girls",
+      "aliases": [],
+      "category": "girl",
+      "format": "for_time",
+      "scheme": "3 RFT: 50 squats, 7 muscle-ups, 10 hang power cleans",
+      "rx": "135 lb",
+      "score": "time"
+    },
+    {
+      "id": "murph",
+      "name": "Murph",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "1 mi run, 100 pull-ups, 200 push-ups, 300 squats, 1 mi run",
+      "rx": "vest 20/14 lb",
+      "score": "time"
+    },
+    {
+      "id": "dt",
+      "name": "DT",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "5 RFT: 12 deadlifts, 9 hang power cleans, 6 push jerks",
+      "rx": "155/105 lb",
+      "score": "time"
+    },
+    {
+      "id": "jt",
+      "name": "JT",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "21-15-9 HSPU, ring dip, push-up",
+      "rx": "bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "michael",
+      "name": "Michael",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "3 RFT: 800 m run, 50 back extensions, 50 sit-ups",
+      "rx": "bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "badger",
+      "name": "Badger",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "3 RFT: 30 squat cleans, 30 pull-ups, 800 m run",
+      "rx": "95/65 lb",
+      "score": "time"
+    },
+    {
+      "id": "nate",
+      "name": "Nate",
+      "aliases": [],
+      "category": "hero",
+      "format": "amrap",
+      "scheme": "AMRAP 20: 2 muscle-ups, 4 HSPU, 8 kettlebell swings",
+      "rx": "KB 70/53 lb",
+      "score": "rounds_reps"
+    },
+    {
+      "id": "randy",
+      "name": "Randy",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "75 power snatches",
+      "rx": "75/55 lb",
+      "score": "time"
+    },
+    {
+      "id": "kalsu",
+      "name": "Kalsu",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "100 thrusters; 5 burpees at the start and top of every minute",
+      "rx": "135/95 lb",
+      "score": "time"
+    },
+    {
+      "id": "chad",
+      "name": "Chad",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "1,000 box step-ups with a ruck",
+      "rx": "ruck 45/35 lb, 20 in box",
+      "score": "time"
+    },
+    {
+      "id": "holleyman",
+      "name": "Holleyman",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "30 RFT: 5 wall-ball shots, 3 HSPU, 1 power clean",
+      "rx": "ball 20/14 lb; clean 225/155 lb",
+      "score": "time"
+    },
+    {
+      "id": "josh",
+      "name": "Josh",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "21 OHS, 42 pull-ups, 15 OHS, 30 pull-ups, 9 OHS, 18 pull-ups",
+      "rx": "95/65 lb",
+      "score": "time"
+    },
+    {
+      "id": "daniel",
+      "name": "Daniel",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "50 pull-ups, 400 m run, 21 thrusters, 800 m run, 21 thrusters, 400 m run, 50 pull-ups",
+      "rx": "95/65 lb",
+      "score": "time"
+    },
+    {
+      "id": "jason",
+      "name": "Jason",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "squats 100/75/50/25 alternating with muscle-ups 5/10/15/20",
+      "rx": "bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "griff",
+      "name": "Griff",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "800 m run, 400 m run backward, 800 m run, 400 m run backward",
+      "rx": "-",
+      "score": "time"
+    },
+    {
+      "id": "ryan",
+      "name": "Ryan",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "5 RFT: 7 muscle-ups, 21 burpees",
+      "rx": "bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "bull",
+      "name": "Bull",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "2 RFT: 200 double-unders, 50 OHS, 50 pull-ups, 1 mi run",
+      "rx": "135/95 lb",
+      "score": "time"
+    },
+    {
+      "id": "the_seven",
+      "name": "The Seven",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "7 RFT: 7 each HSPU, thruster, K2E, deadlift, burpee, KB swing, pull-up",
+      "rx": "thruster 135/95, DL 245/165, KB 70/53 lb",
+      "score": "time"
+    },
+    {
+      "id": "loredo",
+      "name": "Loredo",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "6 RFT: 24 squats, 24 push-ups, 24 walking-lunge steps, 400 m run",
+      "rx": "bodyweight",
+      "score": "time"
+    },
+    {
+      "id": "lumberjack_20",
+      "name": "Lumberjack 20",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "20 each: DL, KBS, OHS, burpee, C2B, box jump, DB squat clean; 400 m run after each",
+      "rx": "DL 275/185, KB 70/53, OHS 115/75 lb",
+      "score": "time"
+    },
+    {
+      "id": "glen",
+      "name": "Glen",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "30 clean and jerks, 1 mi run, 10 rope climbs, 1 mi run, 100 burpees",
+      "rx": "135/95 lb",
+      "score": "time"
+    },
+    {
+      "id": "whitten",
+      "name": "Whitten",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "5 RFT: 22 KBS, 22 box jumps, 400 m run, 22 burpees, 22 wall balls",
+      "rx": "KB 72/53 lb, box 24/20 in, ball 20/14 lb",
+      "score": "time"
+    },
+    {
+      "id": "nutts",
+      "name": "Nutts",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "10 HSPU, 15 DL, 25 box jumps, 50 pull-ups, 100 wall balls, 200 DU, 400 m plate run",
+      "rx": "DL 250/175 lb, box 30/24 in",
+      "score": "time"
+    },
+    {
+      "id": "tommy_v",
+      "name": "Tommy V",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "thrusters 21/15/9 alternating with rope climbs 12/9/6",
+      "rx": "115/75 lb",
+      "score": "time"
+    },
+    {
+      "id": "luce",
+      "name": "Luce",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "3 RFT, vest: 1 km run, 10 muscle-ups, 100 squats",
+      "rx": "vest 20/14 lb",
+      "score": "time"
+    },
+    {
+      "id": "jerry",
+      "name": "Jerry",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "1 mi run, 2 km row, 1 mi run",
+      "rx": "-",
+      "score": "time"
+    },
+    {
+      "id": "danny",
+      "name": "Danny",
+      "aliases": [],
+      "category": "hero",
+      "format": "amrap",
+      "scheme": "AMRAP 20: 30 box jumps, 20 push presses, 30 pull-ups",
+      "rx": "115/75 lb, box 24/20 in",
+      "score": "rounds_reps"
+    },
+    {
+      "id": "mr_joshua",
+      "name": "Mr. Joshua",
+      "aliases": [],
+      "category": "hero",
+      "format": "for_time",
+      "scheme": "5 RFT: 400 m run, 30 GHD sit-ups, 15 deadlifts",
+      "rx": "250/175 lb",
+      "score": "time"
+    },
+    {
+      "id": "mcghee",
+      "name": "McGhee",
+      "aliases": [],
+      "category": "hero",
+      "format": "amrap",
+      "scheme": "AMRAP 30: 5 deadlifts, 13 push-ups, 9 box jumps",
+      "rx": "275/185 lb, box 24/20 in",
+      "score": "rounds_reps"
+    },
+    {
+      "id": "fight_gone_bad",
+      "name": "Fight Gone Bad",
+      "aliases": [
+        "FGB"
+      ],
+      "category": "other",
+      "format": "intervals",
+      "scheme": "3 rounds x 5 one-minute stations, 1:00 rest: wall ball, SDHP, box jump, push press, row (cal)",
+      "rx": "ball 20/14 lb; SDHP/PP 75/55 lb; 20 in box",
+      "score": "reps"
+    },
+    {
+      "id": "filthy_fifty",
+      "name": "Filthy Fifty",
+      "aliases": [],
+      "category": "other",
+      "format": "for_time",
+      "scheme": "50 each: box jump, jumping pull-up, KBS, lunge step, K2E, push press, back extension, wall ball, burpee, DU",
+      "rx": "box 24/20 in, KB 16/12 kg, PP 45/35 lb",
+      "score": "time"
+    },
+    {
+      "id": "crossfit_total",
+      "name": "CrossFit Total",
+      "aliases": [
+        "CFT"
+      ],
+      "category": "other",
+      "format": "strength_sets",
+      "scheme": "1RM back squat, shoulder press, deadlift; 3 attempts each",
+      "rx": "-",
+      "score": "load"
+    },
+    {
+      "id": "tabata_something_else",
+      "name": "Tabata Something Else",
+      "aliases": [],
+      "category": "other",
+      "format": "tabata",
+      "scheme": "32 x :20/:10: pull-ups, push-ups, sit-ups, squats (8 each)",
+      "rx": "bodyweight",
+      "score": "reps"
+    },
+    {
+      "id": "tabata_this",
+      "name": "Tabata This!",
+      "aliases": [
+        "Tabata This"
+      ],
+      "category": "other",
+      "format": "tabata",
+      "scheme": "5 Tabatas, 1:00 rest between: row (cal), squat, pull-up, push-up, sit-up",
+      "rx": "bodyweight",
+      "score": "reps"
+    },
+    {
+      "id": "the_chief",
+      "name": "The Chief",
+      "aliases": [
+        "Chief"
+      ],
+      "category": "other",
+      "format": "intervals",
+      "scheme": "5 x 3:00 AMRAP of 3 power cleans, 6 push-ups, 9 squats; 1:00 rest",
+      "rx": "135/95 lb",
+      "score": "rounds"
+    },
+    {
+      "id": "open_24_1",
+      "name": "24.1",
+      "aliases": [
+        "Open 24.1"
+      ],
+      "category": "open",
+      "format": "for_time",
+      "scheme": "cap 15: 21-15-9 DB snatch (arm 1), LBO DB, DB snatch (arm 2), LBO DB",
+      "rx": "DB 50/35 lb",
+      "score": "time"
+    },
+    {
+      "id": "open_24_2",
+      "name": "24.2",
+      "aliases": [
+        "Open 24.2"
+      ],
+      "category": "open",
+      "format": "amrap",
+      "scheme": "AMRAP 20: 300 m row, 10 deadlifts, 50 double-unders",
+      "rx": "185/125 lb",
+      "score": "reps"
+    },
+    {
+      "id": "open_24_3",
+      "name": "24.3",
+      "aliases": [
+        "Open 24.3"
+      ],
+      "category": "open",
+      "format": "for_time",
+      "scheme": "cap 15: 5 rds 10 thrusters + 10 C2B; rest 1:00; 5 rds 7 thrusters + 7 BMU",
+      "rx": "M 95,135 / F 65,95 lb",
+      "score": "time"
+    },
+    {
+      "id": "open_25_1",
+      "name": "25.1",
+      "aliases": [
+        "Open 25.1"
+      ],
+      "category": "open",
+      "format": "amrap",
+      "scheme": "AMRAP 15: 3 LBO DB, 3 DB HC2OH, 30 ft walking lunge; +3 each round",
+      "rx": "DB 50/35 lb",
+      "score": "reps"
+    },
+    {
+      "id": "open_25_2",
+      "name": "25.2",
+      "aliases": [
+        "Open 25.2",
+        "22.3"
+      ],
+      "category": "open",
+      "format": "for_time",
+      "scheme": "cap 12: 21 PU, 42 DU, 21 thrusters; 18 C2B, 36 DU, 18 thrusters; 15 BMU, 30 DU, 15 thrusters",
+      "rx": "M 95/115/135, F 65/75/85 lb",
+      "score": "time"
+    },
+    {
+      "id": "open_25_3",
+      "name": "25.3",
+      "aliases": [
+        "Open 25.3"
+      ],
+      "category": "open",
+      "format": "for_time",
+      "scheme": "cap 20: WW / 50 cal row / WW / 25 DL / WW / 25 cleans / WW / 25 snatches / WW / 50 cal row",
+      "rx": "DL 225/155, clean 135/85, snatch 95/65 lb",
+      "score": "time"
+    },
+    {
+      "id": "open_26_1",
+      "name": "26.1",
+      "aliases": [
+        "Open 26.1"
+      ],
+      "category": "open",
+      "format": "for_time",
+      "scheme": "cap 12: wall balls 20-30-40-66-40-30-20 with BJO / MB step-over sets",
+      "rx": "ball 20/14 lb, box 24/20 in",
+      "score": "time"
+    },
+    {
+      "id": "open_26_2",
+      "name": "26.2",
+      "aliases": [
+        "Open 26.2"
+      ],
+      "category": "open",
+      "format": "for_time",
+      "scheme": "cap 15: 3 x (80 ft DB OH lunge, 20 alt DB snatches) with 20 PU / 20 C2B / 20 RMU",
+      "rx": "DB 50/35 lb",
+      "score": "time"
+    },
+    {
+      "id": "open_26_3",
+      "name": "26.3",
+      "aliases": [
+        "Open 26.3"
+      ],
+      "category": "open",
+      "format": "for_time",
+      "scheme": "cap 16: 3 blocks x 2 rds: 12 BOB, 12 cleans, 12 BOB, 12 thrusters",
+      "rx": "M 95/115/135, F 65/75/85 lb",
+      "score": "time"
+    }
+  ]
+}

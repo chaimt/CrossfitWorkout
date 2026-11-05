@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crossfitworkout.local/result.schema.json",
+  "title": "Part Result (payload of result.put) — docs/protocol.md §5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sv", "id", "rr", "sid", "pl", "pr", "wid", "wr", "pt", "st", "t0", "el", "act", "wk", "sc", "fit", "dev", "app"],
+  "properties": {
+    "sv": { "const": 1 },
+    "id": { "$ref": "#/$defs/uuid" },
+    "rr": { "type": "integer", "minimum": 1 },
+    "sid": { "$ref": "#/$defs/uuid" },
+    "pl": { "$ref": "#/$defs/uuid" },
+    "pr": { "type": "integer", "minimum": 1 },
+    "wid": { "$ref": "#/$defs/uuid" },
+    "wr": { "type": "integer", "minimum": 1 },
+    "pt": { "$ref": "#/$defs/uuid" },
+    "st": { "enum": ["completed", "capped", "stopped_early", "interrupted", "skipped"] },
+    "t0": { "type": "integer", "minimum": 0 },
+    "el": { "type": "integer", "minimum": 0 },
+    "act": { "type": "integer", "minimum": 0 },
+    "wk": { "type": "integer", "minimum": 0 },
+    "sc": { "$ref": "#/$defs/score" },
+    "lv": { "type": "string", "maxLength": 12 },
+    "ev": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          { "type": "integer", "minimum": 0 },
+          { "enum": ["rd", "mv", "fin", "cap", "undo"] },
+          { "type": "integer", "minimum": 0 }
+        ],
+        "items": false,
+        "minItems": 3
+      }
+    },
+    "sets": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          { "$ref": "#/$defs/uuid" },
+          { "type": "integer", "minimum": 0 },
+          { "type": "integer", "minimum": -1 },
+          { "type": "integer", "minimum": 0 },
+          { "type": "number", "minimum": -1 },
+          { "enum": ["kg", "lb", ""] },
+          { "type": "integer", "minimum": 1 },
+          { "enum": ["done", "partial", "failed", "skipped"] },
+          { "type": "integer", "minimum": 0 }
+        ],
+        "items": false,
+        "minItems": 9
+      }
+    },
+    "ld": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          { "$ref": "#/$defs/uuid" },
+          { "type": "number", "minimum": 0 },
+          { "enum": ["kg", "lb"] },
+          { "type": "integer", "minimum": 1 }
+        ],
+        "items": false,
+        "minItems": 4
+      }
+    },
+    "edt": { "type": "object", "additionalProperties": { "type": "integer" } },
+    "hr": { "type": "array", "prefixItems": [{ "type": "integer" }, { "type": "integer" }], "items": false, "minItems": 2 },
+    "cal": { "type": "integer", "minimum": 0 },
+    "fit": { "enum": ["off", "saved", "failed", "unknown"] },
+    "dev": { "type": "string" },
+    "app": { "type": "string" },
+    "nt": { "type": "string", "maxLength": 256 }
+  },
+  "$defs": {
+    "uuid": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "score": {
+      "type": "object",
+      "required": ["ty", "rv"],
+      "properties": {
+        "ty": { "enum": ["time", "rounds_reps", "reps", "load", "calories", "distance", "minutes_reps", "completion", "text", "none"] },
+        "rv": { "type": "integer", "minimum": 1 },
+        "man": { "type": "boolean" },
+        "cs": { "type": "boolean" },
+        "s": { "type": "integer", "minimum": 0, "maximum": 86399 },
+        "r": { "type": "integer", "minimum": 0 },
+        "x": { "type": "integer", "minimum": 0 },
+        "n": { "type": "integer", "minimum": 0, "maximum": 99999 },
+        "v": { "type": "number", "minimum": 0 },
+        "u": { "enum": ["kg", "lb", "m", "km", "mi", "ft", "yd"] },
+        "i": { "type": "integer", "minimum": 0 },
+        "ok": { "type": "boolean" },
+        "tx": { "type": "string", "maxLength": 256 },
+        "pd": { "type": "boolean" }
+      },
+      "additionalProperties": false,
+      "if": { "required": ["pd"], "properties": { "pd": { "const": true } } },
+      "then": {
+        "not": { "anyOf": [
+          { "required": ["s"] }, { "required": ["r"] }, { "required": ["x"] }, { "required": ["n"] },
+          { "required": ["v"] }, { "required": ["i"] }, { "required": ["ok"] }, { "required": ["tx"] }
+        ] }
+      },
+      "else": {
+        "allOf": [
+          { "if": { "properties": { "ty": { "const": "time" } } }, "then": { "required": ["s"] } },
+          { "if": { "properties": { "ty": { "const": "rounds_reps" } } }, "then": { "required": ["r", "x"] } },
+          { "if": { "properties": { "ty": { "enum": ["reps", "calories"] } } }, "then": { "required": ["n"] } },
+          { "if": { "properties": { "ty": { "enum": ["load", "distance"] } } }, "then": { "required": ["v", "u"] } },
+          { "if": { "properties": { "ty": { "const": "minutes_reps" } } }, "then": { "required": ["i", "x"] } },
+          { "if": { "properties": { "ty": { "const": "completion" } } }, "then": { "required": ["ok"] } },
+          { "if": { "properties": { "ty": { "const": "text" } } }, "then": { "required": ["tx"] } }
+        ]
+      }
+    }
+  }
+}

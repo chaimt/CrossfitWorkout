@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crossfitworkout.local/session.schema.json",
+  "title": "SessionSummary (payload of session.put) — docs/protocol.md §5.4, REQ-SY16",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sv", "id", "rev", "pl", "pr", "e", "t0", "t1", "el", "act", "fit"],
+  "properties": {
+    "sv": { "const": 1 },
+    "id": { "$ref": "#/$defs/uuid" },
+    "rev": { "type": "integer", "minimum": 1 },
+    "pl": { "$ref": "#/$defs/uuid" },
+    "pr": { "type": "integer", "minimum": 1 },
+    "e": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 6,
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          { "$ref": "#/$defs/uuid" },
+          { "anyOf": [{ "$ref": "#/$defs/uuid" }, { "const": "" }] },
+          { "enum": ["completed", "capped", "stopped_early", "interrupted", "skipped"] }
+        ],
+        "items": false,
+        "minItems": 3
+      }
+    },
+    "t0": { "type": "integer", "minimum": 0 },
+    "t1": { "type": "integer", "minimum": 0 },
+    "el": { "type": "integer", "minimum": 0 },
+    "act": { "type": "integer", "minimum": 0 },
+    "hr": { "type": "array", "prefixItems": [{ "type": "integer" }, { "type": "integer" }], "items": false, "minItems": 2 },
+    "cal": { "type": "integer", "minimum": 0 },
+    "rso": { "$ref": "#/$defs/uuid" },
+    "fit": { "enum": ["off", "saved", "failed", "unknown"] }
+  },
+  "$defs": {
+    "uuid": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" }
+  }
+}

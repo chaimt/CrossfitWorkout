@@ -1,0 +1,7 @@
+# Connect IQ build configuration for the beta UUID (manifest-beta.xml).
+# Same restricted source path as monkey.jungle (.claude/worktrees gotcha).
+
+project.manifest = manifest-beta.xml
+
+base.sourcePath = source
+base.resourcePath = resources

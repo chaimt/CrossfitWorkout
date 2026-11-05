@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+    Connect IQ application manifest for WOD Coach - BETA UUID
+    (docs/protocol.md section 0), used for Connect IQ beta uploads.
+    manifest.xml is identical except for the production UUID; keep the two
+    in sync. Build with scripts/build.sh with the beta flag.
+-->
+<iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
+    <iq:application
+        entry="CoachApp"
+        id="a930ecf2337f4023a7b446ce221a73cf"
+        launcherIcon="@Drawables.LauncherIcon"
+        minSdkVersion="5.2.0"
+        name="@Strings.AppName"
+        type="watch-app"
+        version="0.1.0">
+
+        <iq:products>
+            <iq:product id="fr965"/>
+        </iq:products>
+
+        <iq:permissions>
+            <iq:uses-permission id="Fit"/>
+            <iq:uses-permission id="Communications"/>
+            <iq:uses-permission id="Sensor"/>
+        </iq:permissions>
+
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
+    </iq:application>
+</iq:manifest>

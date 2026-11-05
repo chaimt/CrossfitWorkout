@@ -1,0 +1,154 @@
+# https://taskfile.dev  -  WOD Capture (Android app)
+# JAVA_HOME must point at a JDK 21 (AGP/Kotlin cannot run on JDK 27); override with
+#   JAVA_HOME=/path/to/jdk21 task android:build
+version: "3"
+
+vars:
+  APP_ID: com.wodcapture.app
+  ACTIVITY: com.wodcapture.app.ui.MainActivity
+  DEBUG_APK: app/build/outputs/apk/debug/app-debug.apk
+  JDK21:
+    sh: |
+      if [ -n "${JAVA_HOME:-}" ] && "$JAVA_HOME/bin/java" -version 2>&1 | grep -q '"21'; then echo "$JAVA_HOME"
+      elif [ -d "$HOME/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home" ]; then echo "$HOME/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home"
+      else /usr/libexec/java_home -v 21 2>/dev/null || echo "${JAVA_HOME:-}"; fi
+  # Android SDK from local.properties (gitignored), else Homebrew's command-line tools.
+  SDK:
+    sh: |
+      sdk="$(sed -n 's/^sdk.dir=//p' local.properties 2>/dev/null)"
+      echo "${sdk:-/opt/homebrew/share/android-commandlinetools}"
+  # adb from PATH, else from the SDK.
+  ADB:
+    sh: |
+      if command -v adb >/dev/null 2>&1; then command -v adb; exit 0; fi
+      sdk="$(sed -n 's/^sdk.dir=//p' local.properties 2>/dev/null)"
+      echo "${sdk:-/opt/homebrew/share/android-commandlinetools}/platform-tools/adb"
+  # Emulator image: Google Play (ML Kit document scanner needs Play services), Apple-silicon ABI.
+  AVD: wodcapture
+  AVD_IMAGE: system-images;android-36;google_apis_playstore;arm64-v8a
+  AVD_DEVICE: pixel_8
+
+env:
+  JAVA_HOME: "{{.JDK21}}"
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  build:
+    desc: Assemble the debug APK
+    cmds:
+      - ./gradlew --console=plain :app:assembleDebug
+      - echo "APK -> android/{{.DEBUG_APK}}"
+
+  release:
+    desc: Assemble an unsigned release APK (sign it with apksigner before distributing)
+    cmds:
+      - ./gradlew --console=plain :app:assembleRelease
+      - echo "APK -> android/app/build/outputs/apk/release/app-release-unsigned.apk"
+
+  test:
+    desc: Run the JVM unit tests (domain + app)
+    cmds:
+      - ./gradlew --console=plain :domain:test :app:testDebugUnitTest
+
+  lint:
+    desc: Run Android lint on the debug variant
+    cmds:
+      - ./gradlew --console=plain :app:lintDebug
+
+  eval:
+    desc: Run the parser eval harness (needs ANTHROPIC_API_KEY for the cloud parser)
+    cmds:
+      - ./gradlew --console=plain :domain:eval
+
+  clean:
+    desc: Delete Gradle build outputs
+    cmds:
+      - ./gradlew --console=plain clean
+
+  devices:
+    desc: List Android devices/emulators visible to adb
+    cmds:
+      - "{{.ADB}} devices -l"
+
+  _require-device:
+    internal: true
+    silent: true
+    preconditions:
+      - sh: '[ -x "{{.ADB}}" ]'
+        msg: "adb not found at {{.ADB}} — install platform-tools or put adb on PATH"
+      - sh: '{{.ADB}} get-state >/dev/null 2>&1'
+        msg: "No Android device: connect a phone with USB debugging (or start an emulator), then `task android:devices`"
+
+  install:
+    desc: Build the debug APK and install it on the connected phone
+    cmds:
+      - task: build
+      - task: _require-device
+      - "{{.ADB}} install -r {{.DEBUG_APK}}"
+
+  run:
+    desc: Install the debug APK and launch WOD Capture
+    cmds:
+      - task: install
+      - "{{.ADB}} shell am start -n {{.APP_ID}}/{{.ACTIVITY}}"
+
+  logs:
+    desc: Follow logcat for the running WOD Capture process
+    interactive: true
+    cmds:
+      - task: _require-device
+      - |
+        pid="$({{.ADB}} shell pidof {{.APP_ID}} | tr -d '\r')"
+        if [ -z "$pid" ]; then echo "WOD Capture is not running — try 'task android:run'" >&2; exit 1; fi
+        {{.ADB}} logcat --pid="$pid"
+
+  uninstall:
+    desc: Uninstall WOD Capture from the connected phone (deletes its local data)
+    prompt: This deletes all WOD Capture data on the phone. Continue?
+    cmds:
+      - task: _require-device
+      - "{{.ADB}} uninstall {{.APP_ID}}"
+
+  emulator:setup:
+    desc: Download the emulator + Google Play system image and create the "wodcapture" AVD (one-time, ~2 GB)
+    cmds:
+      - '{{.SDK}}/cmdline-tools/latest/bin/sdkmanager --install emulator "{{.AVD_IMAGE}}"'
+      - echo no | {{.SDK}}/cmdline-tools/latest/bin/avdmanager create avd -n {{.AVD}} -k "{{.AVD_IMAGE}}" -d {{.AVD_DEVICE}}
+    status:
+      - '{{.SDK}}/emulator/emulator -list-avds | grep -qx {{.AVD}}'
+
+  emulator:start:
+    desc: Boot the "wodcapture" emulator (window) and wait until Android is ready
+    cmds:
+      - task: emulator:setup
+      - |
+        if ! {{.ADB}} devices | grep -q '^emulator-'; then
+          nohup {{.SDK}}/emulator/emulator -avd {{.AVD}} -no-snapshot-save >/tmp/wodcapture-emulator.log 2>&1 &
+        fi
+      - "{{.ADB}} wait-for-device"
+      - |
+        echo "Waiting for Android to finish booting ..."
+        until [ "$({{.ADB}} shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do sleep 2; done
+        echo "Emulator ready."
+
+  emulator:run:
+    desc: Start the emulator if needed, then build, install and launch WOD Capture on it
+    cmds:
+      - task: emulator:start
+      - task: run
+
+  emulator:stop:
+    desc: Shut down the running emulator
+    cmds:
+      - "{{.ADB}} emu kill"
+
+  tether:
+    desc: Forward the Connect IQ simulator port so the phone app can reach the simulator (REQ-SY08)
+    cmds:
+      - task: _require-device
+      - "{{.ADB}} forward tcp:7381 tcp:7381"
+      - echo "Now in the simulator choose Connection → Start, and enable simulator (TETHERED) mode in WOD Capture's device screen."

@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "id": "f0700000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "title": "4 x 4:00",
+  "date": "2026-11-03",
+  "scheduleTimeZone": "Asia/Jerusalem",
+  "source": {
+    "kind": "text",
+    "imageRefs": [],
+    "parser": "fixture"
+  },
+  "parts": [
+    {
+      "id": "f0710000-0000-4000-8000-000000000001",
+      "label": "",
+      "kind": "metcon",
+      "format": {
+        "type": "intervals",
+        "rounds": 4,
+        "workSec": 240,
+        "restSec": 120,
+        "finalRest": false,
+        "inner": "amrap"
+      },
+      "body": [
+        {
+          "type": "item",
+          "id": "f0720000-0000-4000-8000-000000000001",
+          "movementId": "run",
+          "name": "Run",
+          "measure": {
+            "kind": "distance",
+            "value": 200.0,
+            "labeled": false,
+            "unit": "m"
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "buy_in",
+          "sets": []
+        },
+        {
+          "type": "group",
+          "id": "f0720000-0000-4000-8000-000000000002",
+          "kind": "rounds",
+          "repeat": 1,
+          "repScheme": [],
+          "children": [
+            {
+              "type": "item",
+              "id": "f0720000-0000-4000-8000-000000000003",
+              "movementId": "deadlift",
+              "name": "Deadlift",
+              "measure": {
+                "kind": "reps",
+                "value": 5.0,
+                "labeled": false
+              },
+              "load": {
+                "kind": "split",
+                "male": {
+                  "value": 225.0,
+                  "unit": "lb"
+                },
+                "female": {
+                  "value": 155.0,
+                  "unit": "lb"
+                },
+                "labeled": false,
+                "confirmed": false
+              },
+              "implement": "barbell",
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            },
+            {
+              "type": "item",
+              "id": "f0720000-0000-4000-8000-000000000004",
+              "movementId": "burpee",
+              "name": "Burpee",
+              "measure": {
+                "kind": "reps",
+                "value": 10.0,
+                "labeled": false
+              },
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            }
+          ]
+        }
+      ],
+      "scoring": {
+        "type": "rounds_reps",
+        "aggregation": "sum",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": []
+    }
+  ],
+  "tags": []
+}

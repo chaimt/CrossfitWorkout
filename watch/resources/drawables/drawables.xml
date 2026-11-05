@@ -1,0 +1,4 @@
+<drawables>
+    <!-- Copied from WOD Timer; the resource compiler scales it per device. -->
+    <bitmap id="LauncherIcon" filename="launcher_icon.png"/>
+</drawables>

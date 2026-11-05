@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "crossfitworkout-contract"
+version = "0.1.0"
+description = "Shared-contract checks for WOD Capture / WOD Coach (schemas, wire fixtures, catalogs)"
+authors = ["Chaim Turkel"]
+packages = [{ include = "contract", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11.9,<3.12"
+jsonschema = "^4.23"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3"
+black = "^24.10"
+mypy = "1.8.0"
+pylint = "^3.3"
+types-jsonschema = "^4.23"
+
+[tool.poetry.scripts]
+validate-wire = "contract.validate:main"
+gen-wire-fixtures = "contract.gen_wire_fixtures:main"
+
+[tool.black]
+line-length = 120
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.mypy]
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

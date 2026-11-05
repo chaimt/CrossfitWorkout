@@ -1,0 +1,72 @@
+# https://taskfile.dev — root tasks for the CrossfitWorkout monorepo (REQ-BT02).
+#   task build        build both apps
+#   task deploy       install + launch on the phone and copy to the watch (USB)
+#   task sim          watch app in the Connect IQ simulator + phone app tethered to it
+#   task emulator     phone app in the Android emulator
+# Per-app tasks: task android:<name>, task watch:<name>  (task --list for all)
+version: "3"
+
+includes:
+  android:
+    taskfile: android/taskfile.yml
+    dir: android
+  watch:
+    taskfile: watch/taskfile.yml
+    dir: watch
+
+tasks:
+  default:
+    silent: true
+    cmds:
+      - task --list
+
+  build:
+    desc: Build both apps (Android debug APK + fr965 debug .prg)
+    deps: [android:build, watch:build]
+
+  release:
+    desc: Build release artifacts (unsigned Android APK + store .iq package)
+    deps: [android:release, watch:package]
+
+  deploy:
+    desc: Install and launch WOD Capture on the USB phone, then copy WOD Coach to the USB watch
+    cmds:
+      - task: android:run
+      - task: watch:deploy-watch
+
+  emulator:
+    desc: Run WOD Capture in the Android emulator (creates the AVD on first use)
+    cmds:
+      - task: android:emulator:run
+
+  sim:
+    desc: Run WOD Coach in the Connect IQ simulator and tether the phone/emulator to it (REQ-SY08)
+    cmds:
+      - task: android:run
+      - task: android:tether
+      - task: watch:deploy-simulator
+
+  test:
+    desc: Run every automated test suite that doesn't need a phone (contract, Android JVM, watch simulator)
+    cmds:
+      - task: contract:test
+      - task: android:test
+      - task: watch:test
+
+  eval:
+    desc: Run the parser eval harness over shared/fixtures (needs ANTHROPIC_API_KEY for the cloud parser)
+    cmds:
+      - task: android:eval
+
+  contract:test:
+    desc: Validate shared schemas, golden wire fixtures and catalogs (REQ-TS08)
+    dir: tools
+    cmds:
+      - poetry install --quiet
+      - poetry run pytest -q
+
+  contract:gen:
+    desc: Regenerate shared catalogs and golden wire fixtures
+    cmds:
+      - python3 tools/gen_catalog.py
+      - cd tools && poetry run gen-wire-fixtures

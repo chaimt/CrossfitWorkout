@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "id": "f0900000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "title": "Step-ups, row, squat",
+  "date": "2026-11-03",
+  "scheduleTimeZone": "Asia/Jerusalem",
+  "source": {
+    "kind": "text",
+    "imageRefs": [],
+    "parser": "fixture"
+  },
+  "parts": [
+    {
+      "id": "f0910000-0000-4000-8000-000000000001",
+      "label": "1",
+      "kind": "metcon",
+      "format": {
+        "type": "for_time",
+        "capSec": 3600,
+        "eachRoundForTime": false
+      },
+      "body": [
+        {
+          "type": "item",
+          "id": "f0920000-0000-4000-8000-000000000001",
+          "movementId": "box_step_up",
+          "name": "Box step-up",
+          "measure": {
+            "kind": "reps",
+            "value": 1000.0,
+            "labeled": false
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        },
+        {
+          "type": "item",
+          "id": "f0920000-0000-4000-8000-000000000002",
+          "movementId": "row",
+          "name": "Row",
+          "measure": {
+            "kind": "distance",
+            "value": 2000.0,
+            "labeled": false,
+            "unit": "m"
+          },
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": []
+        }
+      ],
+      "scoring": {
+        "type": "time",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": []
+    },
+    {
+      "id": "f0910000-0000-4000-8000-000000000002",
+      "label": "2",
+      "kind": "strength",
+      "format": {
+        "type": "strength_sets",
+        "setRefs": []
+      },
+      "body": [
+        {
+          "type": "item",
+          "id": "f0920000-0000-4000-8000-000000000003",
+          "movementId": "back_squat",
+          "name": "Back squat",
+          "implement": "barbell",
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": [
+            {
+              "id": "f0930000-0000-4000-8000-000000000001",
+              "reps": {
+                "value": 3,
+                "max": false,
+                "perSide": false
+              },
+              "load": {
+                "kind": "percent_1rm",
+                "percent": 75.0,
+                "repMax": 1
+              },
+              "setType": "working"
+            },
+            {
+              "id": "f0930000-0000-4000-8000-000000000002",
+              "reps": {
+                "value": 3,
+                "max": false,
+                "perSide": false
+              },
+              "load": {
+                "kind": "percent_1rm",
+                "percent": 75.0,
+                "repMax": 1
+              },
+              "setType": "working"
+            },
+            {
+              "id": "f0930000-0000-4000-8000-000000000003",
+              "reps": {
+                "value": 3,
+                "max": false,
+                "perSide": false
+              },
+              "load": {
+                "kind": "percent_1rm",
+                "percent": 75.0,
+                "repMax": 1
+              },
+              "setType": "working"
+            }
+          ]
+        }
+      ],
+      "scoring": {
+        "type": "load",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": []
+    }
+  ],
+  "tags": []
+}

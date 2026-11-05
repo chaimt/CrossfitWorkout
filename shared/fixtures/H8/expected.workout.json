@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 1,
+  "id": "f0800000-0000-4000-8000-000000000001",
+  "revision": 1,
+  "title": "Superset, wave, ladder",
+  "date": "2026-11-03",
+  "scheduleTimeZone": "Asia/Jerusalem",
+  "source": {
+    "kind": "text",
+    "imageRefs": [],
+    "parser": "fixture"
+  },
+  "parts": [
+    {
+      "id": "f0810000-0000-4000-8000-000000000001",
+      "label": "A",
+      "kind": "strength",
+      "format": {
+        "type": "strength_sets",
+        "setRefs": []
+      },
+      "body": [
+        {
+          "type": "group",
+          "id": "f0820000-0000-4000-8000-000000000001",
+          "kind": "superset",
+          "repeat": 1,
+          "repScheme": [],
+          "children": [
+            {
+              "type": "item",
+              "id": "f0820000-0000-4000-8000-000000000002",
+              "movementId": "front_squat",
+              "name": "Front squat",
+              "implement": "barbell",
+              "count": 1,
+              "modifiers": [
+                "tempo"
+              ],
+              "role": "main",
+              "sets": [
+                {
+                  "id": "f0830000-0000-4000-8000-000000000001",
+                  "reps": {
+                    "value": 5,
+                    "max": false,
+                    "perSide": false
+                  },
+                  "tempo": "32X1",
+                  "rpe": 7.0,
+                  "setType": "working"
+                },
+                {
+                  "id": "f0830000-0000-4000-8000-000000000002",
+                  "reps": {
+                    "value": 5,
+                    "max": false,
+                    "perSide": false
+                  },
+                  "tempo": "32X1",
+                  "rpe": 7.0,
+                  "setType": "working"
+                },
+                {
+                  "id": "f0830000-0000-4000-8000-000000000003",
+                  "reps": {
+                    "value": 5,
+                    "max": false,
+                    "perSide": false
+                  },
+                  "tempo": "32X1",
+                  "rpe": 7.0,
+                  "setType": "working"
+                },
+                {
+                  "id": "f0830000-0000-4000-8000-000000000004",
+                  "reps": {
+                    "value": 5,
+                    "max": false,
+                    "perSide": false
+                  },
+                  "tempo": "32X1",
+                  "rpe": 7.0,
+                  "setType": "working"
+                }
+              ]
+            },
+            {
+              "type": "item",
+              "id": "f0820000-0000-4000-8000-000000000003",
+              "movementId": "strict_chest_to_bar_pull_up",
+              "name": "Strict C2B",
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": [
+                {
+                  "id": "f0830000-0000-4000-8000-000000000005",
+                  "reps": {
+                    "value": 5,
+                    "upTo": 8,
+                    "max": false,
+                    "perSide": false
+                  },
+                  "restSec": 90,
+                  "setType": "working"
+                },
+                {
+                  "id": "f0830000-0000-4000-8000-000000000006",
+                  "reps": {
+                    "value": 5,
+                    "upTo": 8,
+                    "max": false,
+                    "perSide": false
+                  },
+                  "restSec": 90,
+                  "setType": "working"
+                },
+                {
+                  "id": "f0830000-0000-4000-8000-000000000007",
+                  "reps": {
+                    "value": 5,
+                    "upTo": 8,
+                    "max": false,
+                    "perSide": false
+                  },
+                  "restSec": 90,
+                  "setType": "working"
+                },
+                {
+                  "id": "f0830000-0000-4000-8000-000000000008",
+                  "reps": {
+                    "value": 5,
+                    "upTo": 8,
+                    "max": false,
+                    "perSide": false
+                  },
+                  "restSec": 90,
+                  "setType": "working"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "scoring": {
+        "type": "load",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": []
+    },
+    {
+      "id": "f0810000-0000-4000-8000-000000000002",
+      "label": "B",
+      "kind": "strength",
+      "format": {
+        "type": "strength_sets",
+        "setRefs": []
+      },
+      "body": [
+        {
+          "type": "item",
+          "id": "f0820000-0000-4000-8000-000000000004",
+          "movementId": "bench_press",
+          "name": "Bench press",
+          "implement": "barbell",
+          "count": 1,
+          "modifiers": [],
+          "role": "main",
+          "sets": [
+            {
+              "id": "f0830000-0000-4000-8000-000000000009",
+              "reps": {
+                "value": 3,
+                "max": false,
+                "perSide": false
+              },
+              "setType": "working"
+            },
+            {
+              "id": "f0830000-0000-4000-8000-000000000010",
+              "reps": {
+                "value": 2,
+                "max": false,
+                "perSide": false
+              },
+              "setType": "working"
+            },
+            {
+              "id": "f0830000-0000-4000-8000-000000000011",
+              "reps": {
+                "value": 1,
+                "max": false,
+                "perSide": false
+              },
+              "setType": "working"
+            },
+            {
+              "id": "f0830000-0000-4000-8000-000000000012",
+              "reps": {
+                "value": 3,
+                "max": false,
+                "perSide": false
+              },
+              "setType": "working"
+            },
+            {
+              "id": "f0830000-0000-4000-8000-000000000013",
+              "reps": {
+                "value": 2,
+                "max": false,
+                "perSide": false
+              },
+              "setType": "working"
+            },
+            {
+              "id": "f0830000-0000-4000-8000-000000000014",
+              "reps": {
+                "value": 1,
+                "max": false,
+                "perSide": false
+              },
+              "setType": "working"
+            }
+          ]
+        }
+      ],
+      "scoring": {
+        "type": "load",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": []
+    },
+    {
+      "id": "f0810000-0000-4000-8000-000000000003",
+      "label": "WOD",
+      "kind": "metcon",
+      "format": {
+        "type": "for_time",
+        "capSec": 720,
+        "eachRoundForTime": false
+      },
+      "body": [
+        {
+          "type": "group",
+          "id": "f0820000-0000-4000-8000-000000000005",
+          "kind": "rounds",
+          "repeat": 10,
+          "repScheme": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "children": [
+            {
+              "type": "item",
+              "id": "f0820000-0000-4000-8000-000000000006",
+              "movementId": "deadlift",
+              "name": "Deadlift",
+              "measure": {
+                "kind": "rep_scheme",
+                "labeled": false
+              },
+              "load": {
+                "kind": "percent_bodyweight",
+                "percent": 150.0
+              },
+              "implement": "barbell",
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            },
+            {
+              "type": "item",
+              "id": "f0820000-0000-4000-8000-000000000007",
+              "movementId": "box_jump",
+              "name": "Box jump",
+              "measure": {
+                "kind": "rep_scheme",
+                "labeled": false
+              },
+              "height": {
+                "male": {
+                  "value": 30.0,
+                  "unit": "in"
+                },
+                "female": {
+                  "value": 24.0,
+                  "unit": "in"
+                },
+                "labeled": false
+              },
+              "count": 1,
+              "modifiers": [],
+              "role": "main",
+              "sets": []
+            }
+          ]
+        }
+      ],
+      "scoring": {
+        "type": "time",
+        "manual": false,
+        "ruleVersion": 1
+      },
+      "levels": []
+    }
+  ],
+  "tags": []
+}
