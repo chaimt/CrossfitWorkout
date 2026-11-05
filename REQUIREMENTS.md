@@ -660,6 +660,7 @@ Hardware execution, real-photo collection and live parser benchmarking are imple
 | REQ-BT02 | Root `taskfile.yml`: `android:build`, `android:test`, `watch:build`, `watch:test`, `watch:deploy-simulator`, `watch:deploy-watch` (USB + libmtp, as WOD Timer), `watch:package`, `eval` (parser eval). Watch scripts copied from WOD Timer (`build.sh`, `test.sh`, `run-simulator.sh`, `lib-sdk.sh`, `deploy-watch.sh`). | MVP | [ ] |
 | REQ-BT03 | `.gitignore`: `bin/`, `build/`, `developer_key`, `local.properties`, keystores, any `*.key`; never commit API keys. | MVP | [ ] |
 | REQ-BT04 | CI (GitHub Actions, `.github/workflows/ci.yml`): Android unit tests + lint on every push (the SDK step installs only `platform-tools`; AGP fetches the rest); watch build when the SDK is available in CI (otherwise local). | v1 | [ ] |
+| REQ-BT05 | **Release on every merge to main** (owner request 2026-11-06): `.github/workflows/release.yml` runs on each push to `main`, runs the Android unit tests, builds the WOD Capture APK and publishes a GitHub Release `v<versionName>` (from `android/app/build.gradle.kts`) with the APK `wod-capture-<tag>.apk` and generated notes. A tag that already exists (version not bumped) gives `v<versionName>-<short sha>` as a pre-release. With the `RELEASE_KEYSTORE_BASE64` / `RELEASE_KEYSTORE_PASSWORD` / `RELEASE_KEY_ALIAS` / `RELEASE_KEY_PASSWORD` secrets the release APK is signed with the owner's key (installs over the previous release); without them the debug APK is attached and the notes say it is debug-signed. The watch `.iq` stays a local build (no Connect IQ SDK in CI). | v1 | [ ] |
 
 ---
 
@@ -1351,4 +1352,5 @@ Sources: the cached mirror of developer.garmin.com/connect-iq used by the garmin
 | 2026-11-05 | Owner request: REQ-AC09 strength sessions drop the Rest field; rest between sets comes from Settings → Default strength rest (`StrengthScheme` now holds only the load type). |
 | 2026-11-05 | Owner request: REQ-AC09 optional session goal weight; each set's weight and % of the goal are linked both ways, computed weights round to the Settings increment (`ManualWorkoutForm.loadStep`). |
 | 2026-11-05 | Owner request: REQ-AC09 new weights quick start "5 × 3 heavy" (back squat, 5 sets × 3 reps @ 85 % 1RM; `ManualTemplates.strength5x3`). |
+| 2026-11-06 | Owner request: new REQ-BT05 — every merge to main publishes a GitHub Release with the WOD Capture APK (`.github/workflows/release.yml`; optional release-key signing via repository secrets). |
 | 2026-11-03 | Builder review: MVP watch target narrowed to the fr965 (REQ-WP01, REQ-WN06, REQ-TS06); gear units per implement (REQ-DM10); capture-now-parse-later (REQ-AX16) and multi-day captures (REQ-AX17); open questions Q1–Q4 (§13). |
