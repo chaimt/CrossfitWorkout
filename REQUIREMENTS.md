@@ -346,7 +346,7 @@ Score fixtures: a rep-only ladder of two movements at 3, 6, 9 reps each has 6/12
 |----|-------------|-------|--------|
 | REQ-AG01 | Profile (REQ-DM10): units, sex for split loads, bodyweight, barbells, smallest increment, rep maxes. **Settings trimmed** (owner request 2026-11-06): only the smallest total increment of the chosen Weight unit is shown (the other unit's value is kept); the kg↔lb **Conversion** choice is removed — prescriptions always use the Appendix D equivalents (REQ-DM19 default), and a stored "arithmetic" choice is reset on load (`SettingsScreen` in `OtherScreens.kt`, `SettingsStore`). | MVP (rep maxes: manual) | [ ] |
 | REQ-AG02 | Workout defaults sent to the watch: strength rest, get-ready countdown, weight step sizes, sound/vibration preferences (the watch can override locally). | MVP | [ ] |
-| REQ-AG03 | Parser settings: cloud on/off, model id, effort, API key, cost estimate. | MVP | [ ] |
+| REQ-AG03 | Parser settings: cloud on/off, model, effort, API key, cost estimate. **The model is a dropdown** (owner request 2026-11-06), not free text: `claude-opus-5-5` (default), `claude-sonnet-5-5`, `claude-haiku-5-5`, `claude-fable-5-1` (`CloudParserConfig.MODELS`, `OtherScreens.kt` SettingsScreen). | MVP | [ ] |
 | REQ-AG04 | Data: confirmed delete-all follows REQ-DM27 in MVP; explicit export/import follows REQ-DM28 in v1. | MVP deletion; v1 export/import | [ ] |
 
 ### 5.8 Integrations
@@ -1361,3 +1361,4 @@ Sources: the cached mirror of developer.garmin.com/connect-iq used by the garmin
 | 2026-11-03 | Builder review: MVP watch target narrowed to the fr965 (REQ-WP01, REQ-WN06, REQ-TS06); gear units per implement (REQ-DM10); capture-now-parse-later (REQ-AX16) and multi-day captures (REQ-AX17); open questions Q1–Q4 (§13). |
 | 2026-11-06 | Owner request: new REQ-AL07 Top lifts view — heaviest completed set per lift with its date, opened from the library bar (`TopLifts.kt`, `TopLiftsScreen.kt`). |
 | 2026-11-06 | Owner request: REQ-AG01 Settings review — removed the Conversion mode control (always equivalents) and the increment field of the unused weight unit. |
+| 2026-11-06 | Owner request: REQ-AG03 Settings → Model is a dropdown of claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5, claude-fable-5-1 instead of a text field (v0.8.1). |

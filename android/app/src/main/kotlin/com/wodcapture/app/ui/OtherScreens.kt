@@ -41,6 +41,7 @@ import com.wodcapture.domain.model.Score
 import com.wodcapture.domain.model.ScoreType
 import com.wodcapture.domain.model.SexSelection
 import com.wodcapture.domain.model.WorkoutResult
+import com.wodcapture.domain.parser.CloudParserConfig
 import com.wodcapture.domain.parser.CostEstimator
 import com.wodcapture.domain.protocol.Protocol
 import com.wodcapture.domain.review.TimeText
@@ -257,7 +258,7 @@ fun SettingsScreen(vm: AppViewModel, back: () -> Unit) {
         Toggle("Record activity", p.watch.record) { b -> profile { it.copy(watch = it.watch.copy(record = b)) } }
         SectionTitle("Parser")
         Toggle("Cloud parsing (Anthropic)", s.cloudParsing) { b -> vm.updateSettings { it.copy(cloudParsing = b) } }
-        Field("Model", s.model, Modifier.fillMaxWidth()) { m -> vm.updateSettings { it.copy(model = m) } }
+        Choice("Model", s.model, CloudParserConfig.MODELS, modifier = Modifier.fillMaxWidth()) { m -> vm.updateSettings { it.copy(model = m) } }
         Choice("Effort", s.effort, listOf("low", "medium", "high", "xhigh", "max")) { e -> vm.updateSettings { it.copy(effort = e) } }
         androidx.compose.material3.OutlinedTextField(
             apiKey, { apiKey = it }, label = { Text(if (vm.hasApiKey()) "API key (stored; paste to replace)" else "Anthropic API key") },
