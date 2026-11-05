@@ -45,6 +45,8 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         // REQ-AW04: on opening the app, request pending results from the watch.
         vm.requestSync()
+        // REQ-AP07: look for an app update (throttled) or finish one waiting for permission.
+        vm.updates.onAppResumed()
     }
 
     @Suppress("DEPRECATION")
@@ -89,6 +91,7 @@ fun AppRoot(vm: AppViewModel) {
         message?.let { snackbar.showSnackbar(it); vm.message.value = null }
     }
     LaunchedEffect(shared) { if (shared != null) nav.navigate(Routes.CAPTURE) }
+    UpdateDialog(vm.updates)
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }) { pad ->
         NavHost(nav, startDestination = Routes.LIBRARY, modifier = Modifier.padding(pad)) {
             composable(Routes.LIBRARY) {

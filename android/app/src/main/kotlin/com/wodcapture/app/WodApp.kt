@@ -13,6 +13,7 @@ import com.wodcapture.app.data.SecretStore
 import com.wodcapture.app.data.SettingsStore
 import com.wodcapture.app.data.WodDatabase
 import com.wodcapture.app.data.WorkoutRepository
+import com.wodcapture.app.update.AppUpdater
 import com.wodcapture.domain.IdSource
 import com.wodcapture.domain.catalog.MovementCatalog
 import com.wodcapture.domain.plan.PlanCompiler
@@ -60,6 +61,8 @@ class AppContainer(context: Context) {
     val catalog: MovementCatalog by lazy { MovementCatalog.fromClasspath() }
     val compiler by lazy { PlanCompiler(catalog) }
     val workouts = WorkoutRepository(db)
+    /** In-app updates from GitHub Releases (REQ-AP07). */
+    val updater by lazy { AppUpdater(context.applicationContext) }
     val ids: IdSource = IdSource.RANDOM
 
     /** Serial executor for the sync engine and its Room writes. */
