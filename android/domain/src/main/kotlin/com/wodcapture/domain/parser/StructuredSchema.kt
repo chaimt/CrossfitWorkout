@@ -8,73 +8,45 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 
 /**
- * Derives the structured-output schema from the canonical `workout.schema.json` (REQ-AX02).
- * Structured outputs reject recursive schemas and numeric/string/array constraints, so the body
- * tree is unrolled to the model depth limit (4, REQ-DM16) and unsupported keywords are dropped;
- * deterministic validation re-checks them after parsing (REQ-AX05). Output is byte-stable.
+ * The response schema the parser asks for (REQ-AX02), derived from the canonical
+ * `workout.schema.json` with ParseResult as the root.
+ *
+ * It is sent in the cached system prompt, not as `output_config.format`: the canonical schema
+ * (about 50 definitions, 128 optional properties, a recursive body tree) is far past the API's
+ * structured-output grammar limits (24 optional parameters, 16 unions per request) and was
+ * rejected with "The compiled grammar is too large". Deterministic decoding and validation
+ * (REQ-AX05) check the reply instead. Output is byte-stable so the prompt prefix caches.
  */
 object StructuredSchema {
-    const val DEPTH = 4
-    private val UNSUPPORTED = setOf(
-        "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "minLength",
-        "maxLength", "pattern", "minItems", "maxItems", "uniqueItems", "default", "\$schema", "\$id", "title",
-    )
+    /** Keywords that only identify the file; they cost prompt tokens and tell the model nothing. */
+    private val DROPPED = setOf("\$schema", "\$id", "title")
 
     fun canonicalText(): String = StructuredSchema::class.java.getResourceAsStream("/workout.schema.json")
         ?.bufferedReader()?.use { it.readText() } ?: error("workout.schema.json resource missing")
 
-    /** Schema for the parser response: root = ParseResult, body unrolled, no recursion. */
-    fun forParser(canonical: JsonObject = Json.parseToJsonElement(canonicalText()).jsonObject): JsonObject {
+    /** Root = ParseResult, all definitions kept (recursion is fine in a prompt). */
+    fun forPrompt(canonical: JsonObject = Json.parseToJsonElement(canonicalText()).jsonObject): JsonObject {
         val defs = canonical.getValue("\$defs").jsonObject
-        val out = LinkedHashMap<String, JsonElement>()
-        for ((name, def) in defs) {
-            if (name == "BodyNode" || name == "Group") continue
-            out[name] = retarget(def, "#/\$defs/BodyNode", "#/\$defs/BodyNode1")
-        }
-        for (d in 1..DEPTH) {
-            val variants = buildList {
-                add(ref("Item"))
-                if (d < DEPTH) add(ref("Group$d"))
-                add(ref("Rest"))
-            }
-            out["BodyNode$d"] = JsonObject(mapOf("anyOf" to JsonArray(variants)))
-            if (d < DEPTH) out["Group$d"] = retarget(defs.getValue("Group"), "#/\$defs/BodyNode", "#/\$defs/BodyNode${d + 1}")
-        }
-        val root = LinkedHashMap(defs.getValue("ParseResult").jsonObject)
-        root["\$defs"] = JsonObject(out.toSortedMap())
-        return strip(JsonObject(root)) as JsonObject
+        require("ParseResult" in defs) { "workout.schema.json has no ParseResult definition" }
+        return JsonObject(
+            mapOf(
+                "\$ref" to JsonPrimitive("#/\$defs/ParseResult"),
+                "\$defs" to strip(JsonObject(defs.toSortedMap())),
+            ),
+        )
     }
 
-    private fun ref(name: String) = JsonObject(mapOf("\$ref" to JsonPrimitive("#/\$defs/$name")))
+    /** Compact single-line text of [forPrompt]. */
+    fun promptText(): String = forPrompt().toString()
 
-    private fun retarget(e: JsonElement, from: String, to: String): JsonElement = when (e) {
-        is JsonObject -> JsonObject(e.mapValues { (k, v) ->
-            if (k == "\$ref" && v is JsonPrimitive && v.content == from) JsonPrimitive(to) else retarget(v, from, to)
-        })
-        is JsonArray -> JsonArray(e.map { retarget(it, from, to) })
-        else -> e
-    }
-
-    /** Drops unsupported keywords and forces `additionalProperties: false` on every object schema. */
     private fun strip(e: JsonElement): JsonElement = when (e) {
-        is JsonObject -> {
-            val m = LinkedHashMap<String, JsonElement>()
-            for ((k, v) in e) {
-                if (k in UNSUPPORTED) continue
+        is JsonObject -> JsonObject(
+            e.filterKeys { it !in DROPPED }.mapValues { (k, v) ->
                 // Property names are data, not keywords: recurse into their schemas only.
-                m[k] = if (k == "properties" && v is JsonObject) JsonObject(v.mapValues { strip(it.value) }) else strip(v)
-            }
-            if (m["type"] == JsonPrimitive("object")) m["additionalProperties"] = JsonPrimitive(false)
-            JsonObject(m)
-        }
+                if (k == "properties" && v is JsonObject) JsonObject(v.mapValues { strip(it.value) }) else strip(v)
+            },
+        )
         is JsonArray -> JsonArray(e.map { strip(it) })
         else -> e
-    }
-
-    /** All `$ref` targets reachable from [schema], for the acyclicity check in tests. */
-    fun refs(e: JsonElement): Set<String> = when (e) {
-        is JsonObject -> e.flatMap { (k, v) -> if (k == "\$ref" && v is JsonPrimitive) setOf(v.content) else refs(v) }.toSet()
-        is JsonArray -> e.flatMap { refs(it) }.toSet()
-        else -> emptySet()
     }
 }
