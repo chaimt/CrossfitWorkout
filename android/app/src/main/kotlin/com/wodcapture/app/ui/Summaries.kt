@@ -23,6 +23,7 @@ import java.util.Locale
 object Summaries {
     private const val MOVEMENTS_SHOWN = 3
     private val dayFormat = DateTimeFormatter.ofPattern("EEE, d MMM", Locale.getDefault())
+    private val longDayFormat = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
 
     /** Friendly name of a canonical format ("AMRAP 20:00", "EMOM 10 × 1:00", "Strength sets"). */
     fun format(f: Format): String = when (f) {
@@ -67,6 +68,9 @@ object Summaries {
     /** "Thu, 5 Nov" for an ISO date; the raw text when it does not parse; "No date" when absent. */
     fun day(iso: String?): String =
         iso?.let { runCatching { LocalDate.parse(it).format(dayFormat) }.getOrDefault(it) } ?: "No date"
+
+    /** "5 Nov 2026": records can be years old, so the year is shown. */
+    fun longDay(date: LocalDate): String = date.format(longDayFormat)
 
     fun status(status: String): String = when (status) {
         "draft" -> "Draft"

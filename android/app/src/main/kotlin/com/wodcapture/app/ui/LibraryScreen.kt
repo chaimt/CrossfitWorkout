@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -64,6 +65,7 @@ fun LibraryScreen(vm: AppViewModel, open: (String) -> Unit, capture: () -> Unit,
         Bar("WOD Capture") {
             WatchChip(sdk) { go(Routes.DEVICE) }
             IconButton(onClick = { go(Routes.RESULTS) }) { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Results") }
+            IconButton(onClick = { go(Routes.TOP_LIFTS) }) { Icon(Icons.Filled.Star, contentDescription = "Top lifts") }
             IconButton(onClick = { go(Routes.SETTINGS) }) { Icon(Icons.Filled.Settings, contentDescription = "Settings") }
         }
         LazyColumn(

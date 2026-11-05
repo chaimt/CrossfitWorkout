@@ -33,13 +33,17 @@ import com.wodcapture.domain.plan.PlanIdentity
 import com.wodcapture.domain.plan.WatchPlan
 import com.wodcapture.domain.plan.WireJson
 import com.wodcapture.domain.protocol.ProfilePayload
+import com.wodcapture.domain.scoring.TopLift
+import com.wodcapture.domain.scoring.TopLifts
 import com.wodcapture.domain.validation.ValidationReport
 import com.wodcapture.domain.validation.WorkoutValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -65,6 +69,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val results: StateFlow<List<WorkoutResult>> = dao.observeResults()
         .map { l -> l.mapNotNull { runCatching { DomainJson.lenient.decodeFromString(WorkoutResult.serializer(), it.resultJson) }.getOrNull() } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Heaviest completed set per lift, in the display unit (REQ-AL07). */
+    val topLifts: StateFlow<List<TopLift>> = combine(results, library, settings) { r, l, s ->
+        val workouts = l.mapNotNull { runCatching { DomainJson.decodeWorkout(it.workoutJson) }.getOrNull() }.associateBy { it.id }
+        TopLifts.compute(r, workouts, c.catalog, s.profile.displayUnit)
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val outbox = c.outboxState
     val devices = c.ciq.devices
     val sdkState = c.ciq.state

@@ -328,6 +328,7 @@ Score fixtures: a rep-only ladder of two movements at 3, 6, 9 reps each has 6/12
 | REQ-AL04 | **Benchmark library** (Appendix G): browse, start (send to watch), see previous results for that benchmark. | v1 | [ ] |
 | REQ-AL05 | **PRs (v1):** group benchmark attempts by canonical benchmark revision plus resolved prescription signature (level/division, movements, quantities, loads, cap and scoring rules). Modified prescriptions form separate variants. Only eligible completed measured attempts count; interrupted/stopped/skipped or incomplete aggregate scores do not. Per-lift rep-maxes use completed sets of the exact rep count, stable movement/variant and physical mass; no inferred 1RM from a multi-rep set. Corrections/deletions recompute PRs. Auto RM updates are opt-in and manual overrides remain authoritative. | v1 | [ ] |
 | REQ-AL06 | Export/import everything as JSON (backup/restore) and results as CSV. | v1 | [ ] |
+| REQ-AL07 | **Top lifts** (owner request 2026-11-06): a Top lifts view (star button in the library bar) lists every lift with its heaviest logged weight and the date it was lifted, one row per lift (catalog movement, or the name of a free-text lift), sorted by name. A row shows the lift, weight in Settings → Weight unit with the reps of that set ("120 kg × 5"), the date and the workout; tapping it opens the workout. Only completed sets count — status done and at least the prescribed reps, the same rule as the best-load score; failed, partial or skipped work never does. A manual load score counts for a part with a single lift (reps = the build-to-max rep count). Watch results are dated by their start time, manual results by the workout's scheduled date when it has one. On equal weight the more reps, then the earliest date, win. Results of deleted workouts are not shown. Computed from the result history on every change, so edits and deletions update it (`TopLifts.compute`, `AppViewModel.topLifts`, `TopLiftsScreen.kt`). Not the v1 PR model of REQ-AL05 (no rep-max per rep count). | MVP | [ ] |
 
 ### 5.6 Watch connection (phone side)
 
@@ -343,7 +344,7 @@ Score fixtures: a rep-only ladder of two movements at 3, 6, 9 reps each has 6/12
 
 | ID | Requirement | Phase | Status |
 |----|-------------|-------|--------|
-| REQ-AG01 | Profile (REQ-DM10): units, sex for split loads, bodyweight, barbells, smallest increment, rep maxes. | MVP (rep maxes: manual) | [ ] |
+| REQ-AG01 | Profile (REQ-DM10): units, sex for split loads, bodyweight, barbells, smallest increment, rep maxes. **Settings trimmed** (owner request 2026-11-06): only the smallest total increment of the chosen Weight unit is shown (the other unit's value is kept); the kg↔lb **Conversion** choice is removed — prescriptions always use the Appendix D equivalents (REQ-DM19 default), and a stored "arithmetic" choice is reset on load (`SettingsScreen` in `OtherScreens.kt`, `SettingsStore`). | MVP (rep maxes: manual) | [ ] |
 | REQ-AG02 | Workout defaults sent to the watch: strength rest, get-ready countdown, weight step sizes, sound/vibration preferences (the watch can override locally). | MVP | [ ] |
 | REQ-AG03 | Parser settings: cloud on/off, model id, effort, API key, cost estimate. | MVP | [ ] |
 | REQ-AG04 | Data: confirmed delete-all follows REQ-DM27 in MVP; explicit export/import follows REQ-DM28 in v1. | MVP deletion; v1 export/import | [ ] |
@@ -1358,3 +1359,5 @@ Sources: the cached mirror of developer.garmin.com/connect-iq used by the garmin
 | 2026-11-06 | Owner request: REQ-AC09 strength quick starts are %-of-goal sessions like manual entry: 5 × 5 · 70–80%, 5 × 3 · 80–85% and new 3 × 5 · 70–80% (replacing the % 1RM "5 × 5 strength" and "5 × 3 heavy"). |
 | 2026-11-06 | Owner request: new REQ-AP07 in-app update from GitHub Releases (banner, dialog, download, PackageInstaller install, Settings → Check for updates); REQ-AP04 adds `REQUEST_INSTALL_PACKAGES`. |
 | 2026-11-03 | Builder review: MVP watch target narrowed to the fr965 (REQ-WP01, REQ-WN06, REQ-TS06); gear units per implement (REQ-DM10); capture-now-parse-later (REQ-AX16) and multi-day captures (REQ-AX17); open questions Q1–Q4 (§13). |
+| 2026-11-06 | Owner request: new REQ-AL07 Top lifts view — heaviest completed set per lift with its date, opened from the library bar (`TopLifts.kt`, `TopLiftsScreen.kt`). |
+| 2026-11-06 | Owner request: REQ-AG01 Settings review — removed the Conversion mode control (always equivalents) and the increment field of the unused weight unit. |
