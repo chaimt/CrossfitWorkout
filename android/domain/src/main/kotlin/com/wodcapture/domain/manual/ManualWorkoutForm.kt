@@ -10,6 +10,7 @@ import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.MeasureKind
 import com.wodcapture.domain.model.PartKind
 import com.wodcapture.domain.model.ScoreType
+import com.wodcapture.domain.model.WorkoutSection
 
 /**
  * State of the guided "New workout" form (REQ-AC09). It is deliberately simpler than the
@@ -26,17 +27,39 @@ data class ManualWorkoutForm(
     val parts: List<ManualPartForm> = emptyList(),
 )
 
-/** Formats offered by the form; each maps to one REQ-DM04 format (Custom → REQ-DM18 fallback). */
-enum class ManualFormat(val label: String) {
-    FOR_TIME("For time"),
-    AMRAP("AMRAP"),
-    EMOM("EMOM / E#MOM"),
-    TABATA("Tabata"),
-    INTERVALS("Intervals"),
-    STRENGTH("Strength sets"),
-    BUILD_TO_MAX("Build to max"),
-    MAX_EFFORT("Max effort"),
-    CUSTOM("Custom"),
+/**
+ * Formats offered by the form; each maps to one REQ-DM04 format (Custom → REQ-DM18 fallback) and
+ * belongs to exactly one [section] of the form (weights or metcon).
+ */
+enum class ManualFormat(val label: String, val section: WorkoutSection) {
+    STRENGTH("Strength sets", WorkoutSection.WEIGHTS),
+    BUILD_TO_MAX("Build to max", WorkoutSection.WEIGHTS),
+    FOR_TIME("For time", WorkoutSection.METCON),
+    AMRAP("AMRAP", WorkoutSection.METCON),
+    EMOM("EMOM / E#MOM", WorkoutSection.METCON),
+    TABATA("Tabata", WorkoutSection.METCON),
+    INTERVALS("Intervals", WorkoutSection.METCON),
+    MAX_EFFORT("Max effort", WorkoutSection.METCON),
+    CUSTOM("Custom", WorkoutSection.METCON),
+    ;
+
+    companion object {
+        /** The formats offered when adding a part to [section]. */
+        fun of(section: WorkoutSection): List<ManualFormat> = entries.filter { it.section == section }
+    }
+}
+
+/** The two sections of the form, in the order a class runs them: lift first, then the metcon. */
+val MANUAL_SECTIONS: List<WorkoutSection> = listOf(WorkoutSection.WEIGHTS, WorkoutSection.METCON)
+
+/**
+ * Part kinds offered in each form section (the section itself comes from the format). Warm-up,
+ * skill and cool-down pieces are timed like a metcon, so they live in the metcon section.
+ */
+fun kindsFor(section: WorkoutSection): List<PartKind> = when (section) {
+    WorkoutSection.WEIGHTS -> listOf(PartKind.STRENGTH, PartKind.ACCESSORY)
+    WorkoutSection.METCON, WorkoutSection.OTHER ->
+        listOf(PartKind.METCON, PartKind.WARMUP, PartKind.SKILL, PartKind.COOLDOWN, PartKind.OTHER)
 }
 
 /** What a max-effort part measures, with the score type it implies. */
@@ -141,11 +164,44 @@ data class ManualStrengthForm(
 object ManualForms {
     private const val SUGGESTIONS = 4
 
-    /** A new part; the first keeps a blank label so a one-part workout shows "W" on the watch. */
-    fun newPart(ids: IdSource, index: Int, format: ManualFormat = ManualFormat.FOR_TIME): ManualPartForm {
-        val label = if (index == 0) "" else ('A' + index).toString()
-        return withFormat(ManualPartForm(id = ids.newId(), label = label), format, ids)
-    }
+    /**
+     * A new part. Its label stays blank so the builder letters parts by position (a single part
+     * shows "W" on the watch, several get A, B, C…) and reordering never leaves stale letters.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun newPart(ids: IdSource, index: Int, format: ManualFormat = ManualFormat.FOR_TIME): ManualPartForm =
+        withFormat(ManualPartForm(id = ids.newId()), format, ids)
+
+    /** The letter the builder gives a part with a blank label at [index] of [count] parts. */
+    fun defaultLabel(index: Int, count: Int): String = if (count == 1) "" else ('A' + index).toString()
+
+    /** The label [part] will carry: what the athlete typed, else its position letter. */
+    fun effectiveLabel(form: ManualWorkoutForm, part: ManualPartForm): String =
+        part.label.trim().ifBlank { defaultLabel(form.parts.indexOfFirst { it.id == part.id }, form.parts.size) }
+
+    /** Which form section [part] sits in (follows its format). */
+    fun sectionOf(part: ManualPartForm): WorkoutSection = part.format.section
+
+    /** Parts of [form] in [section], in workout order. */
+    fun partsIn(form: ManualWorkoutForm, section: WorkoutSection): List<ManualPartForm> = form.parts.filter { sectionOf(it) == section }
+
+    /** Weights before metcon, keeping the order inside each section. */
+    fun ordered(parts: List<ManualPartForm>): List<ManualPartForm> = MANUAL_SECTIONS.flatMap { s -> parts.filter { sectionOf(it) == s } }
+
+    /** Adds a [format] part at the end of its section. */
+    fun addPart(form: ManualWorkoutForm, format: ManualFormat, ids: IdSource): ManualWorkoutForm =
+        form.copy(parts = ordered(form.parts + newPart(ids, form.parts.size, format)))
+
+    fun removePart(form: ManualWorkoutForm, partId: String): ManualWorkoutForm = form.copy(parts = form.parts.filter { it.id != partId })
+
+    /** Replaces part [partId] with [f] of it; a format change across sections moves it. */
+    fun updatePart(form: ManualWorkoutForm, partId: String, f: (ManualPartForm) -> ManualPartForm): ManualWorkoutForm =
+        form.copy(parts = ordered(form.parts.map { if (it.id == partId) f(it) else it }))
+
+    /** True for a part nobody has typed into yet (so a template may replace it). */
+    fun isUntouched(part: ManualPartForm): Boolean =
+        part.name.isBlank() && part.label.isBlank() && part.customText.isBlank() &&
+            part.movements.all { it.name.isBlank() } && part.strength.all { it.name.isBlank() }
 
     fun newMovement(ids: IdSource, measure: MeasureKind = MeasureKind.REPS): ManualMovementForm =
         ManualMovementForm(id = ids.newId(), measure = measure)
@@ -154,22 +210,22 @@ object ManualForms {
     fun newMovementFor(part: ManualPartForm, ids: IdSource): ManualMovementForm =
         newMovement(ids, if (usesScheme(part)) MeasureKind.REP_SCHEME else MeasureKind.REPS)
 
-    /** A blank form for [date] in [timeZone] with one For-time part (REQ-AC09 defaults). */
+    /** A blank form for [date] in [timeZone] with one For-time metcon part (REQ-AC09 defaults). */
     fun blank(ids: IdSource, date: String, timeZone: String): ManualWorkoutForm =
         ManualWorkoutForm(date = date, timeZone = timeZone, parts = listOf(newPart(ids, 0)))
 
     fun newStrengthRow(ids: IdSource): ManualStrengthForm = ManualStrengthForm(id = ids.newId())
 
     /**
-     * Switches [part] to [format]: kind follows (strength formats → strength part), and a
-     * strength part gets its first row so the form never shows an empty card.
+     * Switches [part] to [format]: kind follows the format's section (weights → strength unless
+     * already accessory; metcon → metcon unless warm-up/skill/…), and a strength part gets its
+     * first row so the form never shows an empty card.
      */
     fun withFormat(part: ManualPartForm, format: ManualFormat, ids: IdSource): ManualPartForm {
-        val strengthy = format == ManualFormat.STRENGTH || format == ManualFormat.BUILD_TO_MAX
         val kind = when {
-            strengthy -> PartKind.STRENGTH
-            part.kind == PartKind.STRENGTH -> PartKind.METCON
-            else -> part.kind
+            part.kind in kindsFor(format.section) -> part.kind
+            format.section == WorkoutSection.WEIGHTS -> PartKind.STRENGTH
+            else -> PartKind.METCON
         }
         val strength = if (format == ManualFormat.STRENGTH && part.strength.isEmpty()) listOf(newStrengthRow(ids)) else part.strength
         val movements = if (format != ManualFormat.STRENGTH && format != ManualFormat.CUSTOM && part.movements.isEmpty()) {

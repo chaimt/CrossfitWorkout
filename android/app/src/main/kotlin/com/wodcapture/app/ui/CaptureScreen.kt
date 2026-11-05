@@ -8,19 +8,26 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,6 +38,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -91,28 +99,41 @@ fun CaptureScreen(vm: AppViewModel, onDraft: (String) -> Unit, back: () -> Unit)
         vm.capture(images.toList(), text) { id -> if (parse) vm.parse(id); onDraft(id) }
     }
 
+    val hasInput = images.isNotEmpty() || text.isNotBlank()
     Column(Modifier.fillMaxSize()) {
         Bar("Capture", back)
-        Column(Modifier.padding(12.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = ::startScan) { Text("Scan whiteboard") }
-                OutlinedButton(onClick = ::startCamera) { Text("Plain photo") }
-                OutlinedButton(onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) { Text("From gallery") }
-            }
-            Text("${images.size}/4 images (order is kept)")
-            images.forEachIndexed { i, u ->
-                FlowRow {
-                    Text("${i + 1}. ${u.lastPathSegment}", Modifier.padding(4.dp))
-                    TextButton(onClick = { images.removeAt(i) }) { Text("Remove") }
+        Column(
+            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = Gutter),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SourceTile("Scan", "Whiteboard", primary = true, Modifier.weight(1f), ::startScan)
+                SourceTile("Photo", "Plain camera", primary = false, Modifier.weight(1f), ::startCamera)
+                SourceTile("Gallery", "Pick images", primary = false, Modifier.weight(1f)) {
+                    picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 }
             }
-            OutlinedTextField(text, { text = it }, label = { Text("Or paste workout text") }, modifier = Modifier.fillMaxWidth().height(180.dp))
-            val hasInput = images.isNotEmpty() || text.isNotBlank()
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(enabled = hasInput && settings.cloudParsing, onClick = { if (settings.consentGiven) proceed(true) else askConsent = true }) { Text("Parse") }
-                OutlinedButton(enabled = hasInput, onClick = { proceed(false) }) { Text("Save draft") }
+            Panel {
+                Text("Images", style = MaterialTheme.typography.titleSmall)
+                Hint("${images.size} of 4 · order is kept")
+                images.forEachIndexed { i, u ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("${i + 1}. ${u.lastPathSegment}", Modifier.weight(1f), maxLines = 1, style = MaterialTheme.typography.bodyMedium)
+                        IconButton(onClick = { images.removeAt(i) }) { Icon(Icons.Filled.Close, contentDescription = "Remove image ${i + 1}") }
+                    }
+                }
             }
-            if (!settings.cloudParsing) Text("Cloud parsing is off: save the draft and edit it manually.")
+            OutlinedTextField(
+                text, { text = it }, label = { Text("Or paste the workout text") },
+                modifier = Modifier.fillMaxWidth().height(200.dp), shape = MaterialTheme.shapes.small,
+            )
+            if (!settings.cloudParsing) Banner("Cloud parsing is off: save the draft and edit it by hand.")
+        }
+        ActionBar {
+            OutlinedButton(enabled = hasInput, onClick = { proceed(false) }, modifier = Modifier.weight(1f)) { Text("Save draft") }
+            Button(enabled = hasInput && settings.cloudParsing, onClick = { if (settings.consentGiven) proceed(true) else askConsent = true }, modifier = Modifier.weight(1f)) {
+                Text("Parse")
+            }
         }
     }
     if (askConsent) {
@@ -123,6 +144,22 @@ fun CaptureScreen(vm: AppViewModel, onDraft: (String) -> Unit, back: () -> Unit)
             confirmButton = { TextButton(onClick = { vm.giveConsent(); askConsent = false; proceed(true) }) { Text("Agree and parse") } },
             dismissButton = { TextButton(onClick = { askConsent = false }) { Text("Not now") } },
         )
+    }
+}
+
+/** One capture source as a big tappable tile. */
+@Composable
+private fun SourceTile(title: String, body: String, primary: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val c = MaterialTheme.colorScheme
+    Surface(
+        onClick = onClick, modifier = modifier.height(88.dp), shape = MaterialTheme.shapes.large,
+        color = if (primary) c.primary else c.surfaceContainerLowest, contentColor = if (primary) c.onPrimary else c.onSurface,
+        border = if (primary) null else BorderStroke(1.dp, c.outlineVariant),
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.SpaceBetween) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Text(body, style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
 

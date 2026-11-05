@@ -72,7 +72,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
     fun build(form: ManualWorkoutForm, nowSec: Long? = null): ManualBuild {
         val issues = mutableListOf<ValidationIssue>()
         checkSchedule(form, issues)
-        val parts = form.parts.mapIndexed { i, p -> PartBuilder(p, defaultLabel(i, form.parts.size), issues).build() }
+        val parts = form.parts.mapIndexed { i, p -> PartBuilder(p, ManualForms.defaultLabel(i, form.parts.size), issues).build() }
         val workout = Workout(
             id = ids.newId(),
             title = form.title.trim().ifBlank { defaultTitle(parts) },
@@ -97,9 +97,6 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             issues += blocking("invalid_time_zone", "Unknown time zone ${form.timeZone}", path = "timeZone")
         }
     }
-
-    /** A single part keeps a blank label (the watch shows "W"); several get A, B, C… */
-    private fun defaultLabel(index: Int, count: Int): String = if (count == 1) "" else ('A' + index).toString()
 
     private fun defaultTitle(parts: List<Part>): String =
         parts.firstNotNullOfOrNull { it.title } ?: if (parts.isEmpty()) "Manual workout" else "Workout"

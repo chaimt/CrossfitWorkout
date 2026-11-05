@@ -11,6 +11,8 @@ import com.wodcapture.domain.model.Override
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.RepTarget
 import com.wodcapture.domain.model.StrengthSet
+import com.wodcapture.domain.model.StrengthSets
+import com.wodcapture.domain.model.Workout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -54,5 +56,24 @@ class EditingTest {
     fun formatSwitchPicksANaturalScore() {
         Editing.formatTypes.forEach { t -> assertEquals(t, Editing.formatType(Editing.newFormat(t))) }
         assertEquals("for_time", Editing.formatType(Editing.newFormat("for_time")))
+    }
+
+    @Test
+    fun weightsAreInsertedAheadOfTheMetconAndRelettered() {
+        val metcon = Part(id = "m", label = "", format = Amrap(600))
+        val lift = Part(id = "s", format = StrengthSets())
+        val w = Editing.insertPart(Workout(id = "w", parts = listOf(metcon)), lift)
+        assertEquals(listOf("s", "m"), w.parts.map { it.id })
+        assertEquals(listOf("A", "B"), w.parts.map { it.label })
+        val more = Editing.insertPart(w, Part(id = "m2", format = Amrap(300)))
+        assertEquals(listOf("A", "B", "C"), more.parts.map { it.label })
+    }
+
+    @Test
+    fun handTypedLabelsAreKept() {
+        val w = Workout(id = "w", parts = listOf(Part(id = "m", label = "WOD", format = Amrap(600))))
+        val added = Editing.insertPart(w, Part(id = "s", format = StrengthSets()))
+        assertEquals(listOf("s", "m"), added.parts.map { it.id })
+        assertEquals(listOf("A", "WOD"), added.parts.map { it.label })
     }
 }

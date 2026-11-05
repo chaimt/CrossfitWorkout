@@ -4,24 +4,31 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,12 +38,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.wodcapture.domain.IdSource
+import com.wodcapture.domain.catalog.Movement
 import com.wodcapture.domain.catalog.MovementCatalog
+import com.wodcapture.domain.manual.MANUAL_SECTIONS
 import com.wodcapture.domain.manual.ManualBuild
 import com.wodcapture.domain.manual.ManualForms
 import com.wodcapture.domain.manual.ManualFormat
@@ -47,20 +57,25 @@ import com.wodcapture.domain.manual.ManualTemplates
 import com.wodcapture.domain.manual.ManualWorkoutForm
 import com.wodcapture.domain.manual.MaxEffortMeasure
 import com.wodcapture.domain.manual.StrengthLoadMode
+import com.wodcapture.domain.manual.kindsFor
 import com.wodcapture.domain.model.DistanceUnit
 import com.wodcapture.domain.model.FallbackTimer
 import com.wodcapture.domain.model.LengthUnit
 import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.MeasureKind
 import com.wodcapture.domain.model.PartKind
-import com.wodcapture.domain.validation.Severity
+import com.wodcapture.domain.model.WorkoutSection
 import com.wodcapture.domain.validation.ValidationIssue
 
+private typealias PartEdit = ((ManualPartForm) -> ManualPartForm) -> Unit
+
 /**
- * Guided "New workout" form (REQ-AC09): templates, title and date, then parts with a format,
- * its parameters and movement rows. The domain builder runs on every edit, so the same
- * validation as Review (REQ-AX05) shows as you type and **Create** stays disabled while anything
- * blocks. Create saves a draft and opens Review; nothing is sent from here.
+ * Guided "New workout" form (REQ-AC09) in two sections, as a class runs them: **Weights**
+ * (strength sets, build to a max) then **Metcon** (for time, AMRAP, EMOM, …). Each section has
+ * its own quick-start templates and add menu, so picking "5 × 5 strength" and then "AMRAP 20"
+ * builds the whole day. The domain builder runs on every edit, so the same validation as Review
+ * (REQ-AX05) shows as you type and **Create** stays disabled while anything blocks. Create saves a
+ * draft and opens Review; nothing is sent from here.
  */
 @Composable
 fun ManualWorkoutScreen(vm: AppViewModel, onCreated: (String) -> Unit, back: () -> Unit) {
@@ -70,78 +85,84 @@ fun ManualWorkoutScreen(vm: AppViewModel, onCreated: (String) -> Unit, back: () 
     val build = remember(form) { vm.buildManual(form) }
     val ids = remember { IdSource { vm.newId() } }
     fun edit(f: (ManualWorkoutForm) -> ManualWorkoutForm) = vm.updateManual(f)
-    fun editPart(id: String, f: (ManualPartForm) -> ManualPartForm) =
-        edit { w -> w.copy(parts = w.parts.map { if (it.id == id) f(it) else it }) }
 
     Column(Modifier.fillMaxSize()) {
-        Bar("New workout", back) {
-            TextButton(enabled = build.canCreate, onClick = { vm.createManual(onCreated) }) { Text("Create") }
+        Bar("New workout", back)
+        LazyColumn(
+            Modifier.weight(1f).fillMaxWidth(),
+            contentPadding = PaddingValues(start = Gutter, end = Gutter, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            item {
+                Panel {
+                    Field("Title", form.title, Modifier.fillMaxWidth(), placeholder = "e.g. Monday strength + metcon") { v -> edit { it.copy(title = v) } }
+                    Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Field("Date", form.date, Modifier.weight(1f), placeholder = "YYYY-MM-DD") { v -> edit { it.copy(date = v) } }
+                        Hint(form.timeZone, Modifier.padding(start = 12.dp))
+                    }
+                    Issues(build.report.issues.filter { it.partId == null })
+                }
+            }
+            MANUAL_SECTIONS.forEach { section ->
+                val parts = ManualForms.partsIn(form, section)
+                item(key = "header-$section") {
+                    SectionHeader(section, sectionSubtitle(section))
+                    Templates(section) { t -> edit { ManualTemplates.apply(it, t, ids) } }
+                }
+                items(parts, key = { it.id }) { part ->
+                    PartCard(
+                        vm.catalog, section, ManualForms.effectiveLabel(form, part), part, ids,
+                        build.report.issues.filter { it.partId == part.id },
+                        onChange = { f -> edit { ManualForms.updatePart(it, part.id, f) } },
+                        onRemove = { edit { ManualForms.removePart(it, part.id) } },
+                    )
+                }
+                item(key = "add-$section") {
+                    if (parts.isEmpty()) Hint(emptySectionText(section), Modifier.padding(bottom = 4.dp))
+                    AddPart(section) { format -> edit { ManualForms.addPart(it, format, ids) } }
+                }
+            }
         }
-        LazyColumn(Modifier.fillMaxSize().padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            item { Templates { t -> edit { ManualTemplates.apply(it, t, ids) } } }
-            item {
-                Field("Title", form.title, Modifier.fillMaxWidth()) { v -> edit { it.copy(title = v) } }
-                Row {
-                    Field("Date (YYYY-MM-DD)", form.date, Modifier.weight(1f)) { v -> edit { it.copy(date = v) } }
-                    Text(form.timeZone, Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
-                }
-                Issues(build.report.issues.filter { it.partId == null })
-            }
-            items(form.parts, key = { it.id }) { part ->
-                PartCard(
-                    vm.catalog, part, ids, build.report.issues.filter { it.partId == part.id },
-                    onChange = { f -> editPart(part.id, f) },
-                    onRemove = { edit { w -> w.copy(parts = w.parts.filter { it.id != part.id }) } },
-                )
-            }
-            item {
-                AddPart { format -> edit { w -> w.copy(parts = w.parts + ManualForms.newPart(ids, w.parts.size, format)) } }
-            }
-            item {
-                Row(Modifier.padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(enabled = build.canCreate, onClick = { vm.createManual(onCreated) }) { Text("Create") }
-                    if (!build.canCreate) Text(blockingSummary(build), Modifier.padding(8.dp), color = MaterialTheme.colorScheme.error)
-                }
-            }
+        ActionBar(top = { if (!build.canCreate) Hint(blockingSummary(build), color = MaterialTheme.colorScheme.error) }) {
+            Button(enabled = build.canCreate, onClick = { vm.createManual(onCreated) }, modifier = Modifier.weight(1f)) { Text("Create workout") }
         }
     }
+}
+
+private fun sectionSubtitle(s: WorkoutSection) = when (s) {
+    WorkoutSection.WEIGHTS -> "Strength sets or build to a max"
+    else -> "For time, AMRAP, EMOM, Tabata, intervals"
+}
+
+private fun emptySectionText(s: WorkoutSection) = when (s) {
+    WorkoutSection.WEIGHTS -> "No lifting today? Leave this empty."
+    else -> "No metcon yet."
 }
 
 private fun blockingSummary(b: ManualBuild): String {
     val n = b.report.blocking.distinctBy { it.message }.size
-    return if (n == 1) "1 thing to fix" else "$n things to fix"
+    return if (n == 1) "1 thing to fix before creating" else "$n things to fix before creating"
 }
 
 @Composable
-private fun Templates(onPick: (com.wodcapture.domain.manual.ManualTemplate) -> Unit) {
-    Column {
-        SectionTitle("Start from a template")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            ManualTemplates.all.forEach { t -> SuggestionChip(onClick = { onPick(t) }, label = { Text(t.name) }) }
-        }
-    }
-}
-
-/** Live findings: blocking first, each message once (sets repeat the same message per set). */
-@Composable
-private fun Issues(issues: List<ValidationIssue>) {
-    issues.sortedBy { it.severity }.distinctBy { it.severity to it.message }.forEach { i ->
-        val blocking = i.severity == Severity.BLOCKING
-        Text(
-            (if (blocking) "Fix: " else "Note: ") + i.message,
-            color = if (blocking) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
-            style = MaterialTheme.typography.bodySmall,
-        )
+private fun Templates(section: WorkoutSection, onPick: (com.wodcapture.domain.manual.ManualTemplate) -> Unit) {
+    Hint("Quick start", Modifier.padding(top = 4.dp))
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        ManualTemplates.of(section).forEach { t -> SuggestionChip(onClick = { onPick(t) }, label = { Text(t.name) }) }
     }
 }
 
 @Composable
-private fun AddPart(onAdd: (ManualFormat) -> Unit) {
+private fun AddPart(section: WorkoutSection, onAdd: (ManualFormat) -> Unit) {
     var open by remember { mutableStateOf(false) }
+    val accent = sectionColors(section).accent
     Box {
-        OutlinedButton(onClick = { open = true }) { Text("Add part") }
+        OutlinedButton(onClick = { open = true }, colors = ButtonDefaults.outlinedButtonColors(contentColor = accent)) {
+            Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 6.dp))
+            Text(if (section == WorkoutSection.WEIGHTS) "Add weights" else "Add metcon")
+        }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            ManualFormat.entries.forEach { f -> DropdownMenuItem(text = { Text(f.label) }, onClick = { open = false; onAdd(f) }) }
+            ManualFormat.of(section).forEach { f -> DropdownMenuItem(text = { Text(f.label) }, onClick = { open = false; onAdd(f) }) }
         }
     }
 }
@@ -149,109 +170,160 @@ private fun AddPart(onAdd: (ManualFormat) -> Unit) {
 @Composable
 private fun PartCard(
     catalog: MovementCatalog,
+    section: WorkoutSection,
+    label: String,
     part: ManualPartForm,
     ids: IdSource,
     issues: List<ValidationIssue>,
-    onChange: ((ManualPartForm) -> ManualPartForm) -> Unit,
+    onChange: PartEdit,
     onRemove: () -> Unit,
 ) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row {
-                Field("Label", part.label, Modifier.width(90.dp)) { v -> onChange { it.copy(label = v) } }
-                Field("Name (optional)", part.name, Modifier.weight(1f).padding(start = 8.dp)) { v -> onChange { it.copy(name = v) } }
+    SectionCard(section) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            LabelBadge(label, section)
+            Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                Text(part.name.ifBlank { part.format.label }, style = MaterialTheme.typography.titleMedium)
+                Hint(kindName(part.kind))
             }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Choice("Format", part.format, ManualFormat.entries, { it.label }) { f -> onChange { ManualForms.withFormat(it, f, ids) } }
-                Choice("Kind", part.kind, PartKind.entries, { it.name.lowercase() }) { k -> onChange { it.copy(kind = k) } }
-            }
-            FormatFields(part, onChange)
-            when (part.format) {
-                ManualFormat.STRENGTH -> StrengthRows(catalog, part, ids, onChange)
-                else -> MovementRows(catalog, part, ids, onChange)
-            }
-            Issues(issues)
-            TextButton(onClick = onRemove) { Text("Remove part") }
+            IconButton(onClick = onRemove) { Icon(Icons.Filled.Delete, contentDescription = "Remove part $label") }
+        }
+        FormatChips(section, part.format) { f -> onChange { ManualForms.withFormat(it, f, ids) } }
+        Grid {
+            Field("Label", part.label, Modifier.weight(1f), placeholder = label.ifBlank { "auto" }) { v -> onChange { it.copy(label = v) } }
+            Field("Name (optional)", part.name, Modifier.weight(1f), placeholder = "e.g. Fran") { v -> onChange { it.copy(name = v) } }
+            Choice("Type", part.kind, kindsFor(section), ::kindName, Modifier.weight(1f)) { k -> onChange { it.copy(kind = k) } }
+        }
+        FormatFields(part, onChange)
+        when (part.format) {
+            ManualFormat.STRENGTH -> StrengthRows(catalog, part, ids, onChange)
+            else -> MovementRows(catalog, part, ids, onChange)
+        }
+        Issues(issues)
+    }
+}
+
+@Composable
+private fun FormatChips(section: WorkoutSection, current: ManualFormat, onPick: (ManualFormat) -> Unit) {
+    val colors = sectionColors(section)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        ManualFormat.of(section).forEach { f ->
+            FilterChip(
+                selected = f == current, onClick = { onPick(f) }, label = { Text(f.label) },
+                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = colors.container, selectedLabelColor = colors.onContainer),
+            )
         }
     }
+}
+
+private fun kindName(k: PartKind): String = when (k) {
+    PartKind.WARMUP -> "Warm-up"
+    PartKind.SKILL -> "Skill"
+    PartKind.STRENGTH -> "Strength"
+    PartKind.METCON -> "Metcon"
+    PartKind.ACCESSORY -> "Accessory"
+    PartKind.COOLDOWN -> "Cool-down"
+    PartKind.OTHER -> "Other"
 }
 
 /** Parameters of the chosen format; times are m:ss / h:mm:ss text (REQ-AE02). */
 @Composable
-private fun FormatFields(part: ManualPartForm, onChange: ((ManualPartForm) -> ManualPartForm) -> Unit) {
-    val m = Modifier.width(160.dp)
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        when (part.format) {
-            ManualFormat.FOR_TIME -> {
-                Field("Cap (m:ss, optional)", part.capText, m) { v -> onChange { it.copy(capText = v) } }
-                IntField("Rounds", part.rounds, m) { v -> onChange { it.copy(rounds = v) } }
-                Field("Rep scheme (21-15-9)", part.repSchemeText, m) { v -> onChange { ManualForms.withRepScheme(it, v) } }
+private fun FormatFields(part: ManualPartForm, onChange: PartEdit) {
+    when (part.format) {
+        ManualFormat.STRENGTH -> Unit
+        ManualFormat.CUSTOM -> CustomFields(part, onChange)
+        else -> Grid {
+            val cell = Modifier
+            when (part.format) {
+                ManualFormat.FOR_TIME -> {
+                    Field("Rep scheme", part.repSchemeText, cell, placeholder = "21-15-9") { v -> onChange { ManualForms.withRepScheme(it, v) } }
+                    IntField("Rounds", part.rounds, cell) { v -> onChange { it.copy(rounds = v) } }
+                    Field("Time cap (optional)", part.capText, cell, placeholder = "m:ss") { v -> onChange { it.copy(capText = v) } }
+                }
+                ManualFormat.AMRAP -> Field("Duration", part.durationText, cell, placeholder = "20:00") { v -> onChange { it.copy(durationText = v) } }
+                ManualFormat.EMOM -> {
+                    Field("Every", part.intervalText, cell, placeholder = "1:00") { v -> onChange { it.copy(intervalText = v) } }
+                    IntField("Intervals", part.intervalCount, cell) { v -> onChange { it.copy(intervalCount = v) } }
+                }
+                ManualFormat.TABATA -> {
+                    Field("Work", part.workText, cell, placeholder = "0:20") { v -> onChange { it.copy(workText = v) } }
+                    Field("Rest", part.restText, cell, placeholder = "0:10") { v -> onChange { it.copy(restText = v) } }
+                    IntField("Rounds (default 8)", part.rounds, cell) { v -> onChange { it.copy(rounds = v) } }
+                }
+                ManualFormat.INTERVALS -> {
+                    IntField("Rounds", part.rounds, cell) { v -> onChange { it.copy(rounds = v) } }
+                    Field("Work", part.workText, cell, placeholder = "3:00") { v -> onChange { it.copy(workText = v) } }
+                    Field("Rest", part.restText, cell, placeholder = "1:00") { v -> onChange { it.copy(restText = v) } }
+                }
+                ManualFormat.BUILD_TO_MAX -> {
+                    IntField("Reps per attempt", part.repsPerSet, cell) { v -> onChange { it.copy(repsPerSet = v) } }
+                    IntField("Attempt limit", part.attempts, cell) { v -> onChange { it.copy(attempts = v) } }
+                    Field("Window (optional)", part.durationText, cell, placeholder = "15:00") { v -> onChange { it.copy(durationText = v) } }
+                }
+                ManualFormat.MAX_EFFORT -> {
+                    Choice("Measure", part.maxMeasure, MaxEffortMeasure.entries, { it.wire }, cell) { v -> onChange { it.copy(maxMeasure = v) } }
+                    Field("Window", part.durationText, cell, placeholder = "m:ss") { v -> onChange { it.copy(durationText = v) } }
+                    IntField("Attempts (no window)", part.attempts, cell) { v -> onChange { it.copy(attempts = v) } }
+                }
+                ManualFormat.STRENGTH, ManualFormat.CUSTOM -> Unit
             }
-            ManualFormat.AMRAP -> Field("Duration (m:ss)", part.durationText, m) { v -> onChange { it.copy(durationText = v) } }
-            ManualFormat.EMOM -> {
-                Field("Every (m:ss, default 1:00)", part.intervalText, m) { v -> onChange { it.copy(intervalText = v) } }
-                IntField("Intervals", part.intervalCount, m) { v -> onChange { it.copy(intervalCount = v) } }
-                Text("One movement per interval, in order", Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodySmall)
-            }
-            ManualFormat.TABATA -> {
-                Field("Work (default 0:20)", part.workText, m) { v -> onChange { it.copy(workText = v) } }
-                Field("Rest (default 0:10)", part.restText, m) { v -> onChange { it.copy(restText = v) } }
-                IntField("Rounds (default 8)", part.rounds, m) { v -> onChange { it.copy(rounds = v) } }
-            }
-            ManualFormat.INTERVALS -> {
-                IntField("Rounds", part.rounds, m) { v -> onChange { it.copy(rounds = v) } }
-                Field("Work (m:ss)", part.workText, m) { v -> onChange { it.copy(workText = v) } }
-                Field("Rest (m:ss)", part.restText, m) { v -> onChange { it.copy(restText = v) } }
-            }
-            ManualFormat.STRENGTH -> Unit
-            ManualFormat.BUILD_TO_MAX -> {
-                IntField("Reps per attempt", part.repsPerSet, m) { v -> onChange { it.copy(repsPerSet = v) } }
-                Field("Window (m:ss, optional)", part.durationText, m) { v -> onChange { it.copy(durationText = v) } }
-                IntField("Attempt limit", part.attempts, m) { v -> onChange { it.copy(attempts = v) } }
-            }
-            ManualFormat.MAX_EFFORT -> {
-                Choice("Measure", part.maxMeasure, MaxEffortMeasure.entries, { it.wire }) { v -> onChange { it.copy(maxMeasure = v) } }
-                Field("Window (m:ss)", part.durationText, m) { v -> onChange { it.copy(durationText = v) } }
-                IntField("Attempts (no window)", part.attempts, m) { v -> onChange { it.copy(attempts = v) } }
-            }
-            ManualFormat.CUSTOM -> CustomFields(part, onChange)
         }
+    }
+    if (part.format == ManualFormat.EMOM) Hint("One movement per interval, in order")
+}
+
+@Composable
+private fun CustomFields(part: ManualPartForm, onChange: PartEdit) {
+    OutlinedTextField(
+        value = part.customText, onValueChange = { v -> onChange { it.copy(customText = v) } },
+        label = { Text("Instructions (one watch line each)") }, minLines = 3, modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.small,
+    )
+    Grid {
+        val cell = Modifier
+        Choice("Timer", part.customTimer, FallbackTimer.entries, { if (it == FallbackTimer.COUNT_UP) "Count up" else "Countdown" }, cell) { t ->
+            onChange { it.copy(customTimer = t) }
+        }
+        val label = if (part.customTimer == FallbackTimer.COUNT_DOWN) "Length" else "Cap (optional)"
+        Field(label, part.durationText, cell, placeholder = "m:ss") { v -> onChange { it.copy(durationText = v) } }
+    }
+    // REQ-DM18: the fallback is labelled wherever it is chosen.
+    Hint("Manual timer: no automatic movement/interrupt/rest cues")
+}
+
+/** A soft box around one movement or lift so rows don't run together. */
+@Composable
+private fun RowBox(content: @Composable () -> Unit) {
+    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainer) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { content() }
     }
 }
 
 @Composable
-private fun CustomFields(part: ManualPartForm, onChange: ((ManualPartForm) -> ManualPartForm) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        OutlinedTextField(
-            value = part.customText, onValueChange = { v -> onChange { it.copy(customText = v) } },
-            label = { Text("Instructions (one watch line each)") }, minLines = 3, modifier = Modifier.fillMaxWidth(),
-        )
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Choice("Timer", part.customTimer, FallbackTimer.entries, { if (it == FallbackTimer.COUNT_UP) "count up" else "countdown" }) { t ->
-                onChange { it.copy(customTimer = t) }
-            }
-            val label = if (part.customTimer == FallbackTimer.COUNT_DOWN) "Length (m:ss)" else "Cap (m:ss, optional)"
-            Field(label, part.durationText, Modifier.width(160.dp)) { v -> onChange { it.copy(durationText = v) } }
-        }
-        // REQ-DM18: the fallback is labelled wherever it is chosen.
-        Text("Manual timer: no automatic movement/interrupt/rest cues", style = MaterialTheme.typography.bodySmall)
-    }
-}
-
-@Composable
-private fun MovementRows(catalog: MovementCatalog, part: ManualPartForm, ids: IdSource, onChange: ((ManualPartForm) -> ManualPartForm) -> Unit) {
+private fun MovementRows(catalog: MovementCatalog, part: ManualPartForm, ids: IdSource, onChange: PartEdit) {
     fun editRow(id: String, f: (ManualMovementForm) -> ManualMovementForm) =
         onChange { p -> p.copy(movements = p.movements.map { if (it.id == id) f(it) else it }) }
-    SectionTitle(if (part.format == ManualFormat.CUSTOM) "Movements (optional)" else "Movements")
-    part.movements.forEachIndexed { i, row ->
-        if (i > 0) HorizontalDivider()
+    val single = part.format == ManualFormat.BUILD_TO_MAX
+    Text(
+        when {
+            single -> "Lift"
+            part.format == ManualFormat.CUSTOM -> "Movements (optional)"
+            else -> "Movements"
+        },
+        style = MaterialTheme.typography.titleSmall,
+    )
+    part.movements.forEach { row ->
         MovementRow(
-            catalog, row, schemePart = ManualForms.usesScheme(part),
+            catalog, row, schemePart = ManualForms.usesScheme(part), nameOnly = single,
             onChange = { f -> editRow(row.id, f) },
             onRemove = { onChange { p -> p.copy(movements = p.movements.filter { it.id != row.id }) } },
         )
     }
-    OutlinedButton(onClick = { onChange { p -> p.copy(movements = p.movements + ManualForms.newMovementFor(p, ids)) } }) { Text("Add movement") }
+    if (!single || part.movements.isEmpty()) {
+        TextButton(onClick = { onChange { p -> p.copy(movements = p.movements + ManualForms.newMovementFor(p, ids)) } }) {
+            Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 4.dp))
+            Text("Add movement")
+        }
+    }
 }
 
 /** One movement: catalog autocomplete, measure, amount, load (single or M/F) and height. */
@@ -260,60 +332,72 @@ private fun MovementRow(
     catalog: MovementCatalog,
     row: ManualMovementForm,
     schemePart: Boolean,
+    nameOnly: Boolean,
     onChange: ((ManualMovementForm) -> ManualMovementForm) -> Unit,
     onRemove: () -> Unit,
 ) {
-    val catalogMovement = catalog.byId(row.movementId)
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    RowBox {
         MovementName(catalog, row.name, row.movementId, onName = { v ->
             onChange { it.copy(name = v, movementId = it.movementId.takeIf { id -> catalog.byId(id)?.name == v }) }
-        }, onPick = { m -> onChange { ManualForms.pick(it, m, schemePart) } })
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Choice("Measure", row.measure, MeasureKind.entries, ::measureName) { k -> onChange { it.copy(measure = k) } }
-            val w = Modifier.width(110.dp)
-            when (row.measure) {
-                MeasureKind.REPS, MeasureKind.CALORIES, MeasureKind.DISTANCE -> {
-                    val label = measureName(row.measure).replaceFirstChar { it.uppercase() }
-                    DoubleField(if (row.maleFemale) "$label M" else label, row.amount, w) { v -> onChange { it.copy(amount = v) } }
-                    if (row.maleFemale) DoubleField("$label F", row.amountFemale, w) { v -> onChange { it.copy(amountFemale = v) } }
-                    if (row.measure == MeasureKind.DISTANCE) {
-                        Choice("Unit", row.distanceUnit, DistanceUnit.entries, { it.wire }) { u -> onChange { it.copy(distanceUnit = u) } }
-                    }
-                }
-                MeasureKind.DURATION -> Field("Time (m:ss)", row.durationText, Modifier.width(140.dp)) { v -> onChange { it.copy(durationText = v) } }
-                MeasureKind.REP_SCHEME, MeasureKind.MAX -> Unit
-            }
-        }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (catalogMovement?.loadable != "N") {
-                DoubleField(if (row.maleFemale) "Load M" else "Load", row.load, Modifier.width(110.dp)) { v -> onChange { it.copy(load = v) } }
-                if (row.maleFemale) DoubleField("Load F", row.loadFemale, Modifier.width(110.dp)) { v -> onChange { it.copy(loadFemale = v) } }
-                Choice("Unit", row.loadUnit, listOf(MassUnit.KG, MassUnit.LB, MassUnit.POOD), { it.wire }) { u -> onChange { it.copy(loadUnit = u) } }
-                if (row.load != null) Choice("Implements", row.implementCount, listOf(1, 2)) { n -> onChange { it.copy(implementCount = n) } }
-            }
-            FilterChip(
-                selected = row.maleFemale, onClick = { onChange { it.copy(maleFemale = !it.maleFemale) } },
-                label = { Text("M/F values") }, modifier = Modifier.semantics { contentDescription = "Separate male and female values" },
-            )
-        }
-        val wantsHeight = catalogMovement?.height != null || catalogMovement?.target != null || row.height != null
-        if (wantsHeight) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val label = if (row.heightIsTarget) "Target" else "Box height"
-            DoubleField(if (row.maleFemale) "$label M" else label, row.height, Modifier.width(120.dp)) { v -> onChange { it.copy(height = v) } }
-            if (row.maleFemale) DoubleField("$label F", row.heightFemale, Modifier.width(120.dp)) { v -> onChange { it.copy(heightFemale = v) } }
-            Choice("Unit", row.heightUnit, LengthUnit.entries, { it.wire }) { u -> onChange { it.copy(heightUnit = u) } }
-        }
-        TextButton(onClick = onRemove) { Text("Remove movement") }
+        }, onPick = { m -> onChange { ManualForms.pick(it, m, schemePart) } }, onRemove = onRemove)
+        // Build to max: the attempts carry the reps and load, so only the lift is asked for.
+        if (!nameOnly) MovementDetails(catalog.byId(row.movementId), row, onChange)
     }
 }
 
+/** Measure, amount, load and height of a movement row. */
+@Composable
+private fun MovementDetails(
+    catalogMovement: Movement?,
+    row: ManualMovementForm,
+    onChange: ((ManualMovementForm) -> ManualMovementForm) -> Unit,
+) {
+    Grid {
+        val cell = Modifier
+        Choice("Measure", row.measure, MeasureKind.entries, ::measureName, cell) { k -> onChange { it.copy(measure = k) } }
+        when (row.measure) {
+            MeasureKind.REPS, MeasureKind.CALORIES, MeasureKind.DISTANCE -> {
+                val label = measureName(row.measure)
+                DoubleField(if (row.maleFemale) "$label (M)" else label, row.amount, cell) { v -> onChange { it.copy(amount = v) } }
+                if (row.maleFemale) DoubleField("$label (F)", row.amountFemale, cell) { v -> onChange { it.copy(amountFemale = v) } }
+                if (row.measure == MeasureKind.DISTANCE) {
+                    Choice("Unit", row.distanceUnit, DistanceUnit.entries, { it.wire }, cell) { u -> onChange { it.copy(distanceUnit = u) } }
+                }
+            }
+            MeasureKind.DURATION -> Field("Time", row.durationText, cell, placeholder = "m:ss") { v -> onChange { it.copy(durationText = v) } }
+            MeasureKind.REP_SCHEME, MeasureKind.MAX -> Unit
+        }
+    }
+    if (catalogMovement?.loadable != "N") Grid {
+        val cell = Modifier
+        DoubleField(if (row.maleFemale) "Load (M)" else "Load", row.load, cell) { v -> onChange { it.copy(load = v) } }
+        if (row.maleFemale) DoubleField("Load (F)", row.loadFemale, cell) { v -> onChange { it.copy(loadFemale = v) } }
+        Choice("Unit", row.loadUnit, listOf(MassUnit.KG, MassUnit.LB, MassUnit.POOD), { it.wire }, cell) { u -> onChange { it.copy(loadUnit = u) } }
+        if (row.load != null) Choice("Implements", row.implementCount, listOf(1, 2), { if (it == 1) "Single" else "Double" }, cell) { n ->
+            onChange { it.copy(implementCount = n) }
+        }
+    }
+    val wantsHeight = catalogMovement?.height != null || catalogMovement?.target != null || row.height != null
+    if (wantsHeight) Grid {
+        val cell = Modifier
+        val label = if (row.heightIsTarget) "Target" else "Box height"
+        DoubleField(if (row.maleFemale) "$label (M)" else label, row.height, cell) { v -> onChange { it.copy(height = v) } }
+        if (row.maleFemale) DoubleField("$label (F)", row.heightFemale, cell) { v -> onChange { it.copy(heightFemale = v) } }
+        Choice("Unit", row.heightUnit, LengthUnit.entries, { it.wire }, cell) { u -> onChange { it.copy(heightUnit = u) } }
+    }
+    FilterChip(
+        selected = row.maleFemale, onClick = { onChange { it.copy(maleFemale = !it.maleFemale) } },
+        label = { Text("Separate M/F values") }, modifier = Modifier.semantics { contentDescription = "Separate male and female values" },
+    )
+}
+
 private fun measureName(k: MeasureKind): String = when (k) {
-    MeasureKind.REPS -> "reps"
-    MeasureKind.REP_SCHEME -> "rep scheme"
-    MeasureKind.MAX -> "max"
-    MeasureKind.CALORIES -> "calories"
-    MeasureKind.DISTANCE -> "distance"
-    MeasureKind.DURATION -> "time"
+    MeasureKind.REPS -> "Reps"
+    MeasureKind.REP_SCHEME -> "Rep scheme"
+    MeasureKind.MAX -> "Max"
+    MeasureKind.CALORIES -> "Calories"
+    MeasureKind.DISTANCE -> "Distance"
+    MeasureKind.DURATION -> "Time"
 }
 
 /** Name field plus catalog suggestions (Appendix E); free text is kept when nothing is picked. */
@@ -323,30 +407,34 @@ private fun MovementName(
     name: String,
     movementId: String?,
     onName: (String) -> Unit,
-    onPick: (com.wodcapture.domain.catalog.Movement) -> Unit,
+    onPick: (Movement) -> Unit,
+    onRemove: () -> Unit,
 ) {
-    Row {
-        Field("Movement", name, Modifier.weight(1f), onChange = onName)
-        Text(if (movementId != null) "catalog" else "free text", Modifier.padding(8.dp), style = MaterialTheme.typography.bodySmall)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Field("Movement", name, Modifier.weight(1f), placeholder = "Start typing…", onChange = onName)
+        IconButton(onClick = onRemove) { Icon(Icons.Filled.Close, contentDescription = "Remove ${name.ifBlank { "movement" }}") }
     }
+    if (name.isNotBlank()) Hint(if (movementId != null) "From the movement catalog" else "Free text: pick a suggestion for smarter cues")
     val suggestions = remember(name, movementId) { ManualForms.suggestions(catalog, name, movementId) }
-    if (suggestions.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    if (suggestions.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         suggestions.forEach { m -> AssistChip(onClick = { onPick(m) }, label = { Text(m.name) }) }
     }
 }
 
 @Composable
-private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, ids: IdSource, onChange: ((ManualPartForm) -> ManualPartForm) -> Unit) {
+private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, ids: IdSource, onChange: PartEdit) {
     fun editRow(id: String, f: (ManualStrengthForm) -> ManualStrengthForm) =
         onChange { p -> p.copy(strength = p.strength.map { if (it.id == id) f(it) else it }) }
-    SectionTitle("Sets")
-    part.strength.forEachIndexed { i, row ->
-        if (i > 0) HorizontalDivider()
+    Text("Lifts", style = MaterialTheme.typography.titleSmall)
+    part.strength.forEach { row ->
         StrengthRow(catalog, row, onChange = { f -> editRow(row.id, f) }, onRemove = {
             onChange { p -> p.copy(strength = p.strength.filter { it.id != row.id }) }
         })
     }
-    OutlinedButton(onClick = { onChange { p -> p.copy(strength = p.strength + ManualForms.newStrengthRow(ids)) } }) { Text("Add strength movement") }
+    TextButton(onClick = { onChange { p -> p.copy(strength = p.strength + ManualForms.newStrengthRow(ids)) } }) {
+        Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 4.dp))
+        Text("Add lift")
+    }
 }
 
 /** Strength row: sets × reps @ load (absolute or % 1RM), rest (REQ-DM06). */
@@ -357,31 +445,30 @@ private fun StrengthRow(
     onChange: ((ManualStrengthForm) -> ManualStrengthForm) -> Unit,
     onRemove: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    RowBox {
         MovementName(catalog, row.name, row.movementId, onName = { v ->
             onChange { it.copy(name = v, movementId = it.movementId.takeIf { id -> catalog.byId(id)?.name == v }) }
-        }, onPick = { m -> onChange { ManualForms.pick(it, m) } })
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val w = Modifier.width(90.dp)
-            IntField("Sets", row.sets, w) { v -> onChange { it.copy(sets = v) } }
-            IntField("Reps", row.reps, w) { v -> onChange { it.copy(reps = v) } }
-            Choice("Load", row.loadMode, StrengthLoadMode.entries, ::loadModeName) { mode -> onChange { it.copy(loadMode = mode) } }
+        }, onPick = { m -> onChange { ManualForms.pick(it, m) } }, onRemove = onRemove)
+        Grid {
+            val cell = Modifier
+            IntField("Sets", row.sets, cell) { v -> onChange { it.copy(sets = v) } }
+            IntField("Reps", row.reps, cell) { v -> onChange { it.copy(reps = v) } }
+            Choice("Load", row.loadMode, StrengthLoadMode.entries, ::loadModeName, cell) { mode -> onChange { it.copy(loadMode = mode) } }
             when (row.loadMode) {
                 StrengthLoadMode.ABSOLUTE -> {
-                    DoubleField("Load", row.load, Modifier.width(110.dp)) { v -> onChange { it.copy(load = v) } }
-                    Choice("Unit", row.loadUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }) { u -> onChange { it.copy(loadUnit = u) } }
+                    DoubleField("Weight", row.load, cell) { v -> onChange { it.copy(load = v) } }
+                    Choice("Unit", row.loadUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }, cell) { u -> onChange { it.copy(loadUnit = u) } }
                 }
-                StrengthLoadMode.PERCENT_1RM -> DoubleField("% of 1RM", row.percent, Modifier.width(110.dp)) { v -> onChange { it.copy(percent = v) } }
+                StrengthLoadMode.PERCENT_1RM -> DoubleField("% of 1RM", row.percent, cell) { v -> onChange { it.copy(percent = v) } }
                 StrengthLoadMode.NONE -> Unit
             }
-            Field("Rest (m:ss)", row.restText, Modifier.width(120.dp)) { v -> onChange { it.copy(restText = v) } }
+            Field("Rest", row.restText, cell, placeholder = "2:00") { v -> onChange { it.copy(restText = v) } }
         }
-        TextButton(onClick = onRemove) { Text("Remove movement") }
     }
 }
 
 private fun loadModeName(m: StrengthLoadMode): String = when (m) {
-    StrengthLoadMode.ABSOLUTE -> "weight"
-    StrengthLoadMode.PERCENT_1RM -> "% 1RM"
-    StrengthLoadMode.NONE -> "none"
+    StrengthLoadMode.ABSOLUTE -> "Weight"
+    StrengthLoadMode.PERCENT_1RM -> "% of 1RM"
+    StrengthLoadMode.NONE -> "None"
 }
