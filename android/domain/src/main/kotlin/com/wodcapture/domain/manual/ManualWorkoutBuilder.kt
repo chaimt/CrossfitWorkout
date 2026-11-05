@@ -38,6 +38,7 @@ import com.wodcapture.domain.model.StrengthSet
 import com.wodcapture.domain.model.StrengthSets
 import com.wodcapture.domain.model.Tabata
 import com.wodcapture.domain.model.Workout
+import com.wodcapture.domain.model.WorkoutSection
 import com.wodcapture.domain.plan.WatchLimits
 import com.wodcapture.domain.review.TimeText
 import com.wodcapture.domain.validation.Severity
@@ -204,16 +205,26 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             if (form.movements.size > 1) {
                 issues += blocking("invalid_bounds", "Build to max takes exactly one movement", form.id, path = "movements")
             }
-            return form.movements.take(1).map { item(it).copy(measure = null, load = null) }
+            return form.movements.take(1).map { m -> requireListedLift(m.id, m.movementId); item(m).copy(measure = null, load = null) }
         }
 
         /** Custom instructions: one free-text line each so every watch line is previewed (REQ-DM18). */
         private fun customLines(): List<BodyNode> =
             form.customText.lines().map { it.trim() }.filter { it.isNotEmpty() }.map { Item(ids.newId(), name = it, rawText = it) }
 
+        /**
+         * Weights are picked from the catalog list (owner request 2026-11-05), so a lift without
+         * a catalog ID blocks; this replaces the generic missing-name message for lifts.
+         */
+        private fun requireListedLift(rowId: String, movementId: String?) {
+            if (movementId == null) issues += blocking("lift_not_in_list", "Choose each lift from the list", form.id, rowId, "movementId")
+        }
+
+        private val weights: Boolean get() = form.format.section == WorkoutSection.WEIGHTS
+
         private fun item(m: ManualMovementForm): Item {
             val name = m.name.trim()
-            if (name.isEmpty()) issues += blocking("missing_name", "Every movement needs a name", form.id, m.id, "name")
+            if (name.isEmpty() && !weights) issues += blocking("missing_name", "Every movement needs a name", form.id, m.id, "name")
             return Item(
                 id = m.id,
                 movementId = m.movementId,
@@ -260,7 +271,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
 
         private fun strengthItem(s: ManualStrengthForm): Item {
             val name = s.name.trim()
-            if (name.isEmpty()) issues += blocking("missing_name", "Every movement needs a name", form.id, s.id, "name")
+            requireListedLift(s.id, s.movementId)
             val count = s.sets ?: 0
             if (count !in 1..WatchLimits.SETS) {
                 issues += blocking("invalid_bounds", "Sets must be 1–${WatchLimits.SETS}", form.id, s.id, "sets")

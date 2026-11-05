@@ -1,6 +1,7 @@
 package com.wodcapture.domain.manual
 
 import com.wodcapture.domain.IdSource
+import com.wodcapture.domain.TestSupport
 import com.wodcapture.domain.model.Amrap
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.PartKind
@@ -8,6 +9,8 @@ import com.wodcapture.domain.model.StrengthSets
 import com.wodcapture.domain.model.WorkoutSection
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /** Weights and metcon stay separate sections of the manual form (owner request 2026-11-05). */
 class ManualSectionsTest {
@@ -69,5 +72,29 @@ class ManualSectionsTest {
         assertEquals(WorkoutSection.METCON, WorkoutSection.of(Part(id = "p", format = Amrap(durationSec = 600))))
         assertEquals(WorkoutSection.OTHER, WorkoutSection.of(Part(id = "p", kind = PartKind.WARMUP, format = Amrap(durationSec = 300))))
         assertEquals(WorkoutSection.WEIGHTS, WorkoutSection.of(Part(id = "p", kind = PartKind.ACCESSORY, format = Amrap(durationSec = 300))))
+    }
+
+    @Test
+    fun liftsComeFromAGroupedCatalogList() {
+        val groups = ManualForms.liftGroups(TestSupport.catalog)
+        val ids = groups.flatMap { g -> g.lifts.map { it.id } }
+        assertEquals("Squats, presses & deadlifts", groups.first().title)
+        // crossfit.com lifts, including the ones added for the picker.
+        listOf("back_squat", "deadlift", "clean_and_push_jerk", "dumbbell_squat_snatch", "dumbbell_hang_clean", "american_kettlebell_swing")
+            .forEach { assertTrue(it in ids, it) }
+        // No unloaded gymnastics or cardio.
+        listOf("air_squat", "pull_up", "row", "run").forEach { assertFalse(it in ids, it) }
+        assertEquals(listOf("dumbbell_power_snatch"), ManualForms.liftGroups(TestSupport.catalog, "DB PS").flatMap { g -> g.lifts.map { it.id } })
+    }
+
+    @Test
+    fun aWeightsLiftMustBePickedFromTheList() {
+        val typed = ManualForms.newPart(ids, 0, ManualFormat.STRENGTH).let { p -> p.copy(strength = p.strength.map { it.copy(name = "Squat thing") }) }
+        val codes = builder.build(blank().copy(parts = listOf(typed))).report.blocking.map { it.code }
+        assertTrue("lift_not_in_list" in codes, codes.toString())
+        assertFalse("missing_name" in codes, codes.toString())
+        val back = TestSupport.catalog.byId("back_squat")!!
+        val picked = typed.copy(strength = typed.strength.map { ManualForms.pick(it, back).copy(load = 100.0) })
+        assertTrue(builder.build(blank().copy(parts = listOf(picked))).canCreate)
     }
 }

@@ -398,16 +398,24 @@ private fun NodeActions(reorder: Boolean, onUp: () -> Unit, onDown: () -> Unit, 
 private fun ItemEditor(vm: AppViewModel, part: Part, item: Item, onChange: (Part) -> Unit) {
     fun set(f: (Item) -> Item) = onChange(Editing.updateNode(part, item.id) { f(it as Item) })
     val catalog = vm.catalog
-    Field("Movement", item.name, Modifier.fillMaxWidth()) { v -> set { it.copy(name = v, displayName = null) } }
-    Hint(if (item.movementId != null) "From the movement catalog" else "Free text")
-    // Catalog autocomplete (REQ-AE02): names and unambiguous aliases.
-    val suggestions = remember(item.name) {
-        if (item.name.length < 2) emptyList() else catalog.movements.filter { m ->
-            m.id != item.movementId && (m.name.contains(item.name, true) || m.aliases.any { it.equals(item.name, true) })
-        }.take(3)
-    }
-    if (suggestions.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        suggestions.forEach { m -> AssistChip(onClick = { set { it.copy(movementId = m.id, name = m.name, implement = it.implement ?: m.implement) } }, label = { Text(m.name) }) }
+    if (WorkoutSection.of(part) == WorkoutSection.WEIGHTS) {
+        // Weights come from the lift list (owner request 2026-11-05); a parsed free-text lift is
+        // flagged so it can be matched to the list.
+        LiftField(catalog, item.name, item.movementId, Modifier.fillMaxWidth()) { m ->
+            set { it.copy(movementId = m.id, name = m.name, displayName = null, implement = m.implement.takeIf { i -> i !in setOf("none", "bodyweight") }) }
+        }
+    } else {
+        Field("Movement", item.name, Modifier.fillMaxWidth()) { v -> set { it.copy(name = v, displayName = null) } }
+        Hint(if (item.movementId != null) "From the movement catalog" else "Free text")
+        // Catalog autocomplete (REQ-AE02): names and unambiguous aliases.
+        val suggestions = remember(item.name) {
+            if (item.name.length < 2) emptyList() else catalog.movements.filter { m ->
+                m.id != item.movementId && (m.name.contains(item.name, true) || m.aliases.any { it.equals(item.name, true) })
+            }.take(3)
+        }
+        if (suggestions.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            suggestions.forEach { m -> AssistChip(onClick = { set { it.copy(movementId = m.id, name = m.name, implement = it.implement ?: m.implement) } }, label = { Text(m.name) }) }
+        }
     }
     val strength = part.format is StrengthSets || item.sets.isNotEmpty()
     if (strength) Grid {

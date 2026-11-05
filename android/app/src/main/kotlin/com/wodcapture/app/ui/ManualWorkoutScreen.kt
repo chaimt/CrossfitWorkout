@@ -337,11 +337,16 @@ private fun MovementRow(
     onRemove: () -> Unit,
 ) {
     RowBox {
-        MovementName(catalog, row.name, row.movementId, onName = { v ->
-            onChange { it.copy(name = v, movementId = it.movementId.takeIf { id -> catalog.byId(id)?.name == v }) }
-        }, onPick = { m -> onChange { ManualForms.pick(it, m, schemePart) } }, onRemove = onRemove)
-        // Build to max: the attempts carry the reps and load, so only the lift is asked for.
-        if (!nameOnly) MovementDetails(catalog.byId(row.movementId), row, onChange)
+        if (nameOnly) {
+            // Build to max is a weights part: the lift comes from the list, and the attempts
+            // carry the reps and load, so nothing else is asked for.
+            LiftRow(catalog, row.name, row.movementId, onRemove) { m -> onChange { ManualForms.pick(it, m, schemePart) } }
+        } else {
+            MovementName(catalog, row.name, row.movementId, onName = { v ->
+                onChange { it.copy(name = v, movementId = it.movementId.takeIf { id -> catalog.byId(id)?.name == v }) }
+            }, onPick = { m -> onChange { ManualForms.pick(it, m, schemePart) } }, onRemove = onRemove)
+            MovementDetails(catalog.byId(row.movementId), row, onChange)
+        }
     }
 }
 
@@ -421,6 +426,15 @@ private fun MovementName(
     }
 }
 
+/** Lift picker plus remove button, for weights rows. */
+@Composable
+private fun LiftRow(catalog: MovementCatalog, name: String, movementId: String?, onRemove: () -> Unit, onPick: (Movement) -> Unit) {
+    Row(verticalAlignment = Alignment.Top) {
+        LiftField(catalog, name, movementId, Modifier.weight(1f), onPick)
+        IconButton(onClick = onRemove, modifier = Modifier.padding(top = 8.dp)) { Icon(Icons.Filled.Close, contentDescription = "Remove ${name.ifBlank { "lift" }}") }
+    }
+}
+
 @Composable
 private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, ids: IdSource, onChange: PartEdit) {
     fun editRow(id: String, f: (ManualStrengthForm) -> ManualStrengthForm) =
@@ -446,9 +460,7 @@ private fun StrengthRow(
     onRemove: () -> Unit,
 ) {
     RowBox {
-        MovementName(catalog, row.name, row.movementId, onName = { v ->
-            onChange { it.copy(name = v, movementId = it.movementId.takeIf { id -> catalog.byId(id)?.name == v }) }
-        }, onPick = { m -> onChange { ManualForms.pick(it, m) } }, onRemove = onRemove)
+        LiftRow(catalog, row.name, row.movementId, onRemove) { m -> onChange { ManualForms.pick(it, m) } }
         Grid {
             val cell = Modifier
             IntField("Sets", row.sets, cell) { v -> onChange { it.copy(sets = v) } }

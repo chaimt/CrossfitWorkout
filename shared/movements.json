@@ -291,6 +291,26 @@
       "implement": "barbell"
     },
     {
+      "id": "clean_and_push_jerk",
+      "name": "Clean and push jerk",
+      "aliases": [],
+      "ambiguousAliases": [],
+      "category": "olympic",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "barbell"
+    },
+    {
+      "id": "hang_clean_and_push_jerk",
+      "name": "Hang clean and push jerk",
+      "aliases": [],
+      "ambiguousAliases": [],
+      "category": "olympic",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "barbell"
+    },
+    {
       "id": "squat_clean_thruster",
       "name": "Squat-clean thruster",
       "aliases": [
@@ -588,7 +608,8 @@
       "id": "front_rack_lunge",
       "name": "Front-rack lunge",
       "aliases": [
-        "FRL"
+        "FRL",
+        "barbell front-rack lunge"
       ],
       "ambiguousAliases": [],
       "category": "strength",
@@ -1885,7 +1906,9 @@
       "id": "farmers_carry",
       "name": "Farmer's carry",
       "aliases": [
-        "FC"
+        "FC",
+        "dumbbell farmers carry",
+        "farmers carry"
       ],
       "ambiguousAliases": [],
       "category": "dumbbell",
@@ -1901,7 +1924,60 @@
       "id": "single_arm_dumbbell_overhead_squat",
       "name": "Single-arm dumbbell overhead squat",
       "aliases": [
-        "SA DB OHS"
+        "SA DB OHS",
+        "dumbbell overhead squat",
+        "DB OHS"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "dumbbell_clean",
+      "name": "Dumbbell clean",
+      "aliases": [
+        "DB clean",
+        "DB squat clean"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "dumbbell_hang_clean",
+      "name": "Dumbbell hang clean",
+      "aliases": [
+        "DB HC",
+        "DB hang clean"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "dumbbell_power_snatch",
+      "name": "Dumbbell power snatch",
+      "aliases": [
+        "DB PS",
+        "DB power snatch"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "dumbbell_squat_snatch",
+      "name": "Dumbbell squat snatch",
+      "aliases": [
+        "DB squat snatch"
       ],
       "ambiguousAliases": [],
       "category": "dumbbell",

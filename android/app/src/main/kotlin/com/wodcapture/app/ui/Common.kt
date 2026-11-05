@@ -152,7 +152,7 @@ fun <T> Choice(
             shape = MaterialTheme.shapes.small,
             modifier = Modifier.fillMaxWidth(),
         )
-        Box(Modifier.matchParentSize().padding(top = 8.dp).clip(MaterialTheme.shapes.small).clickable(role = Role.DropdownList) { open = true })
+        Box(Modifier.matchParentSize().clip(MaterialTheme.shapes.small).clickable(role = Role.DropdownList) { open = true })
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             options.forEach { o -> DropdownMenuItem(text = { Text(name(o)) }, onClick = { open = false; onPick(o) }) }
         }

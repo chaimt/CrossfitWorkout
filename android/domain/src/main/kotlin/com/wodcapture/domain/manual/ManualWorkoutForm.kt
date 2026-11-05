@@ -49,6 +49,9 @@ enum class ManualFormat(val label: String, val section: WorkoutSection) {
     }
 }
 
+/** A heading of the weights picker and its lifts, A–Z. */
+data class LiftGroup(val title: String, val lifts: List<Movement>)
+
 /** The two sections of the form, in the order a class runs them: lift first, then the metcon. */
 val MANUAL_SECTIONS: List<WorkoutSection> = listOf(WorkoutSection.WEIGHTS, WorkoutSection.METCON)
 
@@ -283,6 +286,31 @@ object ManualForms {
         val byAlias = catalog.movements.filter { m -> m.aliases.any { it !in m.ambiguousAliases && it.startsWith(q, ignoreCase = true) } }
         return (byName.sortedBy { !it.name.startsWith(q, ignoreCase = true) } + byAlias).distinctBy { it.id }.take(SUGGESTIONS)
     }
+
+    /**
+     * The weights picker list (owner request 2026-11-05: lifts come from a list, after
+     * crossfit.com/crossfit-movements): every catalog movement that takes a load, minus cardio,
+     * grouped by kind of lift. [query] filters by name or unambiguous alias.
+     */
+    fun liftGroups(catalog: MovementCatalog, query: String = ""): List<LiftGroup> {
+        val q = query.trim()
+        val lifts = catalog.movements.filter { it.loadable != "N" && it.category != "monostructural" }.filter { m ->
+            q.isEmpty() || m.name.contains(q, ignoreCase = true) ||
+                m.aliases.any { it !in m.ambiguousAliases && it.startsWith(q, ignoreCase = true) }
+        }
+        return LIFT_GROUPS.mapNotNull { (category, title) ->
+            lifts.filter { it.category == category }.sortedBy { it.name.lowercase() }.takeIf { it.isNotEmpty() }?.let { LiftGroup(title, it) }
+        }
+    }
+
+    private val LIFT_GROUPS = listOf(
+        "strength" to "Squats, presses & deadlifts",
+        "olympic" to "Olympic lifts",
+        "dumbbell" to "Dumbbell",
+        "kettlebell" to "Kettlebell",
+        "gymnastics" to "Weighted gymnastics",
+        "other" to "Med ball, sandbag & more",
+    )
 
     /** Whether a movement can carry a load (catalog `loadable` Y/optional, or free text). */
     fun loadable(catalog: MovementCatalog, movementId: String?): Boolean = catalog.byId(movementId)?.loadable != "N"
