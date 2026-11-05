@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -52,7 +53,7 @@ import com.wodcapture.domain.manual.ManualForms
 import com.wodcapture.domain.manual.ManualFormat
 import com.wodcapture.domain.manual.ManualMovementForm
 import com.wodcapture.domain.manual.ManualPartForm
-import com.wodcapture.domain.manual.ManualStrengthForm
+import com.wodcapture.domain.manual.ManualSetForm
 import com.wodcapture.domain.manual.ManualTemplates
 import com.wodcapture.domain.manual.ManualWorkoutForm
 import com.wodcapture.domain.manual.MaxEffortMeasure
@@ -112,7 +113,7 @@ fun ManualWorkoutScreen(vm: AppViewModel, onCreated: (String) -> Unit, back: () 
                 }
                 items(parts, key = { it.id }) { part ->
                     PartCard(
-                        vm.catalog, section, ManualForms.effectiveLabel(form, part), part, ids,
+                        vm.catalog, section, ManualForms.effectiveLabel(form, part), part, form.loadUnit, form.loadStep, ids,
                         build.report.issues.filter { it.partId == part.id },
                         onChange = { f -> edit { ManualForms.updatePart(it, part.id, f) } },
                         onRemove = { edit { ManualForms.removePart(it, part.id) } },
@@ -131,7 +132,7 @@ fun ManualWorkoutScreen(vm: AppViewModel, onCreated: (String) -> Unit, back: () 
 }
 
 private fun sectionSubtitle(s: WorkoutSection) = when (s) {
-    WorkoutSection.WEIGHTS -> "Strength sets or build to a max"
+    WorkoutSection.WEIGHTS -> "One lift per session, set by set"
     else -> "For time, AMRAP, EMOM, Tabata, intervals"
 }
 
@@ -157,13 +158,15 @@ private fun Templates(section: WorkoutSection, onPick: (com.wodcapture.domain.ma
 private fun AddPart(section: WorkoutSection, onAdd: (ManualFormat) -> Unit) {
     var open by remember { mutableStateOf(false) }
     val accent = sectionColors(section).accent
+    val formats = ManualFormat.of(section)
     Box {
-        OutlinedButton(onClick = { open = true }, colors = ButtonDefaults.outlinedButtonColors(contentColor = accent)) {
+        // Weights has one format (Strength sets), so its button adds it directly.
+        OutlinedButton(onClick = { if (formats.size == 1) onAdd(formats.single()) else open = true }, colors = ButtonDefaults.outlinedButtonColors(contentColor = accent)) {
             Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 6.dp))
             Text(if (section == WorkoutSection.WEIGHTS) "Add weights" else "Add metcon")
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            ManualFormat.of(section).forEach { f -> DropdownMenuItem(text = { Text(f.label) }, onClick = { open = false; onAdd(f) }) }
+            formats.forEach { f -> DropdownMenuItem(text = { Text(f.label) }, onClick = { open = false; onAdd(f) }) }
         }
     }
 }
@@ -174,6 +177,8 @@ private fun PartCard(
     section: WorkoutSection,
     label: String,
     part: ManualPartForm,
+    unit: MassUnit,
+    step: Double,
     ids: IdSource,
     issues: List<ValidationIssue>,
     onChange: PartEdit,
@@ -188,16 +193,18 @@ private fun PartCard(
             }
             IconButton(onClick = onRemove) { Icon(Icons.Filled.Delete, contentDescription = "Remove part $label") }
         }
-        FormatChips(section, part.format) { f -> onChange { ManualForms.withFormat(it, f, ids) } }
-        Grid {
+        if (ManualFormat.of(section).size > 1) FormatChips(section, part.format) { f -> onChange { ManualForms.withFormat(it, f, ids) } }
+        // Weights parts are always strength and need no label or name (owner request 2026-11-05):
+        // the lift says what it is and the builder letters the part.
+        if (section != WorkoutSection.WEIGHTS) Grid {
             Field("Label", part.label, Modifier.weight(1f), placeholder = label.ifBlank { "auto" }) { v -> onChange { it.copy(label = v) } }
             Field("Name (optional)", part.name, Modifier.weight(1f), placeholder = "e.g. Fran") { v -> onChange { it.copy(name = v) } }
             Choice("Type", part.kind, kindsFor(section), ::kindName, Modifier.weight(1f)) { k -> onChange { it.copy(kind = k) } }
         }
         FormatFields(part, onChange)
         when (part.format) {
-            ManualFormat.STRENGTH -> StrengthRows(catalog, part, ids, onChange)
-            else -> MovementRows(catalog, part, ids, onChange)
+            ManualFormat.STRENGTH -> StrengthRows(catalog, part, unit, step, ids, onChange)
+            else -> MovementRows(catalog, part, unit, ids, onChange)
         }
         Issues(issues)
     }
@@ -255,11 +262,6 @@ private fun FormatFields(part: ManualPartForm, onChange: PartEdit) {
                     Field("Work", part.workText, cell, placeholder = "3:00") { v -> onChange { it.copy(workText = v) } }
                     Field("Rest", part.restText, cell, placeholder = "1:00") { v -> onChange { it.copy(restText = v) } }
                 }
-                ManualFormat.BUILD_TO_MAX -> {
-                    IntField("Reps per attempt", part.repsPerSet, cell) { v -> onChange { it.copy(repsPerSet = v) } }
-                    IntField("Attempt limit", part.attempts, cell) { v -> onChange { it.copy(attempts = v) } }
-                    Field("Window (optional)", part.durationText, cell, placeholder = "15:00") { v -> onChange { it.copy(durationText = v) } }
-                }
                 ManualFormat.MAX_EFFORT -> {
                     Choice("Measure", part.maxMeasure, MaxEffortMeasure.entries, { it.wire }, cell) { v -> onChange { it.copy(maxMeasure = v) } }
                     Field("Window", part.durationText, cell, placeholder = "m:ss") { v -> onChange { it.copy(durationText = v) } }
@@ -300,30 +302,20 @@ private fun RowBox(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun MovementRows(catalog: MovementCatalog, part: ManualPartForm, ids: IdSource, onChange: PartEdit) {
+private fun MovementRows(catalog: MovementCatalog, part: ManualPartForm, unit: MassUnit, ids: IdSource, onChange: PartEdit) {
     fun editRow(id: String, f: (ManualMovementForm) -> ManualMovementForm) =
         onChange { p -> p.copy(movements = p.movements.map { if (it.id == id) f(it) else it }) }
-    val single = part.format == ManualFormat.BUILD_TO_MAX
-    Text(
-        when {
-            single -> "Lift"
-            part.format == ManualFormat.CUSTOM -> "Movements (optional)"
-            else -> "Movements"
-        },
-        style = MaterialTheme.typography.titleSmall,
-    )
+    Text(if (part.format == ManualFormat.CUSTOM) "Movements (optional)" else "Movements", style = MaterialTheme.typography.titleSmall)
     part.movements.forEach { row ->
         MovementRow(
-            catalog, row, schemePart = ManualForms.usesScheme(part), nameOnly = single,
+            catalog, row, unit, schemePart = ManualForms.usesScheme(part),
             onChange = { f -> editRow(row.id, f) },
             onRemove = { onChange { p -> p.copy(movements = p.movements.filter { it.id != row.id }) } },
         )
     }
-    if (!single || part.movements.isEmpty()) {
-        TextButton(onClick = { onChange { p -> p.copy(movements = p.movements + ManualForms.newMovementFor(p, ids)) } }) {
-            Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 4.dp))
-            Text("Add movement")
-        }
+    TextButton(onClick = { onChange { p -> p.copy(movements = p.movements + ManualForms.newMovementFor(p, ids)) } }) {
+        Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 4.dp))
+        Text("Add movement")
     }
 }
 
@@ -332,22 +324,16 @@ private fun MovementRows(catalog: MovementCatalog, part: ManualPartForm, ids: Id
 private fun MovementRow(
     catalog: MovementCatalog,
     row: ManualMovementForm,
+    unit: MassUnit,
     schemePart: Boolean,
-    nameOnly: Boolean,
     onChange: ((ManualMovementForm) -> ManualMovementForm) -> Unit,
     onRemove: () -> Unit,
 ) {
     RowBox {
-        if (nameOnly) {
-            // Build to max is a weights part: the lift comes from the list, and the attempts
-            // carry the reps and load, so nothing else is asked for.
-            LiftRow(catalog, row.name, row.movementId, onRemove) { m -> onChange { ManualForms.pick(it, m, schemePart) } }
-        } else {
-            MovementName(catalog, row.name, row.movementId, onName = { v ->
-                onChange { it.copy(name = v, movementId = it.movementId.takeIf { id -> catalog.byId(id)?.name == v }) }
-            }, onPick = { m -> onChange { ManualForms.pick(it, m, schemePart) } }, onRemove = onRemove)
-            MovementDetails(catalog.byId(row.movementId), row, onChange)
-        }
+        MovementName(catalog, row.name, row.movementId, onName = { v ->
+            onChange { it.copy(name = v, movementId = it.movementId.takeIf { id -> catalog.byId(id)?.name == v }) }
+        }, onPick = { m -> onChange { ManualForms.pick(it, m, schemePart) } }, onRemove = onRemove)
+        MovementDetails(catalog.byId(row.movementId), row, unit, onChange)
     }
 }
 
@@ -356,6 +342,7 @@ private fun MovementRow(
 private fun MovementDetails(
     catalogMovement: Movement?,
     row: ManualMovementForm,
+    unit: MassUnit,
     onChange: ((ManualMovementForm) -> ManualMovementForm) -> Unit,
 ) {
     Grid {
@@ -376,9 +363,9 @@ private fun MovementDetails(
     }
     if (catalogMovement?.loadable != "N") Grid {
         val cell = Modifier
-        DoubleField(if (row.maleFemale) "Load (M)" else "Load", row.load, cell) { v -> onChange { it.copy(load = v) } }
-        if (row.maleFemale) DoubleField("Load (F)", row.loadFemale, cell) { v -> onChange { it.copy(loadFemale = v) } }
-        Choice("Unit", row.loadUnit, listOf(MassUnit.KG, MassUnit.LB, MassUnit.POOD), { it.wire }, cell) { u -> onChange { it.copy(loadUnit = u) } }
+        // The unit is the app setting (Settings → Units), not chosen per movement.
+        DoubleField(if (row.maleFemale) "Load (M, ${unit.wire})" else "Load (${unit.wire})", row.load, cell) { v -> onChange { it.copy(load = v) } }
+        if (row.maleFemale) DoubleField("Load (F, ${unit.wire})", row.loadFemale, cell) { v -> onChange { it.copy(loadFemale = v) } }
         if (row.load != null) Choice("Implements", row.implementCount, listOf(1, 2), { if (it == 1) "Single" else "Double" }, cell) { n ->
             onChange { it.copy(implementCount = n) }
         }
@@ -427,71 +414,69 @@ private fun MovementName(
     }
 }
 
-/** Lift picker plus remove button, for weights rows. */
+/**
+ * A strength session (owner request 2026-11-05): one lift and its load type once at the top, an
+ * optional goal weight, then one row per set with its weight and reps. With a goal, each set also
+ * shows its % of the goal; editing the weight or the % updates the other. "Add set" repeats the
+ * last set.
+ */
 @Composable
-private fun LiftRow(catalog: MovementCatalog, name: String, movementId: String?, onRemove: () -> Unit, onPick: (Movement) -> Unit) {
-    Row(verticalAlignment = Alignment.Top) {
-        LiftField(catalog, name, movementId, Modifier.weight(1f), onPick)
-        IconButton(onClick = onRemove, modifier = Modifier.padding(top = 8.dp)) { Icon(Icons.Filled.Close, contentDescription = "Remove ${name.ifBlank { "lift" }}") }
+private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, unit: MassUnit, step: Double, ids: IdSource, onChange: PartEdit) {
+    fun editSet(id: String, f: (ManualSetForm) -> ManualSetForm) =
+        onChange { p -> p.copy(sets = p.sets.map { if (it.id == id) f(it) else it }) }
+    Text("Session", style = MaterialTheme.typography.titleSmall)
+    val lift = part.lift
+    LiftField(catalog, lift?.name.orEmpty(), lift?.movementId, Modifier.fillMaxWidth()) { m ->
+        onChange { p -> p.copy(lift = ManualForms.pick(p.lift ?: ManualForms.newLift(ids), m)) }
     }
-}
-
-@Composable
-private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, ids: IdSource, onChange: PartEdit) {
-    fun editRow(id: String, f: (ManualStrengthForm) -> ManualStrengthForm) =
-        onChange { p -> p.copy(strength = p.strength.map { if (it.id == id) f(it) else it }) }
-    SchemeFields(part.scheme) { f -> onChange { it.copy(scheme = f(it.scheme)) } }
-    Text("Lifts", style = MaterialTheme.typography.titleSmall)
-    part.strength.forEach { row ->
-        StrengthRow(catalog, part.scheme, row, onChange = { f -> editRow(row.id, f) }, onRemove = {
-            onChange { p -> p.copy(strength = p.strength.filter { it.id != row.id }) }
+    val weights = part.scheme.loadMode == StrengthLoadMode.ABSOLUTE
+    Grid {
+        Choice("Load type", part.scheme.loadMode, StrengthLoadMode.entries, ::loadModeName, Modifier) { mode ->
+            onChange { it.copy(scheme = it.scheme.copy(loadMode = mode)) }
+        }
+        if (weights) DoubleField("Goal weight (${unit.wire})", part.scheme.goalWeight, Modifier) { v ->
+            onChange { ManualForms.withGoal(it, v, step) }
+        }
+    }
+    // The set row is too narrow for "Weight (kg)", so the Settings unit sits in the heading.
+    Text(if (weights) "Sets · weight in ${unit.wire}" else "Sets", style = MaterialTheme.typography.titleSmall)
+    part.sets.forEachIndexed { i, set ->
+        SetRow(i + 1, part.scheme, step, set, onChange = { f -> editSet(set.id, f) }, onRemove = {
+            onChange { p -> p.copy(sets = p.sets.filter { it.id != set.id }) }
         })
     }
-    TextButton(onClick = { onChange { p -> p.copy(strength = p.strength + ManualForms.newStrengthRow(ids)) } }) {
+    TextButton(onClick = { onChange { p -> p.copy(sets = p.sets + ManualForms.newSet(p, ids)) } }) {
         Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 4.dp))
-        Text("Add lift")
+        Text("Add set")
     }
 }
 
 /**
- * Sets × reps, load type and rest for the whole part, before the lifts (owner request
- * 2026-11-05): every lift, including one added later, follows it.
+ * One set: its weight (in the session's load type and the Settings unit) and reps (REQ-DM06).
+ * With a goal weight it also shows the % of the goal, linked both ways to the weight.
  */
 @Composable
-private fun SchemeFields(scheme: StrengthScheme, onChange: ((StrengthScheme) -> StrengthScheme) -> Unit) {
-    Text("Sets & reps (every lift)", style = MaterialTheme.typography.titleSmall)
-    Grid {
-        val cell = Modifier
-        IntField("Sets", scheme.sets, cell) { v -> onChange { it.copy(sets = v) } }
-        IntField("Reps", scheme.reps, cell) { v -> onChange { it.copy(reps = v) } }
-        Choice("Load type", scheme.loadMode, StrengthLoadMode.entries, ::loadModeName, cell) { mode -> onChange { it.copy(loadMode = mode) } }
-        if (scheme.loadMode == StrengthLoadMode.ABSOLUTE) {
-            Choice("Unit", scheme.loadUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }, cell) { u -> onChange { it.copy(loadUnit = u) } }
-        }
-        Field("Rest", scheme.restText, cell, placeholder = "2:00") { v -> onChange { it.copy(restText = v) } }
-    }
-}
-
-/** A lift of a strength part: the lift from the list and its load in the part's load type (REQ-DM06). */
-@Composable
-private fun StrengthRow(
-    catalog: MovementCatalog,
+private fun SetRow(
+    number: Int,
     scheme: StrengthScheme,
-    row: ManualStrengthForm,
-    onChange: ((ManualStrengthForm) -> ManualStrengthForm) -> Unit,
+    step: Double,
+    set: ManualSetForm,
+    onChange: ((ManualSetForm) -> ManualSetForm) -> Unit,
     onRemove: () -> Unit,
 ) {
-    RowBox {
-        LiftRow(catalog, row.name, row.movementId, onRemove) { m -> onChange { ManualForms.pick(it, m) } }
+    val goal = scheme.goalWeight
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text("Set $number", style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(44.dp))
         when (scheme.loadMode) {
-            StrengthLoadMode.ABSOLUTE -> Grid {
-                DoubleField("Weight (${scheme.loadUnit.wire})", row.load, Modifier) { v -> onChange { it.copy(load = v) } }
+            StrengthLoadMode.ABSOLUTE -> {
+                DoubleField("Weight", set.load, Modifier.weight(1f)) { v -> onChange { ManualForms.withSetWeight(it, v, goal) } }
+                if (goal != null) DoubleField("%", set.ofGoal, Modifier.weight(0.8f)) { v -> onChange { ManualForms.withSetPercent(it, v, goal, step) } }
             }
-            StrengthLoadMode.PERCENT_1RM -> Grid {
-                DoubleField("% of 1RM", row.percent, Modifier) { v -> onChange { it.copy(percent = v) } }
-            }
+            StrengthLoadMode.PERCENT_1RM -> DoubleField("% of 1RM", set.percent, Modifier.weight(1f)) { v -> onChange { it.copy(percent = v) } }
             StrengthLoadMode.NONE -> Unit
         }
+        IntField("Reps", set.reps, Modifier.weight(0.8f)) { v -> onChange { it.copy(reps = v) } }
+        IconButton(onClick = onRemove) { Icon(Icons.Filled.Close, contentDescription = "Remove set $number") }
     }
 }
 

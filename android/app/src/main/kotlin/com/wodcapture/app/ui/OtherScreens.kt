@@ -226,7 +226,7 @@ fun SettingsScreen(vm: AppViewModel, back: () -> Unit) {
         Bar("Settings", back)
         SectionTitle("Profile")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Choice("Units", p.displayUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }) { u -> profile { it.copy(displayUnit = u) } }
+            Choice("Weight unit", p.displayUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }) { u -> profile { it.copy(displayUnit = u) } }
             Choice("Board unit", p.boardUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }) { u -> profile { it.copy(boardUnit = u) } }
             Choice("Split loads", p.sex, SexSelection.entries, { it.name.lowercase() }) { x -> profile { it.copy(sex = x) } }
             Choice("Conversion", p.conversionMode, ConversionMode.entries, { it.name.lowercase() }) { m -> profile { it.copy(conversionMode = m) } }

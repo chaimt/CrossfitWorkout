@@ -3,6 +3,7 @@ package com.wodcapture.domain.manual
 import com.wodcapture.domain.IdSource
 import com.wodcapture.domain.catalog.Movement
 import com.wodcapture.domain.catalog.MovementCatalog
+import com.wodcapture.domain.load.MassMath
 import com.wodcapture.domain.model.DistanceUnit
 import com.wodcapture.domain.model.FallbackTimer
 import com.wodcapture.domain.model.LengthUnit
@@ -24,6 +25,16 @@ data class ManualWorkoutForm(
     val date: String,
     /** IANA zone of [date] (default: the phone's zone). */
     val timeZone: String,
+    /**
+     * Unit of every weight typed in the form. It is not chosen per entry: it follows the app's
+     * Settings → Units ([com.wodcapture.domain.model.Profile.displayUnit]) (owner request 2026-11-05).
+     */
+    val loadUnit: MassUnit = MassUnit.KG,
+    /**
+     * Rounding step for weights the form computes (a % of the goal weight): Settings → smallest
+     * total increment for [loadUnit].
+     */
+    val loadStep: Double = 1.0,
     val parts: List<ManualPartForm> = emptyList(),
 )
 
@@ -33,7 +44,6 @@ data class ManualWorkoutForm(
  */
 enum class ManualFormat(val label: String, val section: WorkoutSection) {
     STRENGTH("Strength sets", WorkoutSection.WEIGHTS),
-    BUILD_TO_MAX("Build to max", WorkoutSection.WEIGHTS),
     FOR_TIME("For time", WorkoutSection.METCON),
     AMRAP("AMRAP", WorkoutSection.METCON),
     EMOM("EMOM / E#MOM", WorkoutSection.METCON),
@@ -56,11 +66,12 @@ data class LiftGroup(val title: String, val lifts: List<Movement>)
 val MANUAL_SECTIONS: List<WorkoutSection> = listOf(WorkoutSection.WEIGHTS, WorkoutSection.METCON)
 
 /**
- * Part kinds offered in each form section (the section itself comes from the format). Warm-up,
- * skill and cool-down pieces are timed like a metcon, so they live in the metcon section.
+ * Part kinds offered in each form section (the section itself comes from the format). A weights
+ * part is always strength (owner request 2026-11-05: no accessory choice). Warm-up, skill and
+ * cool-down pieces are timed like a metcon, so they live in the metcon section.
  */
 fun kindsFor(section: WorkoutSection): List<PartKind> = when (section) {
-    WorkoutSection.WEIGHTS -> listOf(PartKind.STRENGTH, PartKind.ACCESSORY)
+    WorkoutSection.WEIGHTS -> listOf(PartKind.STRENGTH)
     WorkoutSection.METCON, WorkoutSection.OTHER ->
         listOf(PartKind.METCON, PartKind.WARMUP, PartKind.SKILL, PartKind.COOLDOWN, PartKind.OTHER)
 }
@@ -90,7 +101,7 @@ data class ManualPartForm(
     val format: ManualFormat = ManualFormat.FOR_TIME,
     /** For time: optional cap. */
     val capText: String = "",
-    /** AMRAP duration; max-effort / build-to-max window; Custom countdown length or count-up cap. */
+    /** AMRAP duration; max-effort window; Custom countdown length or count-up cap. */
     val durationText: String = "",
     /** For time / Tabata / Intervals rounds. `null` = format default. */
     val rounds: Int? = null,
@@ -103,30 +114,34 @@ data class ManualPartForm(
     val workText: String = "",
     val restText: String = "",
     val maxMeasure: MaxEffortMeasure = MaxEffortMeasure.REPS,
-    /** Max-effort attempts or build-to-max attempt limit. */
+    /** Max-effort attempts. */
     val attempts: Int? = null,
-    /** Build to max: reps per attempt. */
-    val repsPerSet: Int? = 1,
     /** Custom: the instructions, one watch line per text line. */
     val customText: String = "",
     val customTimer: FallbackTimer = FallbackTimer.COUNT_UP,
     val movements: List<ManualMovementForm> = emptyList(),
-    /** Strength sets: one scheme for the whole part, set above the lifts (owner request 2026-11-05). */
+    /**
+     * Strength sets: one lift per session, its load type and rest set once, then one row per set
+     * with only weight and reps (owner request 2026-11-05).
+     */
     val scheme: StrengthScheme = StrengthScheme(),
-    val strength: List<ManualStrengthForm> = emptyList(),
+    val lift: ManualStrengthForm? = null,
+    val sets: List<ManualSetForm> = emptyList(),
 )
 
 /**
- * Sets × reps, load type and rest of a strength part. It is set once, before the lifts, and
- * every lift of the part follows it, so a new lift needs only the lift and its weight.
+ * Load type of a strength session, set once above the sets; every set follows it, so a set needs
+ * only its weight and reps (owner request 2026-11-05). The number of sets is the number of set
+ * rows, and rest between sets is not asked for: the compiler uses Settings → Default strength rest.
  */
 data class StrengthScheme(
-    val sets: Int? = 5,
-    val reps: Int? = 5,
     val loadMode: StrengthLoadMode = StrengthLoadMode.ABSOLUTE,
-    val loadUnit: MassUnit = MassUnit.KG,
-    /** Rest after each set; the compiler drops it after the last set. */
-    val restText: String = "2:00",
+    /**
+     * Optional goal weight of the session, in the form's unit (owner request 2026-11-05). With it,
+     * each set's weight and its % of the goal are two views of one value: editing either updates
+     * the other ([ManualForms.withSetWeight], [ManualForms.withSetPercent]).
+     */
+    val goalWeight: Double? = null,
 )
 
 /** A movement row of a metcon part (REQ-DM05). */
@@ -143,9 +158,11 @@ data class ManualMovementForm(
     val distanceUnit: DistanceUnit = DistanceUnit.M,
     /** Duration measure as m:ss. */
     val durationText: String = "",
-    /** Load (per implement). With [maleFemale] it is the male value of an explicit M/F pair. */
+    /**
+     * Load (per implement), in the form's [ManualWorkoutForm.loadUnit]. With [maleFemale] it is the
+     * male value of an explicit M/F pair.
+     */
     val load: Double? = null,
-    val loadUnit: MassUnit = MassUnit.KG,
     /** Explicit M/F prescription: the female fields below are used and the pair is labelled. */
     val maleFemale: Boolean = false,
     val amountFemale: Double? = null,
@@ -159,18 +176,30 @@ data class ManualMovementForm(
     val heightIsTarget: Boolean = false,
 )
 
-/**
- * A lift of a strength part (REQ-DM06): the lift and its load in the part's [StrengthScheme]
- * load type — a weight ([load], in the scheme unit) or a percentage of 1RM ([percent]).
- */
+/** The one lift of a strength session (REQ-DM06), picked from the list once for the whole session. */
 data class ManualStrengthForm(
     /** Becomes the item ID. */
     val id: String,
     val name: String = "",
     val movementId: String? = null,
     val implement: String? = null,
+)
+
+/**
+ * One set of a strength session: its reps and its load in the session's [StrengthScheme] load
+ * type — a weight ([load], in the form's unit) or a percentage of 1RM ([percent]).
+ */
+data class ManualSetForm(
+    /** Becomes the set ID. */
+    val id: String,
     val load: Double? = null,
     val percent: Double? = null,
+    val reps: Int? = null,
+    /**
+     * Weight mode with a goal weight: [load] as a % of the goal. It is an input aid kept in step
+     * with [load]; the workout stores only the weight.
+     */
+    val ofGoal: Double? = null,
 )
 
 /**
@@ -216,7 +245,7 @@ object ManualForms {
     /** True for a part nobody has typed into yet (so a template may replace it). */
     fun isUntouched(part: ManualPartForm): Boolean =
         part.name.isBlank() && part.label.isBlank() && part.customText.isBlank() &&
-            part.movements.all { it.name.isBlank() } && part.strength.all { it.name.isBlank() }
+            part.movements.all { it.name.isBlank() } && part.lift?.name.isNullOrBlank()
 
     fun newMovement(ids: IdSource, measure: MeasureKind = MeasureKind.REPS): ManualMovementForm =
         ManualMovementForm(id = ids.newId(), measure = measure)
@@ -225,16 +254,58 @@ object ManualForms {
     fun newMovementFor(part: ManualPartForm, ids: IdSource): ManualMovementForm =
         newMovement(ids, if (usesScheme(part)) MeasureKind.REP_SCHEME else MeasureKind.REPS)
 
-    /** A blank form for [date] in [timeZone] with one For-time metcon part (REQ-AC09 defaults). */
-    fun blank(ids: IdSource, date: String, timeZone: String): ManualWorkoutForm =
-        ManualWorkoutForm(date = date, timeZone = timeZone, parts = listOf(newPart(ids, 0)))
+    /**
+     * A blank form for [date] in [timeZone] with one For-time metcon part (REQ-AC09 defaults);
+     * weights are in [loadUnit], the Settings unit.
+     */
+    fun blank(ids: IdSource, date: String, timeZone: String, loadUnit: MassUnit = MassUnit.KG, loadStep: Double = 1.0): ManualWorkoutForm =
+        ManualWorkoutForm(date = date, timeZone = timeZone, loadUnit = loadUnit, loadStep = loadStep, parts = listOf(newPart(ids, 0)))
 
-    fun newStrengthRow(ids: IdSource): ManualStrengthForm = ManualStrengthForm(id = ids.newId())
+    fun newLift(ids: IdSource): ManualStrengthForm = ManualStrengthForm(id = ids.newId())
+
+    /** Typing a set's weight: with a goal weight, its % of the goal follows. */
+    fun withSetWeight(set: ManualSetForm, weight: Double?, goal: Double?): ManualSetForm =
+        set.copy(load = weight, ofGoal = percentOf(weight, goal))
 
     /**
-     * Switches [part] to [format]: kind follows the format's section (weights → strength unless
-     * already accessory; metcon → metcon unless warm-up/skill/…), and a strength part gets its
-     * first row so the form never shows an empty card.
+     * Typing a set's % of the goal: its weight becomes goal × %, rounded to [step] (Settings →
+     * smallest increment). Without a goal there is nothing to compute, so the weight is kept.
+     */
+    fun withSetPercent(set: ManualSetForm, percent: Double?, goal: Double?, step: Double): ManualSetForm =
+        set.copy(ofGoal = percent, load = weightOf(percent, goal, step) ?: set.load)
+
+    /**
+     * Changing the session goal: sets given as a % get their weight recomputed; sets given only
+     * as a weight get their % of the new goal.
+     */
+    fun withGoal(part: ManualPartForm, goal: Double?, step: Double): ManualPartForm = part.copy(
+        scheme = part.scheme.copy(goalWeight = goal),
+        sets = part.sets.map { s ->
+            val computed = weightOf(s.ofGoal, goal, step)
+            if (computed != null) s.copy(load = computed) else s.copy(ofGoal = percentOf(s.load, goal))
+        },
+    )
+
+    private fun weightOf(percent: Double?, goal: Double?, step: Double): Double? {
+        if (percent == null || goal == null || goal <= 0) return null
+        return MassMath.roundToStep(goal * percent / 100, step.takeIf { it > 0 } ?: 1.0)
+    }
+
+    /** % of [goal], to one decimal; `null` when either is missing. */
+    private fun percentOf(weight: Double?, goal: Double?): Double? {
+        if (weight == null || goal == null || goal <= 0) return null
+        return Math.round(weight / goal * 1000) / 10.0
+    }
+
+    /** A new set for [part]: it repeats the last set's weight and reps, so 5 × 5 is five taps. */
+    fun newSet(part: ManualPartForm, ids: IdSource): ManualSetForm =
+        part.sets.lastOrNull()?.copy(id = ids.newId()) ?: ManualSetForm(id = ids.newId())
+
+    /**
+     * Switches [part] to [format]: kind follows the format's section (weights → always strength;
+     * metcon → metcon unless warm-up/skill/…), and a strength part gets its lift and a first set so
+     * the form never shows an empty card. Weights parts have no label or name of their own (owner
+     * request 2026-11-05), so moving a part there clears them rather than keeping hidden values.
      */
     fun withFormat(part: ManualPartForm, format: ManualFormat, ids: IdSource): ManualPartForm {
         val kind = when {
@@ -242,11 +313,22 @@ object ManualForms {
             format.section == WorkoutSection.WEIGHTS -> PartKind.STRENGTH
             else -> PartKind.METCON
         }
-        val strength = if (format == ManualFormat.STRENGTH && part.strength.isEmpty()) listOf(newStrengthRow(ids)) else part.strength
+        val strength = format == ManualFormat.STRENGTH
+        val lift = if (strength && part.lift == null) newLift(ids) else part.lift
+        val sets = if (strength && part.sets.isEmpty()) listOf(ManualSetForm(id = ids.newId())) else part.sets
         val movements = if (format != ManualFormat.STRENGTH && format != ManualFormat.CUSTOM && part.movements.isEmpty()) {
             listOf(newMovement(ids))
         } else part.movements
-        return part.copy(format = format, kind = kind, strength = strength, movements = movements)
+        val weights = format.section == WorkoutSection.WEIGHTS
+        return part.copy(
+            format = format,
+            kind = kind,
+            label = if (weights) "" else part.label,
+            name = if (weights) "" else part.name,
+            lift = lift,
+            sets = sets,
+            movements = movements,
+        )
     }
 
     /** Whether movement rows of [part] take their reps from a part rep scheme. */
@@ -282,7 +364,7 @@ object ManualForms {
         )
     }
 
-    /** Applies a catalog pick to a strength row. */
+    /** Applies a catalog pick to the session lift. */
     fun pick(row: ManualStrengthForm, m: Movement): ManualStrengthForm =
         row.copy(name = m.name, movementId = m.id, implement = implementOf(m))
 

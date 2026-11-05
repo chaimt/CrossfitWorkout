@@ -35,5 +35,9 @@ jobs:
           distribution: temurin
           java-version: "21"
       - uses: android-actions/setup-android@v3
+        with:
+          # The default also installs the legacy "tools" package, which current cmdline-tools no
+          # longer has ("Failed to find package 'tools'"); AGP downloads build-tools/platforms itself.
+          packages: platform-tools
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew --console=plain :domain:test :app:testDebugUnitTest :app:lintDebug

@@ -6,7 +6,6 @@ import com.wodcapture.domain.model.AggregationOp
 import com.wodcapture.domain.model.Amrap
 import com.wodcapture.domain.model.BodyNode
 import com.wodcapture.domain.model.BodyTree
-import com.wodcapture.domain.model.BuildToMax
 import com.wodcapture.domain.model.CustomSegments
 import com.wodcapture.domain.model.Emom
 import com.wodcapture.domain.model.Fallback
@@ -21,6 +20,7 @@ import com.wodcapture.domain.model.Item
 import com.wodcapture.domain.model.Length
 import com.wodcapture.domain.model.LoadSpec
 import com.wodcapture.domain.model.Mass
+import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.MaxEffort
 import com.wodcapture.domain.model.Measure
 import com.wodcapture.domain.model.MeasureKind
@@ -73,7 +73,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
     fun build(form: ManualWorkoutForm, nowSec: Long? = null): ManualBuild {
         val issues = mutableListOf<ValidationIssue>()
         checkSchedule(form, issues)
-        val parts = form.parts.mapIndexed { i, p -> PartBuilder(p, ManualForms.defaultLabel(i, form.parts.size), issues).build() }
+        val parts = form.parts.mapIndexed { i, p -> PartBuilder(p, ManualForms.defaultLabel(i, form.parts.size), form.loadUnit, issues).build() }
         val workout = Workout(
             id = ids.newId(),
             title = form.title.trim().ifBlank { defaultTitle(parts) },
@@ -84,7 +84,11 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             createdAt = nowSec,
             updatedAt = nowSec,
         )
+        // A set row's empty Reps field is already reported in form terms; drop the validator's
+        // duplicate "needs a rep target" for the same set.
+        val setsMissingReps = issues.filter { it.path == "reps" }.mapNotNull { it.nodeId }.toSet()
         val validation = WorkoutValidator.validate(workout).issues
+            .filterNot { it.nodeId in setsMissingReps && it.path?.endsWith(".reps") == true }
         return ManualBuild(workout, ValidationReport(issues + validation))
     }
 
@@ -106,6 +110,8 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
     private inner class PartBuilder(
         private val form: ManualPartForm,
         private val fallbackLabel: String,
+        /** The form-wide weight unit (Settings → Units); no entry carries its own. */
+        private val unit: MassUnit,
         private val issues: MutableList<ValidationIssue>,
     ) {
         fun build(): Part {
@@ -144,11 +150,6 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
                 inner = InnerMode.AMRAP,
             )
             ManualFormat.STRENGTH -> StrengthSets()
-            ManualFormat.BUILD_TO_MAX -> BuildToMax(
-                repsPerSet = form.repsPerSet ?: 1,
-                windowSec = time(form.durationText, "Window", "durationText"),
-                attemptLimit = form.attempts,
-            )
             ManualFormat.MAX_EFFORT -> MaxEffort(
                 windowSec = time(form.durationText, "Window", "durationText"),
                 attempts = form.attempts,
@@ -171,7 +172,6 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
         private fun body(): List<BodyNode> = when (form.format) {
             ManualFormat.FOR_TIME -> forTimeBody()
             ManualFormat.STRENGTH -> strengthBody()
-            ManualFormat.BUILD_TO_MAX -> buildToMaxBody()
             ManualFormat.CUSTOM -> customLines() + form.movements.map(::item)
             else -> form.movements.map(::item)
         }
@@ -201,13 +201,6 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             return values.filterNotNull()
         }
 
-        private fun buildToMaxBody(): List<BodyNode> {
-            if (form.movements.size > 1) {
-                issues += blocking("invalid_bounds", "Build to max takes exactly one movement", form.id, path = "movements")
-            }
-            return form.movements.take(1).map { m -> requireListedLift(m.id, m.movementId); item(m).copy(measure = null, load = null) }
-        }
-
         /** Custom instructions: one free-text line each so every watch line is previewed (REQ-DM18). */
         private fun customLines(): List<BodyNode> =
             form.customText.lines().map { it.trim() }.filter { it.isNotEmpty() }.map { Item(ids.newId(), name = it, rawText = it) }
@@ -217,7 +210,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
          * a catalog ID blocks; this replaces the generic missing-name message for lifts.
          */
         private fun requireListedLift(rowId: String, movementId: String?) {
-            if (movementId == null) issues += blocking("lift_not_in_list", "Choose each lift from the list", form.id, rowId, "movementId")
+            if (movementId == null) issues += blocking("lift_not_in_list", "Choose the lift from the list", form.id, rowId, "movementId")
         }
 
         private val weights: Boolean get() = form.format.section == WorkoutSection.WEIGHTS
@@ -259,8 +252,8 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
         private fun load(m: ManualMovementForm): LoadSpec? {
             val male = m.load ?: return null
             val female = m.loadFemale.takeIf { m.maleFemale }
-            return if (female != null) SplitLoad(Mass(male, m.loadUnit), Mass(female, m.loadUnit), labeled = true)
-            else AbsoluteLoad(Mass(male, m.loadUnit))
+            return if (female != null) SplitLoad(Mass(male, unit), Mass(female, unit), labeled = true)
+            else AbsoluteLoad(Mass(male, unit))
         }
 
         private fun height(m: ManualMovementForm): SplitLength? {
@@ -269,32 +262,38 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             return SplitLength(Length(male, m.heightUnit), female?.let { Length(it, m.heightUnit) }, labeled = female != null)
         }
 
-        /** Every lift follows the part scheme; it is checked once, not per lift. */
+        /**
+         * One lift per session: a single item whose sets are the set rows, each with its own
+         * weight and reps; the load type comes from the session. Sets carry no rest, so the
+         * compiler applies the profile's default strength rest (Settings).
+         */
         private fun strengthBody(): List<BodyNode> {
-            val scheme = form.scheme
-            val count = scheme.sets ?: 0
-            if (count !in 1..WatchLimits.SETS) {
-                issues += blocking("invalid_bounds", "Sets must be 1–${WatchLimits.SETS}", form.id, path = "scheme.sets")
+            val lift = form.lift ?: ManualStrengthForm(id = form.id + "-lift")
+            requireListedLift(lift.id, lift.movementId)
+            // No sets at all is the validator's "missing_sets"; only the watch limit is checked here.
+            if (form.sets.size > WatchLimits.SETS) {
+                issues += blocking("invalid_bounds", "At most ${WatchLimits.SETS} sets", form.id, path = "sets")
             }
-            val rest = time(scheme.restText, "Rest", "scheme.restText")
-            return form.strength.map { strengthItem(it, count.coerceIn(0, WatchLimits.SETS), rest) }
+            val sets = form.sets.take(WatchLimits.SETS).map { strengthSet(it) }
+            return listOf(Item(id = lift.id, movementId = lift.movementId, name = lift.name.trim(), implement = lift.implement, sets = sets))
         }
 
-        private fun strengthItem(s: ManualStrengthForm, count: Int, rest: Int?): Item {
-            requireListedLift(s.id, s.movementId)
-            val load = strengthLoad(s)
-            val sets = (0 until count).map { StrengthSet(ids.newId(), RepTarget(form.scheme.reps), load = load, restSec = rest) }
-            return Item(id = s.id, movementId = s.movementId, name = s.name.trim(), implement = s.implement, sets = sets)
+        private fun strengthSet(s: ManualSetForm): StrengthSet {
+            val reps = s.reps?.takeIf { it > 0 } ?: run {
+                issues += blocking("missing_value", "Enter the reps of each set", form.id, s.id, "reps")
+                null
+            }
+            return StrengthSet(s.id, RepTarget(reps), load = strengthLoad(s))
         }
 
-        private fun strengthLoad(s: ManualStrengthForm): LoadSpec? = when (form.scheme.loadMode) {
+        private fun strengthLoad(s: ManualSetForm): LoadSpec? = when (form.scheme.loadMode) {
             StrengthLoadMode.NONE -> null
-            StrengthLoadMode.ABSOLUTE -> s.load?.let { AbsoluteLoad(Mass(it, form.scheme.loadUnit)) } ?: run {
-                issues += blocking("missing_value", "Enter a load or choose no load", form.id, s.id, "load")
+            StrengthLoadMode.ABSOLUTE -> s.load?.let { AbsoluteLoad(Mass(it, unit)) } ?: run {
+                issues += blocking("missing_value", "Enter the weight of each set or choose no load", form.id, s.id, "load")
                 null
             }
             StrengthLoadMode.PERCENT_1RM -> s.percent?.let { PercentOfMax(it) } ?: run {
-                issues += blocking("missing_value", "Enter a percentage of 1RM", form.id, s.id, "percent")
+                issues += blocking("missing_value", "Enter a percentage of 1RM for each set", form.id, s.id, "percent")
                 null
             }
         }
@@ -312,7 +311,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             ManualFormat.EMOM -> Scoring(ScoreType.COMPLETION, manual = true)
             ManualFormat.TABATA -> Scoring(ScoreType.REPS, manual = mixedMeasures())
             ManualFormat.INTERVALS -> Scoring(ScoreType.ROUNDS_REPS, aggregation = AggregationOp.SUM)
-            ManualFormat.STRENGTH, ManualFormat.BUILD_TO_MAX -> Scoring(ScoreType.LOAD)
+            ManualFormat.STRENGTH -> Scoring(ScoreType.LOAD)
             ManualFormat.MAX_EFFORT -> Scoring(form.maxMeasure.score)
             ManualFormat.CUSTOM -> Scoring(ScoreType.TEXT, manual = true)
         }

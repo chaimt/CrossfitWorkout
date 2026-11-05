@@ -16,6 +16,7 @@ import com.wodcapture.domain.manual.ManualBuild
 import com.wodcapture.domain.manual.ManualForms
 import com.wodcapture.domain.manual.ManualWorkoutBuilder
 import com.wodcapture.domain.manual.ManualWorkoutForm
+import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.ParseResult
 import com.wodcapture.domain.model.SexSelection
 import com.wodcapture.domain.model.Workout
@@ -37,8 +38,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -178,9 +181,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val manualForm = MutableStateFlow<ManualWorkoutForm?>(null)
     private val manualBuilder by lazy { ManualWorkoutBuilder(c.ids) }
 
-    /** Starts a fresh guided form: today, in the phone's time zone, one For-time part. */
+    // Declared after manualForm: the collector starts immediately and must see it initialised.
+    init {
+        // Weights in the form follow Settings → Units, also when it changes while the form is open.
+        viewModelScope.launch {
+            settings.map { loadUnitAndStep(it) }.distinctUntilChanged().collect { (unit, step) ->
+                manualForm.update { f -> f?.copy(loadUnit = unit, loadStep = step) }
+            }
+        }
+    }
+
+    /** Starts a fresh guided form: today, in the phone's time zone, one For-time part, Settings unit. */
     fun startManual() {
-        manualForm.value = ManualForms.blank(c.ids, LocalDate.now().toString(), ZoneId.systemDefault().id)
+        val (unit, step) = loadUnitAndStep(settings.value)
+        manualForm.value = ManualForms.blank(c.ids, LocalDate.now().toString(), ZoneId.systemDefault().id, unit, step)
+    }
+
+    /** Settings → weight unit and its smallest total increment (rounding of computed weights). */
+    private fun loadUnitAndStep(s: AppSettings): Pair<MassUnit, Double> {
+        val p = s.profile
+        return p.displayUnit to if (p.displayUnit == MassUnit.LB) p.barIncrementLb else p.barIncrementKg
     }
 
     fun updateManual(f: (ManualWorkoutForm) -> ManualWorkoutForm) {
