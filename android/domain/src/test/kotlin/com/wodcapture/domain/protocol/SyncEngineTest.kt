@@ -90,6 +90,47 @@ class FakeTransport(private val watch: FakeWatch) : WatchTransport {
 }
 
 class SyncEngineTest {
+    @Test
+    fun exhaustedCallbackRetriesPersistWaitingState() {
+        var persisted = emptyList<OutboxEntry>()
+        val ingest = ResultIngest(InMemoryResults()) { 1 }
+        val silent = object : WatchTransport {
+            override fun send(target: WatchTarget, message: Map<String, Any>, onStatus: (SendStatus) -> Unit) {}
+        }
+        val e = SyncEngine(silent, Outbox(), ingest, SessionIngest(InMemorySessions()) { 1 },
+            ChunkStager(InMemoryChunkStore(), ingest) { null }, ids, { now },
+            object : SyncListener {
+                override fun onOutboxChanged(outbox: List<OutboxEntry>) { persisted = outbox }
+            })
+        e.sendPlan(target, plan(1))
+        listOf(35_000L, 45_000L, 90_000L, 90_000L).forEach { now += it; e.tick(target) }
+        assertEquals(DeliveryState.WAITING, persisted.single().state)
+    }
+
+    @Test
+    fun sdkCallbacksWaitForSerialExecutorAndCannotUndoAck() {
+        val callbacks = ArrayDeque<Runnable>()
+        val ingest = ResultIngest(InMemoryResults()) { 1 }
+        lateinit var statusCallback: (SendStatus) -> Unit
+        val asyncTransport = object : WatchTransport {
+            override fun send(target: WatchTarget, message: Map<String, Any>, onStatus: (SendStatus) -> Unit) {
+                statusCallback = onStatus
+            }
+        }
+        val box = Outbox()
+        val serialEngine = SyncEngine(
+            asyncTransport, box, ingest, SessionIngest(InMemorySessions()) { 1 },
+            ChunkStager(InMemoryChunkStore(), ingest) { null }, ids, { now },
+            callbackExecutor = java.util.concurrent.Executor { callbacks.addLast(it) },
+        )
+        val entry = serialEngine.sendPlan(target, plan(1))
+        statusCallback(SendStatus.SUCCESS)
+        assertEquals(DeliveryState.SENDING, box.snapshot().single().state, "callback must not mutate outside executor")
+        box.onAck(target, Ack(entry.messageId, AckStatus.OK))
+        callbacks.removeFirst().run()
+        assertEquals(DeliveryState.ON_WATCH, box.snapshot().single().state)
+    }
+
     private val ids = IdSource.sequential("e0000000")
     private val target = WatchTarget("fr965-1", Protocol.APP_UUID_PRODUCTION, 1)
     private var now = 1_793_700_000_000L
@@ -170,7 +211,7 @@ class SyncEngineTest {
         // Manual edit v2 (AMRAP 12) before rev 1 was acked: rev 1 is superseded.
         engine.sendPlan(target, plan(2, 12))
         val states = engine.outbox.snapshot().associate { it.revision to it.state }
-        assertEquals(DeliveryState.SUPERSEDED, states[1])
+        assertEquals(null, states[1], "superseded pending revisions are compacted")
         // A late attempt to queue rev 1 again is refused (never send older, REQ-SY11).
         assertTrue(runCatching { engine.sendPlan(target, plan(1)) }.isFailure)
         transport.deliverAcks = true

@@ -117,8 +117,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Cancel: prevents future sends; a late response is ignored (REQ-AX18). */
     fun cancelParse(job: ParseJobEntity) = viewModelScope.launch(Dispatchers.IO) {
-        dao.upsertJob(job.copy(state = JobState.CANCELLED.name))
-        dao.workout(job.draftId)?.let { c.workouts.setStatus(it, "draft") }
+        dao.cancelParse(job.jobId)
     }
 
     fun giveConsent() = viewModelScope.launch { c.settings.update { it.copy(consentGiven = true) } }
