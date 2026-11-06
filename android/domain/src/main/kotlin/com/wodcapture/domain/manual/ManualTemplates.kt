@@ -116,13 +116,13 @@ object ManualTemplates {
 
     /**
      * A strength quick start is the same session the manual form builds (owner request
-     * 2026-11-06): weight load type, a goal weight to fill in, and set rows of % · weight · reps
+     * 2026-11-06): no load type, a goal weight to fill in, and set rows of % · weight · reps
      * whose % ramps evenly from [from] to [to] (to 0.5 %). Entering the goal fills every weight.
      */
     private fun percentSession(ids: IdSource, sets: Int, reps: Int, from: Double, to: Double) =
         part(ids, ManualFormat.STRENGTH).copy(
             kind = PartKind.STRENGTH,
-            scheme = StrengthScheme(loadMode = StrengthLoadMode.ABSOLUTE),
+            scheme = StrengthScheme(),
             lift = ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell"),
             sets = List(sets) { i ->
                 val pct = if (sets == 1) from else from + (to - from) * i / (sets - 1)

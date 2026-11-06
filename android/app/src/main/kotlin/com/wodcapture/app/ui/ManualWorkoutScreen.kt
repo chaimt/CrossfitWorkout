@@ -57,7 +57,6 @@ import com.wodcapture.domain.manual.ManualSetForm
 import com.wodcapture.domain.manual.ManualTemplates
 import com.wodcapture.domain.manual.ManualWorkoutForm
 import com.wodcapture.domain.manual.MaxEffortMeasure
-import com.wodcapture.domain.manual.StrengthLoadMode
 import com.wodcapture.domain.manual.StrengthScheme
 import com.wodcapture.domain.manual.kindsFor
 import com.wodcapture.domain.model.DistanceUnit
@@ -415,10 +414,10 @@ private fun MovementName(
 }
 
 /**
- * A strength session (owner request 2026-11-05): one lift and its load type once at the top, an
- * optional goal weight, then one row per set with its weight and reps. With a goal, each set also
- * shows its % of the goal; editing the weight or the % updates the other. "Add set" repeats the
- * last set.
+ * A strength session: one lift at the top, an optional goal weight, then one row per set of
+ * % · weight · reps. There is no load-type choice (owner request 2026-11-06), so a hand-built
+ * session and a quick start look the same; with a goal, editing the weight or the % updates the
+ * other. "Add set" repeats the last set.
  */
 @Composable
 private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, unit: MassUnit, step: Double, ids: IdSource, onChange: PartEdit) {
@@ -429,17 +428,14 @@ private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, unit: M
     LiftField(catalog, lift?.name.orEmpty(), lift?.movementId, Modifier.fillMaxWidth()) { m ->
         onChange { p -> p.copy(lift = ManualForms.pick(p.lift ?: ManualForms.newLift(ids), m)) }
     }
-    val weights = part.scheme.loadMode == StrengthLoadMode.ABSOLUTE
-    Grid {
-        Choice("Load type", part.scheme.loadMode, StrengthLoadMode.entries, ::loadModeName, Modifier) { mode ->
-            onChange { it.copy(scheme = it.scheme.copy(loadMode = mode)) }
-        }
-        if (weights) DoubleField("Goal weight (${unit.wire})", part.scheme.goalWeight, Modifier) { v ->
-            onChange { ManualForms.withGoal(it, v, step) }
-        }
+    DoubleField("Goal weight (${unit.wire})", part.scheme.goalWeight, Modifier.fillMaxWidth()) { v ->
+        onChange { ManualForms.withGoal(it, v, step) }
+    }
+    if (part.scheme.goalWeight == null && part.sets.any { it.ofGoal != null && it.load == null }) {
+        Hint("Enter the goal weight to fill in each set's weight from its %")
     }
     // The set row is too narrow for "Weight (kg)", so the Settings unit sits in the heading.
-    Text(if (weights) "Sets · weight in ${unit.wire}" else "Sets", style = MaterialTheme.typography.titleSmall)
+    Text("Sets · weight in ${unit.wire}", style = MaterialTheme.typography.titleSmall)
     part.sets.forEachIndexed { i, set ->
         SetRow(i + 1, part.scheme, step, set, onChange = { f -> editSet(set.id, f) }, onRemove = {
             onChange { p -> p.copy(sets = p.sets.filter { it.id != set.id }) }
@@ -467,22 +463,10 @@ private fun SetRow(
     val goal = scheme.goalWeight
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Set $number", style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(44.dp))
-        when (scheme.loadMode) {
-            // Order is % · Weight · Reps (owner request 2026-11-06): the % of the goal comes first.
-            StrengthLoadMode.ABSOLUTE -> {
-                if (goal != null) DoubleField("%", set.ofGoal, Modifier.weight(0.8f)) { v -> onChange { ManualForms.withSetPercent(it, v, goal, step) } }
-                DoubleField("Weight", set.load, Modifier.weight(1f)) { v -> onChange { ManualForms.withSetWeight(it, v, goal) } }
-            }
-            StrengthLoadMode.PERCENT_1RM -> DoubleField("% of 1RM", set.percent, Modifier.weight(1f)) { v -> onChange { it.copy(percent = v) } }
-            StrengthLoadMode.NONE -> Unit
-        }
+        // Every set shows % · Weight · Reps (owner request 2026-11-06), with or without a goal yet.
+        DoubleField("%", set.ofGoal, Modifier.weight(0.8f)) { v -> onChange { ManualForms.withSetPercent(it, v, goal, step) } }
+        DoubleField("Weight", set.load, Modifier.weight(1f)) { v -> onChange { ManualForms.withSetWeight(it, v, goal) } }
         IntField("Reps", set.reps, Modifier.weight(0.8f)) { v -> onChange { it.copy(reps = v) } }
         IconButton(onClick = onRemove) { Icon(Icons.Filled.Close, contentDescription = "Remove set $number") }
     }
-}
-
-private fun loadModeName(m: StrengthLoadMode): String = when (m) {
-    StrengthLoadMode.ABSOLUTE -> "Weight"
-    StrengthLoadMode.PERCENT_1RM -> "% of 1RM"
-    StrengthLoadMode.NONE -> "None"
 }
