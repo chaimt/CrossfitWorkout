@@ -68,9 +68,7 @@ int main(int argc, char **argv) {
     }
 
     LIBMTP_Init();
-    /* Get_First_Device() opens a cached session. Listing folders on that
-       session fails with "tried to use LIBMTP_Get_Files_And_Folders on a
-       cached device", so the watch has to be opened uncached. */
+    /* Folder and file listing APIs require a cached device session. */
     LIBMTP_raw_device_t *raw = NULL;
     int raw_count = 0;
     LIBMTP_error_number_t detect = LIBMTP_Detect_Raw_Devices(&raw, &raw_count);
@@ -89,7 +87,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    LIBMTP_mtpdevice_t *device = LIBMTP_Open_Raw_Device_Uncached(&raw[chosen]);
+    LIBMTP_mtpdevice_t *device = LIBMTP_Open_Raw_Device(&raw[chosen]);
     free(raw);
     if (device == NULL) {
         fprintf(stderr, "Could not open the watch. Wake it and accept USB file transfer if it asks.\n");
@@ -99,8 +97,7 @@ int main(int argc, char **argv) {
         fail(device, "Could not read the watch storage.");
     }
 
-    /* Get_Files_And_Folders fails on the cached session this watch opens.
-       The folder list still returns GARMIN/Apps. */
+    /* Read the folder tree from the cached object listing. */
     LIBMTP_folder_t *folders = LIBMTP_Get_Folder_List(device);
     LIBMTP_folder_t *garmin = find_folder(folders, "GARMIN");
     LIBMTP_folder_t *apps = NULL;
@@ -175,7 +172,7 @@ int main(int argc, char **argv) {
         fail(device, "Copy to the watch failed.");
     }
     printf("Installed %s on the watch.\n", remote_name);
-    printf("Unplug the watch, then choose this watch face.\n");
+    printf("Unplug the watch, then open WOD Coach from the apps list.\n");
 
     LIBMTP_destroy_file_t(file);
     LIBMTP_Release_Device(device);

@@ -62,11 +62,17 @@ tasks:
     desc: Validate shared schemas, golden wire fixtures and catalogs (REQ-TS08)
     dir: tools
     cmds:
+    preconditions:
+      - sh: command -v poetry >/dev/null 2>&1
+        msg: "poetry is not installed - install it (https://python-poetry.org/docs/#installation) to run the contract suite"
       - poetry install --quiet
       - poetry run pytest -q
 
   contract:gen:
     desc: Regenerate shared catalogs and golden wire fixtures
     cmds:
+    preconditions:
+      - sh: command -v poetry >/dev/null 2>&1
+        msg: "poetry is not installed - install it (https://python-poetry.org/docs/#installation) to run the wire fixtures"
       - python3 tools/gen_catalog.py
       - cd tools && poetry run gen-wire-fixtures

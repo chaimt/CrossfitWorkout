@@ -128,7 +128,7 @@ private fun ReviewContent(vm: AppViewModel, e: WorkoutEntity, back: () -> Unit, 
             item {
                 Panel {
                     Field("Title", draft.title, Modifier.fillMaxWidth()) { draft = draft.copy(title = it) }
-                    Field("Date", draft.date.orEmpty(), Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = "YYYY-MM-DD") {
+                    DateField(draft.date.orEmpty(), Modifier.fillMaxWidth().padding(top = 8.dp)) {
                         draft = draft.copy(date = it.ifBlank { null })
                     }
                     if (settings.profile.sex == SexSelection.ALWAYS_ASK) {

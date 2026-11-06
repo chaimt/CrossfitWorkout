@@ -107,7 +107,7 @@ fun ManualLiftDialog(vm: AppViewModel, close: () -> Unit) {
                     Field("Weight (${unit.wire})", weight, Modifier.weight(1f), numeric = true) { weight = it }
                     Field("Reps", reps, Modifier.weight(1f), numeric = true) { reps = it }
                 }
-                Field("Date", date, Modifier.fillMaxWidth(), placeholder = "YYYY-MM-DD") { date = it }
+                DateField(date, Modifier.fillMaxWidth()) { date = it }
             }
         },
         confirmButton = { TextButton(enabled = entry != null, onClick = { entry?.let(vm::addRepMax); close() }) { Text("Save") } },
