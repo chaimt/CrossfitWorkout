@@ -98,7 +98,7 @@ fun ManualWorkoutScreen(vm: AppViewModel, onCreated: (String) -> Unit, back: () 
                 Panel {
                     Field("Title", form.title, Modifier.fillMaxWidth(), placeholder = "e.g. Monday strength + metcon") { v -> edit { it.copy(title = v) } }
                     Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Field("Date", form.date, Modifier.weight(1f), placeholder = "YYYY-MM-DD") { v -> edit { it.copy(date = v) } }
+                        DateField(form.date, Modifier.weight(1f)) { v -> edit { it.copy(date = v) } }
                         Hint(form.timeZone, Modifier.padding(start = 12.dp))
                     }
                     Issues(build.report.issues.filter { it.partId == null })

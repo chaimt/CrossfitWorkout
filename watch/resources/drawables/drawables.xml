@@ -1,4 +1,10 @@
 <drawables>
     <!-- Copied from WOD Timer; the resource compiler scales it per device. -->
     <bitmap id="LauncherIcon" filename="launcher_icon.png"/>
+    <bitmap id="MenuToday" filename="menu_today.svg" />
+    <bitmap id="MenuWorkouts" filename="menu_workouts.svg" />
+    <bitmap id="MenuHistory" filename="menu_history.svg" />
+    <bitmap id="MenuSettings" filename="menu_settings.svg" />
+    <bitmap id="MenuSync" filename="menu_sync.svg" />
+    <bitmap id="MenuRecovered" filename="menu_recovered.svg" />
 </drawables>
