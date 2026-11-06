@@ -218,7 +218,7 @@ fun DeviceScreen(vm: AppViewModel, back: () -> Unit) {
     }
 }
 
-/** Profile and settings (REQ-AG01–AG04, AX09–AX11). */
+/** Profile and settings (REQ-AG01–AG05, AX09–AX11). */
 @Composable
 fun SettingsScreen(vm: AppViewModel, back: () -> Unit) {
     val s by vm.settings.collectAsState()
@@ -278,6 +278,7 @@ fun SettingsScreen(vm: AppViewModel, back: () -> Unit) {
         Text("Estimated cost: about $%.2f per photo parse, $%.2f per text parse (your own key).".format(CostEstimator.typicalParseUsd(1), CostEstimator.typicalParseUsd(0)), style = MaterialTheme.typography.bodySmall)
         SectionTitle("App")
         UpdateSettings(vm.updates)
+        FeedbackSettings(vm.updates.installedVersion)
         SectionTitle("Data")
         Button(onClick = { confirmWipe = true }) { Text("Delete all data") }
     }
