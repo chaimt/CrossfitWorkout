@@ -78,6 +78,7 @@ class Session {
     var summary as Dictionary? = null;
     var message as String? = null;
     var frozen as Boolean = false;
+    private var _stopAfterPart as Boolean = false;
 
     private var _timer as Timer.Timer? = null;
     private var _prevPhase as Number = -1;
@@ -538,6 +539,9 @@ class Session {
 
     //! Save on the result screen: finalize, queue, move on (REQ-WO01/02).
     function savePart() as Boolean {
+        if (_stopAfterPart) {
+            return savePartAndStop(now());
+        }
         var o = outcome;
         if (o == null) {
             return false;
@@ -613,12 +617,53 @@ class Session {
         if (!Outbox.enqueue(kv, "result.put", o.resultId, 1, Uuid.v4(), Time.now().value())) {
             return false;
         }
-        CoachApp.instance().onResultQueued();
+        _notifyResultQueued();
         return true;
     }
 
+    function _notifyResultQueued() as Void {
+        CoachApp.instance().onResultQueued();
+    }
+
+    function _notifyFinalized() as Void {
+        CoachApp.instance().onSessionClosed();
+    }
+
+    function _showStage() as Void {
+        CoachUi.showStage(self);
+    }
+
     //! Final summary (REQ-WR07 final_result -> finalized, REQ-SY16).
-    function _finalize(t as Number) as Void {
+    function _finalize(t as Number) as Boolean {
+        if (finalized) {
+            return true;
+        }
+        if (summary == null) {
+            summary = _buildSummary(t);
+        }
+        var s = summary as Dictionary;
+        var title = U.str(plan, "ti");
+        // Checkpoint the committed-part list before attempting either summary write.
+        if (!_checkpoint(t)
+                || !History.add(kv, sid, History.KIND_SESSION, title == null ? "" : title, "",
+                    U.num(s, "t0") as Number, entries.size().format("%d") + " parts", "completed", s)
+                || !Outbox.enqueue(kv, "session.put", sid, 1, Uuid.v4(), Time.now().value())) {
+            _storageFailure();
+            _showStage();
+            return false;
+        }
+        Checkpoint.clear(kv);
+        kv.del("snap");
+        frozen = false;
+        message = null;
+        finalized = true;
+        _notifyFinalized();
+        _showStage();
+        return true;
+    }
+
+    //! Freeze the summary once so retry latency never changes its payload.
+    function _buildSummary(t as Number) as Dictionary {
         clock.enter(CS_FINAL, t);
         _stopTimer();
         // Unreached parts are skipped, never fabricated (REQ-SY16).
@@ -639,19 +684,8 @@ class Session {
             cal = info.calories;
         }
         var start = t0 == 0 ? Time.now().value() : t0;
-        var s = ResultBuilder.session(plan, sid, entries, start, start + clock.wallAt(t) / 1000,
+        return ResultBuilder.session(plan, sid, entries, start, start + clock.wallAt(t) / 1000,
             clock.wallAt(t), clock.activeAt(t), hr, cal, restartOf, fit);
-        summary = s;
-        var title = U.str(plan, "ti");
-        History.add(kv, sid, History.KIND_SESSION, title == null ? "" : title, "", start,
-            entries.size().format("%d") + " parts", "completed", s);
-        Outbox.enqueue(kv, "session.put", sid, 1, Uuid.v4(), Time.now().value());
-        // Clear the checkpoint only after results + summary are durable.
-        Checkpoint.clear(kv);
-        kv.del("snap");
-        finalized = true;
-        CoachApp.instance().onSessionClosed();
-        CoachUi.showStage(self);
     }
 
     //! Exit dialog "Finish incomplete" (REQ-WN07): the current part (when it
@@ -673,14 +707,18 @@ class Session {
         _finalize(t);
     }
 
-    function savePartAndStop(t as Number) as Void {
+    function savePartAndStop(t as Number) as Boolean {
+        _stopAfterPart = true;
         var o = outcome as PartOutcome;
         o.fit = recorder.save();
-        if (_storeResult(o)) {
-            entries.add([o.partId, o.resultId, o.status]);
+        if (!_checkpoint(t) || !_storeResult(o)) {
+            _storageFailure();
+            _showStage();
+            return false;
         }
+        entries.add([o.partId, o.resultId, o.status]);
         outcome = null;
-        _finalize(t);
+        return _finalize(t);
     }
 
     //! Discard session (after double confirmation): drafts and recording
@@ -707,6 +745,11 @@ class Session {
             return;
         }
         var t = now();
+        if (clock.state == CS_FINAL) {
+            // A failed finalization must retain its checkpoint on app exit too.
+            _checkpoint(t);
+            return;
+        }
         _stopTimer();
         if (clock.state != CS_PAUSED) {
             clock.enter(CS_PAUSED, t);
@@ -714,7 +757,7 @@ class Session {
         _checkpoint(t);
         var fit = recorder.save();
         Recovery.run(kv, fit);
-        finalized = true;
+        finalized = !Checkpoint.exists(kv);
     }
 
     // ------------------------------------------------------------------
@@ -839,6 +882,9 @@ class Session {
 
     //! Clears the storage-failure freeze so the athlete may retry.
     function retryStorage() as Boolean {
+        if (clock.state == CS_FINAL && !finalized) {
+            return _finalize(now());
+        }
         frozen = false;
         message = null;
         return _checkpoint(now());

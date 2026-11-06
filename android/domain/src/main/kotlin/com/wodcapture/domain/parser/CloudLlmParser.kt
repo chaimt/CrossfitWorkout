@@ -138,6 +138,8 @@ class CloudLlmParser(
             } catch (e: IOException) {
                 ParseOutcome.Failure(ParseError.Network(e.message), attempt)
             }
+            // Cancellation during an HTTP request also discards successful output.
+            if (cancel.isCancelled()) return ParseOutcome.Failure(ParseError.Cancelled, attempt)
             if (outcome !is ParseOutcome.Failure || !outcome.error.retryable || attempt > config.maxRetries) return outcome
             sleeper.sleep(backoffMs(outcome.error, attempt))
             // A request already sent cannot be recalled; a cancel now just ignores the next try (REQ-AX18).

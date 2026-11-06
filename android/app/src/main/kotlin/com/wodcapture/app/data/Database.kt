@@ -9,6 +9,14 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.Upsert
+import androidx.room.Transaction
+import com.wodcapture.domain.DomainJson
+import com.wodcapture.domain.parser.JobCompletion
+import com.wodcapture.domain.parser.JobPreconditions
+import com.wodcapture.domain.parser.JobState
+import com.wodcapture.domain.parser.ParseJob
+import com.wodcapture.domain.parser.ParseJobs
+import com.wodcapture.domain.parser.ParseOutcome
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -123,6 +131,54 @@ interface WodDao {
     fun observeLatestJob(draftId: String): Flow<ParseJobEntity?>
     @Query("UPDATE parse_jobs SET state = 'CANCELLED' WHERE state IN ('QUEUED','RUNNING')") fun cancelAllJobs()
 
+    /** Re-read the job under the write lock so start cannot undo a concurrent cancel. */
+    @Transaction
+    fun startParse(id: String, preconditions: JobPreconditions): ParseJobEntity? {
+        val row = job(id) ?: return null
+        if (row.state != JobState.QUEUED.name) return null
+        val started = ParseJobs.start(ParseJob(row.jobId, row.draftId, row.draftRevision, attempts = row.attempts), preconditions)
+        val updated = row.copy(state = started.state.name, error = started.error?.toString())
+        upsertJob(updated)
+        return updated
+    }
+
+    /** Cancellation and draft status change are one operation; terminal jobs stay terminal. */
+    @Transaction
+    fun cancelParse(id: String) {
+        val row = job(id) ?: return
+        if (row.state != JobState.QUEUED.name && row.state != JobState.RUNNING.name) return
+        upsertJob(row.copy(state = JobState.CANCELLED.name))
+        workout(row.draftId)?.let { upsertWorkout(it.copy(status = "draft")) }
+    }
+
+    /** Commit against current rows so cancellation, deletion, and edits cannot be overwritten. */
+    @Transaction
+    fun completeParse(id: String, outcome: ParseOutcome, nowSec: Long, stopped: Boolean): ParseJob? {
+        val row = job(id) ?: return null
+        val current = workout(row.draftId)
+        val job = ParseJob(row.jobId, row.draftId, row.draftRevision, JobState.valueOf(row.state), row.attempts)
+        if (job.state != JobState.RUNNING) return job
+        if (stopped || current == null || current.archived) {
+            val cancelled = ParseJobs.cancel(job)
+            upsertJob(row.copy(state = cancelled.state.name))
+            return cancelled
+        }
+        val (done, completion) = ParseJobs.complete(job, outcome, current.revision)
+        when (completion) {
+            is JobCompletion.Apply -> {
+                val result = completion.result
+                val w = result.workout.copy(id = current.id, revision = current.revision + 1, createdAt = current.createdAt, updatedAt = nowSec)
+                upsertWorkout(current.copy(revision = w.revision, title = w.title, date = w.date,
+                    workoutJson = DomainJson.encodeWorkout(w), parseJson = DomainJson.encodeParseResult(result),
+                    status = "ready", updatedAt = nowSec))
+            }
+            is JobCompletion.Alternative -> upsertWorkout(current.copy(alternativeJson = DomainJson.encodeParseResult(completion.result)))
+            JobCompletion.Ignore -> if (done.state == JobState.FAILED) upsertWorkout(current.copy(status = "draft"))
+        }
+        upsertJob(row.copy(state = done.state.name, attempts = done.attempts, error = done.error?.toString()))
+        return done
+    }
+
     @Upsert fun upsertResult(r: ResultEntity)
     @Query("SELECT * FROM results WHERE deleted = 0 ORDER BY startedAt DESC") fun observeResults(): Flow<List<ResultEntity>>
     @Query("SELECT * FROM results WHERE id = :id") fun result(id: String): ResultEntity?
@@ -137,6 +193,14 @@ interface WodDao {
     @Query("SELECT * FROM outbox") fun outbox(): List<OutboxEntity>
     @Query("SELECT * FROM outbox") fun observeOutbox(): Flow<List<OutboxEntity>>
     @Query("DELETE FROM outbox") fun clearOutbox()
+    @Query("DELETE FROM outbox WHERE `key` = :key") fun deleteOutbox(key: String)
+
+    /** Apply a snapshot delta atomically without rewriting unchanged message bodies. */
+    @Transaction
+    fun applyOutboxChanges(changed: List<OutboxEntity>, removed: List<String>) {
+        changed.forEach(::upsertOutbox)
+        removed.forEach(::deleteOutbox)
+    }
 
     @Upsert fun upsertPlan(p: PlanEntity)
     @Query("SELECT * FROM plans WHERE workoutId = :workoutId AND targetKey = :targetKey") fun plan(workoutId: String, targetKey: String): PlanEntity?

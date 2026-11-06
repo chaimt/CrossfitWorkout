@@ -10,18 +10,14 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.wodcapture.app.container
-import com.wodcapture.app.data.ParseJobEntity
 import com.wodcapture.domain.parser.CloudLlmParser
 import com.wodcapture.domain.parser.CloudParserConfig
 import com.wodcapture.domain.parser.ImageInput
-import com.wodcapture.domain.parser.JobCompletion
 import com.wodcapture.domain.parser.JobPreconditions
 import com.wodcapture.domain.parser.JobState
 import com.wodcapture.domain.parser.OkHttpTransport
 import com.wodcapture.domain.parser.ParseError
 import com.wodcapture.domain.parser.ParseInput
-import com.wodcapture.domain.parser.ParseJob
-import com.wodcapture.domain.parser.ParseJobs
 import com.wodcapture.domain.parser.ParseOutcome
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
@@ -42,29 +38,19 @@ class ParseWorker(context: Context, params: WorkerParameters) : CoroutineWorker(
         val draft = dao.workout(jobRow.draftId)
         val settings = c.settings.current()
         val images = draft?.let { Json.decodeFromString(ListSerializer(String.serializer()), it.imagePaths) }.orEmpty().map(::File)
-        var job = ParseJob(jobRow.jobId, jobRow.draftId, jobRow.draftRevision, JobState.valueOf(jobRow.state), jobRow.attempts)
-        job = ParseJobs.start(job, JobPreconditions(settings.cloudParsing && settings.consentGiven, draft != null && images.all { it.exists() }))
-        save(job, jobRow)
-        if (job.state != JobState.RUNNING) return Result.success()
-        val key = c.secrets.apiKey() ?: return save(job.copy(state = JobState.FAILED, error = ParseError.InvalidCredentials), jobRow).let { Result.success() }
+        val job = dao.startParse(jobId, JobPreconditions(settings.cloudParsing && settings.consentGiven, draft != null && !draft.archived && images.all { it.exists() }))
+            ?: return Result.success()
+        if (job.state != JobState.RUNNING.name) return Result.success()
+        val key = c.secrets.apiKey() ?: run {
+            dao.completeParse(jobId, ParseOutcome.Failure(ParseError.InvalidCredentials, 0), System.currentTimeMillis() / 1000, isStopped)
+            return Result.success()
+        }
 
         val parser = CloudLlmParser(CloudParserConfig(apiKey = key, model = settings.model, effort = settings.effort), c.catalog, OkHttpTransport())
         val input = ParseInput(images = images.map { ImageInput(it.readBytes()) }, text = draft!!.rawText)
-        val outcome = parser.parse(input) { isStopped || dao.job(jobId)?.state == JobState.CANCELLED.name }
-        val current = dao.workout(jobRow.draftId)
-        val (done, completion) = ParseJobs.complete(job, outcome, current?.revision)
-        save(done, jobRow)
-        val now = System.currentTimeMillis() / 1000
-        when (completion) {
-            is JobCompletion.Apply -> c.workouts.applyParse(current!!, completion.result, now)
-            is JobCompletion.Alternative -> c.workouts.storeAlternative(current!!, completion.result)
-            JobCompletion.Ignore -> current?.takeIf { done.state == JobState.FAILED }?.let { c.workouts.setStatus(it, "draft") }
-        }
-        return if (done.state == JobState.QUEUED && outcome is ParseOutcome.Failure && outcome.error.retryable) Result.retry() else Result.success()
-    }
-
-    private fun save(job: ParseJob, row: ParseJobEntity) {
-        applicationContext.container.db.dao().upsertJob(row.copy(state = job.state.name, attempts = job.attempts, error = job.error?.toString()))
+        val outcome = parser.parse(input) { isStopped || dao.job(jobId)?.state != JobState.RUNNING.name }
+        val done = dao.completeParse(jobId, outcome, System.currentTimeMillis() / 1000, isStopped)
+        return if (done?.state == JobState.QUEUED && outcome is ParseOutcome.Failure && outcome.error.retryable) Result.retry() else Result.success()
     }
 
     companion object {

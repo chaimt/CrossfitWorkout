@@ -27,6 +27,15 @@ import kotlin.test.assertTrue
 
 /** REQ-AX02–AX04 with a mocked HTTP layer; REQ-AX12 harness; REQ-AX18 job lifecycle. */
 class CloudLlmParserTest {
+    @Test
+    fun cancellationDuringSuccessfulHttpRequestDiscardsOutput() {
+        var cancelled = false
+        val response = ok(modelOutput())
+        val http = Scripted({ cancelled = true; response })
+        val outcome = parser(http).parse(ParseInput(text = "AMRAP 10")) { cancelled }
+        assertEquals(ParseError.Cancelled, assertIs<ParseOutcome.Failure>(outcome).error)
+    }
+
     private val config = CloudParserConfig(apiKey = "sk-test-not-real")
     private val sleeps = mutableListOf<Long>()
 

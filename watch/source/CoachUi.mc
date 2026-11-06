@@ -55,6 +55,11 @@ module CoachUi {
             return [tv, new TransitionDelegate(s)];
         }
         if (st == STAGE_SUMMARY) {
+            if (!s.finalized) {
+                var pending = new TextView("Save pending",
+                    ["Storage full", "Sync results, then retry"], "START to retry");
+                return [pending, new FinalizationDelegate(s, pending)];
+            }
             var lines = Summary.sessionLines(s);
             var sv = new TextView("Session done", lines, "START to close");
             return [sv, new TextDelegate(sv, null)];
@@ -76,6 +81,26 @@ module CoachUi {
     function showLines(title as String, lines as Array) as Void {
         var v = new TextView(title, lines, null);
         WatchUi.pushView(v, new TextDelegate(v, null), WatchUi.SLIDE_LEFT);
+    }
+}
+
+//! Keep failed finalization reachable until its durable writes succeed.
+class FinalizationDelegate extends TextDelegate {
+    private var _session as Session;
+
+    function initialize(s as Session, view as TextView) {
+        TextDelegate.initialize(view, null);
+        _session = s;
+    }
+
+    function onSelect() as Boolean {
+        _session.retryStorage();
+        return true;
+    }
+
+    function onBack() as Boolean {
+        // Leaving the view would strand the open session behind the Busy check.
+        return true;
     }
 }
 

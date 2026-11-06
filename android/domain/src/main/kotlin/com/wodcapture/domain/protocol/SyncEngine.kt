@@ -3,6 +3,7 @@ package com.wodcapture.domain.protocol
 import com.wodcapture.domain.IdSource
 import com.wodcapture.domain.plan.WatchPlan
 import kotlinx.serialization.json.JsonObject
+import java.util.concurrent.Executor
 
 /**
  * Phone side of the watch transport, implemented by the Connect IQ adapter in `:app` and by fakes
@@ -35,6 +36,7 @@ class SyncEngine(
     private val ids: IdSource,
     private val clockMs: () -> Long,
     private val listener: SyncListener = object : SyncListener {},
+    private val callbackExecutor: Executor = Executor { it.run() },
 ) {
     private fun nowSec() = clockMs() / 1000
 
@@ -77,13 +79,21 @@ class SyncEngine(
 
     /** Sends the next due data message for [target], if any. */
     fun pump(target: WatchTarget) {
-        val next = outbox.next(target, clockMs()) ?: return
+        val before = outbox.snapshot()
+        val next = outbox.next(target, clockMs())
+        if (next == null) {
+            // Exhausting a retry budget changes durable state without sending a message.
+            if (outbox.snapshot() != before) changed()
+            return
+        }
         changed()
         @Suppress("UNCHECKED_CAST")
         val message = WireValues.toWire(next.body) as Map<String, Any>
         transport.send(target, message) { status ->
-            outbox.onSendStatus(next.messageId, status, clockMs())
-            changed()
+            callbackExecutor.execute {
+                outbox.onSendStatus(next.messageId, status, clockMs())
+                changed()
+            }
         }
     }
 
@@ -156,7 +166,9 @@ class SyncEngine(
     /** Acks and control messages bypass the data queue (protocol §7). */
     private fun sendControl(target: WatchTarget, env: Envelope) {
         transport.send(target, EnvelopeCodec.encode(env)) { status ->
-            if (status != SendStatus.SUCCESS) listener.onProtocolError(target, "send", "${env.t} send status $status")
+            callbackExecutor.execute {
+                if (status != SendStatus.SUCCESS) listener.onProtocolError(target, "send", "${env.t} send status $status")
+            }
         }
     }
 
