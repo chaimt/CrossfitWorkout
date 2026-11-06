@@ -3,7 +3,6 @@ package com.wodcapture.app.data
 import androidx.room.withTransaction
 import com.wodcapture.domain.DomainJson
 import com.wodcapture.domain.IdSource
-import com.wodcapture.domain.model.ParseResult
 import com.wodcapture.domain.model.Session
 import com.wodcapture.domain.model.Workout
 import com.wodcapture.domain.model.WorkoutResult
@@ -68,16 +67,6 @@ class WorkoutRepository(private val db: WodDatabase, private val ids: IdSource =
         runBlocking { db.withTransaction { dao.insertRevision(WorkoutRevisionEntity(entity.id, entity.revision, entity.workoutJson, nowSec)); dao.upsertWorkout(e) } }
         return e
     }
-
-    /** Applies parser output to a draft that was not edited meanwhile (REQ-AX18). */
-    fun applyParse(entity: WorkoutEntity, result: ParseResult, nowSec: Long): WorkoutEntity {
-        val w = result.workout.copy(id = entity.id, revision = entity.revision + 1, createdAt = entity.createdAt, updatedAt = nowSec)
-        val e = entity.copy(revision = w.revision, title = w.title, date = w.date, workoutJson = DomainJson.encodeWorkout(w), parseJson = DomainJson.encodeParseResult(result), status = "ready", updatedAt = nowSec)
-        dao.upsertWorkout(e)
-        return e
-    }
-
-    fun storeAlternative(entity: WorkoutEntity, result: ParseResult) = dao.upsertWorkout(entity.copy(alternativeJson = DomainJson.encodeParseResult(result)))
 
     fun setStatus(entity: WorkoutEntity, status: String) = dao.upsertWorkout(entity.copy(status = status))
 
@@ -170,21 +159,29 @@ private data class OutboxRecord(
 )
 
 /** Persists the outbox snapshot after every mutation (REQ-SY14). */
-class OutboxStore(private val db: WodDatabase) {
-    private val dao = db.dao()
+class OutboxStore(private val dao: WodDao) {
+    constructor(db: WodDatabase) : this(db.dao())
+
+    private var persisted: Map<String, OutboxEntry>? = null
 
     fun load(): List<OutboxEntry> = dao.outbox().map { e ->
         val r = json.decodeFromString(OutboxRecord.serializer(), e.entryJson)
         OutboxEntry(r.messageId, WatchTarget(r.deviceId, r.appUuid, r.generation), r.type, r.objectId, r.revision, r.body, DeliveryState.valueOf(r.state), r.retries, r.sentAtMs, r.reason, r.enqueuedAtMs)
+    }.also { entries -> persisted = entries.associateBy(::key) }
+
+    /** Called only on the sync executor; advance the cache after the transaction commits. */
+    fun save(entries: List<OutboxEntry>) {
+        if (persisted == null) load()
+        val previous = requireNotNull(persisted)
+        val current = entries.associateBy(::key)
+        val changed = entries.filter { previous[key(it)] != it }.map { e ->
+            val rec = OutboxRecord(e.messageId, e.target.deviceId, e.target.appUuid, e.target.generation, e.type, e.objectId, e.revision, e.body, e.state.name, e.retries, e.sentAtMs, e.reason, e.enqueuedAtMs)
+            OutboxEntity(key(e), e.target.key, json.encodeToString(OutboxRecord.serializer(), rec))
+        }
+        val removed = (previous.keys - current.keys).toList()
+        if (changed.isNotEmpty() || removed.isNotEmpty()) dao.applyOutboxChanges(changed, removed)
+        persisted = current
     }
 
-    fun save(entries: List<OutboxEntry>) = runBlocking {
-        db.withTransaction {
-            dao.clearOutbox()
-            entries.forEach { e ->
-                val rec = OutboxRecord(e.messageId, e.target.deviceId, e.target.appUuid, e.target.generation, e.type, e.objectId, e.revision, e.body, e.state.name, e.retries, e.sentAtMs, e.reason, e.enqueuedAtMs)
-                dao.upsertOutbox(OutboxEntity("${e.target.key}|${e.messageId}", e.target.key, json.encodeToString(OutboxRecord.serializer(), rec)))
-            }
-        }
-    }
+    private fun key(e: OutboxEntry) = "${e.target.key}|${e.messageId}"
 }

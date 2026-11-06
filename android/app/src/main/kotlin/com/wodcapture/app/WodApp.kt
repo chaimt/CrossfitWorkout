@@ -98,6 +98,7 @@ class AppContainer(context: Context) {
                 chunks = ChunkStager(RoomChunkStore(db), ingest) { results.dedupe(it) },
                 ids = ids,
                 clockMs = System::currentTimeMillis,
+                callbackExecutor = sync,
                 listener = object : SyncListener {
                     override fun onOutboxChanged(outbox: List<OutboxEntry>) {
                         outboxStore.save(outbox)

@@ -64,8 +64,15 @@ data class OutboxEntry(
  * [snapshot] after every mutation (it survives process death) and supplies the clock.
  */
 class Outbox(entries: List<OutboxEntry> = emptyList()) {
-    private val items = entries.toMutableList()
+    // SDK callbacks cannot survive process death. Retry the original wire message.
+    private val items = entries.map {
+        if (it.state == DeliveryState.SENDING) it.copy(state = DeliveryState.QUEUED, sentAtMs = null) else it
+    }.toMutableList()
     private val lastAutoRestart = mutableMapOf<String, Long>()
+
+    init {
+        compact()
+    }
 
     fun snapshot(): List<OutboxEntry> = items.toList()
 
@@ -89,6 +96,7 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
         same.filter { it.state in PENDING }.forEach { replace(it.copy(state = DeliveryState.SUPERSEDED)) }
         val entry = OutboxEntry(envelope.id, target, envelope.t, oid, rev, body, enqueuedAtMs = nowMs)
         items += entry
+        compact()
         return entry
     }
 
@@ -99,22 +107,21 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
     fun next(target: WatchTarget, nowMs: Long): OutboxEntry? {
         val inFlight = items.firstOrNull { it.target == target && (it.state == DeliveryState.SENDING || it.state == DeliveryState.SENT) }
         if (inFlight != null) {
-            if (inFlight.state == DeliveryState.SENDING) return null
             val due = (inFlight.sentAtMs ?: nowMs) + ACK_TIMEOUT_MS + RETRY_DELAYS_MS[minOf(inFlight.retries, RETRY_DELAYS_MS.lastIndex)]
             if (nowMs < due) return null
             if (inFlight.retries >= MAX_RETRIES_PER_DRAIN) {
                 replace(inFlight.copy(state = DeliveryState.WAITING, reason = "no_ack"))
                 return null
             }
-            return inFlight.copy(state = DeliveryState.SENDING, retries = inFlight.retries + 1).also(::replace)
+            return inFlight.copy(state = DeliveryState.SENDING, retries = inFlight.retries + 1, sentAtMs = nowMs).also(::replace)
         }
         if (items.any { it.target == target && (it.state == DeliveryState.WAITING || it.state == DeliveryState.SUSPENDED) }) return null
         val queued = items.firstOrNull { it.target == target && it.state == DeliveryState.QUEUED } ?: return null
-        return queued.copy(state = DeliveryState.SENDING).also(::replace)
+        return queued.copy(state = DeliveryState.SENDING, sentAtMs = nowMs).also(::replace)
     }
 
     /** When the next retry check is due for [target] (for scheduling a timer), or `null`. */
-    fun nextDueAt(target: WatchTarget): Long? = items.firstOrNull { it.target == target && it.state == DeliveryState.SENT }
+    fun nextDueAt(target: WatchTarget): Long? = items.firstOrNull { it.target == target && it.state in setOf(DeliveryState.SENDING, DeliveryState.SENT) }
         ?.let { (it.sentAtMs ?: 0) + ACK_TIMEOUT_MS + RETRY_DELAYS_MS[minOf(it.retries, RETRY_DELAYS_MS.lastIndex)] }
 
     /** Maps every SDK send status to a delivery state (REQ-AP06). Success is not delivery. */
@@ -149,6 +156,7 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
             }
         }
         replace(updated)
+        compact()
         return updated
     }
 
@@ -191,6 +199,21 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
     private fun replace(e: OutboxEntry) {
         val i = items.indexOfFirst { it.messageId == e.messageId && it.target == e.target }
         if (i >= 0) items[i] = e else items += e
+    }
+
+    /** Keep reconciliation state and pending operations, not lifetime revision history. */
+    private fun compact() {
+        val keep = mutableSetOf<OutboxEntry>()
+        items.groupBy { it.target to it.objectId }.values.forEach { revisions ->
+            // Prefer the newest attempt when a failed revision was explicitly replaced.
+            val newestFirst = revisions.asReversed()
+            newestFirst.maxByOrNull { it.revision }?.let(keep::add)
+            newestFirst.filter { it.state != DeliveryState.FAILED && it.state != DeliveryState.SUPERSEDED }
+                .maxByOrNull { it.revision }?.let(keep::add)
+            newestFirst.filter { it.state == DeliveryState.ON_WATCH }
+                .maxByOrNull { it.revision }?.let(keep::add)
+        }
+        items.removeAll { it.state !in PENDING && it !in keep }
     }
 
     companion object {
