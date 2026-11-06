@@ -25,7 +25,6 @@ import com.wodcapture.domain.model.MaxEffort
 import com.wodcapture.domain.model.Measure
 import com.wodcapture.domain.model.MeasureKind
 import com.wodcapture.domain.model.Part
-import com.wodcapture.domain.model.PercentOfMax
 import com.wodcapture.domain.model.RepTarget
 import com.wodcapture.domain.model.ScoreType
 import com.wodcapture.domain.model.Scoring
@@ -286,16 +285,10 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             return StrengthSet(s.id, RepTarget(reps), load = strengthLoad(s))
         }
 
-        private fun strengthLoad(s: ManualSetForm): LoadSpec? = when (form.scheme.loadMode) {
-            StrengthLoadMode.NONE -> null
-            StrengthLoadMode.ABSOLUTE -> s.load?.let { AbsoluteLoad(Mass(it, unit)) } ?: run {
-                issues += blocking("missing_value", "Enter the weight of each set or choose no load", form.id, s.id, "load")
-                null
-            }
-            StrengthLoadMode.PERCENT_1RM -> s.percent?.let { PercentOfMax(it) } ?: run {
-                issues += blocking("missing_value", "Enter a percentage of 1RM for each set", form.id, s.id, "percent")
-                null
-            }
+        private fun strengthLoad(s: ManualSetForm): LoadSpec? = s.load?.let { AbsoluteLoad(Mass(it, unit)) } ?: run {
+            val hint = if (s.ofGoal != null) " (or the goal weight, to fill it from the %)" else ""
+            issues += blocking("missing_value", "Enter the weight of each set$hint", form.id, s.id, "load")
+            null
         }
 
         // ---------------------------------------------------------------- scoring / fallback

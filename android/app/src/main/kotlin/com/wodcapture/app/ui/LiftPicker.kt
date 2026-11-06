@@ -86,7 +86,7 @@ fun LiftPickerDialog(catalog: MovementCatalog, onDismiss: () -> Unit, onPick: (M
                 }
                 OutlinedTextField(
                     value = query, onValueChange = { query = it }, singleLine = true,
-                    placeholder = { Text("Search, e.g. squat, DB, KBS") },
+                    placeholder = { Text("Search, e.g. squat, BS, press") },
                     leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
                     shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),

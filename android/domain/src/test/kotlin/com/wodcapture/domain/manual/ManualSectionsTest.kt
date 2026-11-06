@@ -96,12 +96,15 @@ class ManualSectionsTest {
         val groups = ManualForms.liftGroups(TestSupport.catalog)
         val ids = groups.flatMap { g -> g.lifts.map { it.id } }
         assertEquals("Squats, presses & deadlifts", groups.first().title)
-        // crossfit.com lifts, including the ones added for the picker.
-        listOf("back_squat", "deadlift", "clean_and_push_jerk", "dumbbell_squat_snatch", "dumbbell_hang_clean", "american_kettlebell_swing")
-            .forEach { assertTrue(it in ids, it) }
+        listOf("back_squat", "deadlift", "front_squat").forEach { assertTrue(it in ids, it) }
         // No unloaded gymnastics or cardio.
         listOf("air_squat", "pull_up", "row", "run").forEach { assertFalse(it in ids, it) }
-        assertEquals(listOf("dumbbell_power_snatch"), ManualForms.liftGroups(TestSupport.catalog, "DB PS").flatMap { g -> g.lifts.map { it.id } })
+        // Olympic, dumbbell and kettlebell lifts are not offered (owner request 2026-11-06).
+        listOf("clean_and_push_jerk", "dumbbell_squat_snatch", "dumbbell_hang_clean", "american_kettlebell_swing")
+            .forEach { assertFalse(it in ids, it) }
+        assertTrue(groups.none { it.title in setOf("Olympic lifts", "Dumbbell", "Kettlebell") })
+        // Search still filters; the dumbbell variant no longer shows up.
+        assertEquals(listOf("front_squat"), ManualForms.liftGroups(TestSupport.catalog, "front squat").flatMap { g -> g.lifts.map { it.id } })
     }
 
     /** A strength session on [liftId] with [sets] (weight, reps) rows. */
@@ -226,7 +229,7 @@ class ManualSectionsTest {
     fun strengthQuickStartsArePercentOfGoalSessions() {
         fun percents(name: String) = ManualTemplates.apply(blank(), template(name), ids).parts.single()
         val fiveByFive = percents("5 × 5 · 70–80%")
-        assertEquals(StrengthLoadMode.ABSOLUTE, fiveByFive.scheme.loadMode)
+        assertEquals(StrengthScheme(), fiveByFive.scheme)
         assertEquals(null, fiveByFive.scheme.goalWeight)
         assertEquals(listOf(70.0, 72.5, 75.0, 77.5, 80.0), fiveByFive.sets.map { it.ofGoal })
         assertEquals(List(5) { 5 }, fiveByFive.sets.map { it.reps })
@@ -240,5 +243,24 @@ class ManualSectionsTest {
         val filled = ManualForms.withGoal(fiveByThree, 140.0, 2.5)
         assertEquals(listOf(112.5, 112.5, 115.0, 117.5, 120.0), filled.sets.map { it.load })
         assertTrue(builder.build(blank().copy(parts = listOf(filled))).canCreate)
+    }
+
+    @Test
+    fun setPercentsSurviveUntilAGoalIsSet() {
+        val start = ManualTemplates.apply(blank(), template("3 × 5 · 70–80%"), ids).parts.single()
+        // Without a goal the sets have no weight yet, so Create is blocked with a hint.
+        val unfilled = builder.build(blank().copy(parts = listOf(start)))
+        assertFalse(unfilled.canCreate)
+        assertTrue(unfilled.report.blocking.any { "goal weight" in it.message }, unfilled.report.blocking.toString())
+        // Typing a weight before the goal keeps that set's %.
+        val typed = ManualForms.withSetWeight(start.sets.first(), 60.0, goal = null)
+        assertEquals(60.0, typed.load)
+        assertEquals(70.0, typed.ofGoal)
+        // Clearing the goal (e.g. to retype it) keeps every %.
+        val withGoal = ManualForms.withGoal(start, 100.0, step = 1.0)
+        val cleared = ManualForms.withGoal(withGoal, null, step = 1.0)
+        assertEquals(null, cleared.scheme.goalWeight)
+        assertEquals(listOf(70.0, 75.0, 80.0), cleared.sets.map { it.ofGoal })
+        assertEquals(listOf(70.0, 75.0, 80.0), cleared.sets.map { it.load })
     }
 }

@@ -84,9 +84,6 @@ enum class MaxEffortMeasure(val wire: String, val score: ScoreType) {
     LOAD("load", ScoreType.LOAD),
 }
 
-/** How a strength row prescribes its load (REQ-DM06). */
-enum class StrengthLoadMode { ABSOLUTE, PERCENT_1RM, NONE }
-
 /**
  * One part of the form. Only the fields of the chosen [format] are read; the others are kept so
  * switching formats back and forth does not lose what was typed.
@@ -130,12 +127,12 @@ data class ManualPartForm(
 )
 
 /**
- * Load type of a strength session, set once above the sets; every set follows it, so a set needs
- * only its weight and reps (owner request 2026-11-05). The number of sets is the number of set
- * rows, and rest between sets is not asked for: the compiler uses Settings → Default strength rest.
+ * Session-wide settings of a strength session. Every set is a weight; there is no load-type choice
+ * (owner request 2026-11-06), so a hand-built session and a quick start look the same: % · weight ·
+ * reps per set. The number of sets is the number of set rows, and rest between sets is not asked
+ * for: the compiler uses Settings → Default strength rest.
  */
 data class StrengthScheme(
-    val loadMode: StrengthLoadMode = StrengthLoadMode.ABSOLUTE,
     /**
      * Optional goal weight of the session, in the form's unit (owner request 2026-11-05). With it,
      * each set's weight and its % of the goal are two views of one value: editing either updates
@@ -185,19 +182,16 @@ data class ManualStrengthForm(
     val implement: String? = null,
 )
 
-/**
- * One set of a strength session: its reps and its load in the session's [StrengthScheme] load
- * type — a weight ([load], in the form's unit) or a percentage of 1RM ([percent]).
- */
+/** One set of a strength session: its weight ([load], in the form's unit), reps and % of the goal. */
 data class ManualSetForm(
     /** Becomes the set ID. */
     val id: String,
     val load: Double? = null,
-    val percent: Double? = null,
     val reps: Int? = null,
     /**
-     * Weight mode with a goal weight: [load] as a % of the goal. It is an input aid kept in step
-     * with [load]; the workout stores only the weight.
+     * [load] as a % of the session's goal weight. It is an input aid kept in step with [load] once
+     * a goal is set (before that it waits for the goal, e.g. a quick start's ramp); the workout
+     * stores only the weight.
      */
     val ofGoal: Double? = null,
 )
@@ -263,9 +257,12 @@ object ManualForms {
 
     fun newLift(ids: IdSource): ManualStrengthForm = ManualStrengthForm(id = ids.newId())
 
-    /** Typing a set's weight: with a goal weight, its % of the goal follows. */
+    /**
+     * Typing a set's weight: with a goal weight, its % of the goal follows. Without a goal there
+     * is nothing to compare against, so the % is kept.
+     */
     fun withSetWeight(set: ManualSetForm, weight: Double?, goal: Double?): ManualSetForm =
-        set.copy(load = weight, ofGoal = percentOf(weight, goal))
+        set.copy(load = weight, ofGoal = if (hasGoal(goal)) percentOf(weight, goal) else set.ofGoal)
 
     /**
      * Typing a set's % of the goal: its weight becomes goal × %, rounded to [step] (Settings →
@@ -276,24 +273,27 @@ object ManualForms {
 
     /**
      * Changing the session goal: sets given as a % get their weight recomputed; sets given only
-     * as a weight get their % of the new goal.
+     * as a weight get their % of the new goal. Clearing the goal keeps every set as it is, so
+     * retyping the goal does not lose the %s.
      */
     fun withGoal(part: ManualPartForm, goal: Double?, step: Double): ManualPartForm = part.copy(
         scheme = part.scheme.copy(goalWeight = goal),
-        sets = part.sets.map { s ->
+        sets = if (!hasGoal(goal)) part.sets else part.sets.map { s ->
             val computed = weightOf(s.ofGoal, goal, step)
             if (computed != null) s.copy(load = computed) else s.copy(ofGoal = percentOf(s.load, goal))
         },
     )
 
+    private fun hasGoal(goal: Double?): Boolean = goal != null && goal > 0
+
     private fun weightOf(percent: Double?, goal: Double?, step: Double): Double? {
-        if (percent == null || goal == null || goal <= 0) return null
+        if (percent == null || goal == null || !hasGoal(goal)) return null
         return MassMath.roundToStep(goal * percent / 100, step.takeIf { it > 0 } ?: 1.0)
     }
 
     /** % of [goal], to one decimal; `null` when either is missing. */
     private fun percentOf(weight: Double?, goal: Double?): Double? {
-        if (weight == null || goal == null || goal <= 0) return null
+        if (weight == null || goal == null || !hasGoal(goal)) return null
         return Math.round(weight / goal * 1000) / 10.0
     }
 
@@ -384,7 +384,9 @@ object ManualForms {
     /**
      * The weights picker list (owner request 2026-11-05: lifts come from a list, after
      * crossfit.com/crossfit-movements): every catalog movement that takes a load, minus cardio,
-     * grouped by kind of lift. [query] filters by name or unambiguous alias.
+     * grouped by kind of lift. Olympic, dumbbell and kettlebell lifts are not listed (owner request
+     * 2026-11-06); they stay in the catalog for parsed workouts. [query] filters by name or
+     * unambiguous alias.
      */
     fun liftGroups(catalog: MovementCatalog, query: String = ""): List<LiftGroup> {
         val q = query.trim()
@@ -399,9 +401,6 @@ object ManualForms {
 
     private val LIFT_GROUPS = listOf(
         "strength" to "Squats, presses & deadlifts",
-        "olympic" to "Olympic lifts",
-        "dumbbell" to "Dumbbell",
-        "kettlebell" to "Kettlebell",
         "gymnastics" to "Weighted gymnastics",
         "other" to "Med ball, sandbag & more",
     )
