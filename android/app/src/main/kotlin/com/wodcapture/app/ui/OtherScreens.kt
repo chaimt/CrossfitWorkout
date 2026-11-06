@@ -54,9 +54,10 @@ import com.wodcapture.domain.review.TimeText
 fun ResultsScreen(vm: AppViewModel, back: () -> Unit, logFor: String? = null) {
     val results by vm.results.collectAsState()
     val library by vm.library.collectAsState()
-    var entering by remember { mutableStateOf(logFor != null) }
+    var logging by remember { mutableStateOf(logFor != null) }
+    var adding by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize()) {
-        Bar("Results", back) { TextButton(onClick = { entering = true }) { Text("Add manual") } }
+        Bar("Results", back) { TextButton(onClick = { adding = true }) { Text("Add manual") } }
         LazyColumn(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(results, key = { it.id }) { r ->
                 val title = library.firstOrNull { it.id == r.workoutId }?.title ?: "Workout"
@@ -75,7 +76,9 @@ fun ResultsScreen(vm: AppViewModel, back: () -> Unit, logFor: String? = null) {
             }
         }
     }
-    if (entering) ManualResultDialog(vm, logFor) { entering = false }
+    // "Add manual" enters a lift from the lift list, the same as on the 1RM screen (owner request 2026-11-06).
+    if (adding) ManualLiftDialog(vm) { adding = false }
+    if (logging && logFor != null) ManualResultDialog(vm, logFor) { logging = false }
 }
 
 fun scoreText(s: PartScore?): String = when (val v = s?.score) {
@@ -95,33 +98,37 @@ fun scoreText(s: PartScore?): String = when (val v = s?.score) {
     Score.None -> "--"
 }
 
+/**
+ * "Save & log result" from Review (REQ-AC09, AL03): the score of the workout just saved. No
+ * workout, score-type or status choice (owner request 2026-11-06): the field follows the part's
+ * score type and the result is completed; the part is asked only when the workout has several.
+ */
 @Composable
-private fun ManualResultDialog(vm: AppViewModel, initialWorkoutId: String?, close: () -> Unit) {
+private fun ManualResultDialog(vm: AppViewModel, workoutId: String, close: () -> Unit) {
     val library by vm.library.collectAsState()
-    var workoutId by remember { mutableStateOf(initialWorkoutId ?: library.firstOrNull()?.id) }
+    val settings by vm.settings.collectAsState()
+    val unit = settings.profile.displayUnit
     var a by remember { mutableStateOf("") }
     var b by remember { mutableStateOf("") }
-    var status by remember { mutableStateOf(ResultStatus.COMPLETED) }
     val entity = library.firstOrNull { it.id == workoutId }
     val workout = entity?.let { DomainJson.decodeWorkout(it.workoutJson) }
     // Keyed on the loaded revision too: right after "Save & log result" the library may emit later.
     var partId by remember(workoutId, workout?.revision) { mutableStateOf(workout?.parts?.firstOrNull()?.id) }
     val part = workout?.parts?.firstOrNull { it.id == partId }
-    var kind by remember(partId) { mutableStateOf(part?.let { entryKind(it.scoring.type) } ?: "time") }
+    val kind = part?.let { entryKind(it.scoring.type) } ?: "text"
     AlertDialog(
         onDismissRequest = close,
-        title = { Text("Manual result") },
+        title = { Text(workout?.title?.ifBlank { null } ?: "Manual result") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Choice("Workout", workoutId, library.map { it.id }, { id -> library.firstOrNull { it.id == id }?.title ?: "-" }) { workoutId = it }
-                workout?.let { w -> Choice("Part", partId, w.parts.map { it.id }, { id -> w.parts.indexOfFirst { it.id == id }.takeIf { it >= 0 }?.let { i -> partName(w.parts[i], i) } ?: "-" }) { partId = it } }
-                Choice("Score", kind, listOf("time", "rounds_reps", "reps", "load", "text")) { kind = it }
-                Choice("Status", status, ResultStatus.entries, { it.wire }) { status = it }
+                workout?.takeIf { it.parts.size > 1 }?.let { w ->
+                    Choice("Part", partId, w.parts.map { it.id }, { id -> w.parts.indexOfFirst { it.id == id }.takeIf { it >= 0 }?.let { i -> partName(w.parts[i], i) } ?: "-" }) { partId = it }
+                }
                 when (kind) {
                     "time" -> Field("Time (m:ss)", a) { a = it }
                     "rounds_reps" -> Row { Field("Rounds", a, Modifier.width(120.dp), numeric = true) { a = it }; Field("Reps", b, Modifier.width(120.dp), numeric = true) { b = it } }
                     "reps" -> Field("Reps", a, numeric = true) { a = it }
-                    "load" -> Field("Load (kg)", a, numeric = true) { a = it }
+                    "load" -> Field("Weight (${unit.wire})", a, numeric = true) { a = it }
                     else -> Field("Score", a) { a = it }
                 }
             }
@@ -132,14 +139,14 @@ private fun ManualResultDialog(vm: AppViewModel, initialWorkoutId: String?, clos
                     "time" -> TimeText.parse(a)?.let { Score.Time(it) }
                     "rounds_reps" -> a.toIntOrNull()?.let { Score.RoundsReps(it, b.toIntOrNull() ?: 0) }
                     "reps" -> a.toIntOrNull()?.let { Score.Reps(it) }
-                    "load" -> a.toDoubleOrNull()?.let { Score.Load(it, MassUnit.KG) }
+                    "load" -> a.replace(',', '.').toDoubleOrNull()?.let { Score.Load(it, unit) }
                     else -> a.takeIf { it.isNotBlank() }?.let { Score.Text(it) }
                 }
                 if (workout != null && partId != null) {
                     vm.saveManualResult(
                         WorkoutResult(
                             id = vm.newId(), sessionId = vm.newId(), workoutId = workout.id, workoutRevision = workout.revision,
-                            partId = partId!!, startedAt = System.currentTimeMillis() / 1000, status = status,
+                            partId = partId!!, startedAt = System.currentTimeMillis() / 1000, status = ResultStatus.COMPLETED,
                             score = score?.let { PartScore(it, manual = true) }, source = ResultSource.MANUAL,
                         ),
                     )

@@ -89,7 +89,7 @@ private fun liftWeight(lift: TopLift): String = MassMath.formatMass(lift.load) +
 
 /** Lift from the lift list, weight in Settings → Weight unit, reps (default 1) and date (default today). */
 @Composable
-private fun ManualLiftDialog(vm: AppViewModel, close: () -> Unit) {
+fun ManualLiftDialog(vm: AppViewModel, close: () -> Unit) {
     val settings by vm.settings.collectAsState()
     val unit = settings.profile.displayUnit
     var lift by remember { mutableStateOf<Movement?>(null) }
