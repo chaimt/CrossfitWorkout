@@ -71,12 +71,12 @@ import com.wodcapture.domain.validation.ValidationIssue
 private typealias PartEdit = ((ManualPartForm) -> ManualPartForm) -> Unit
 
 /**
- * Guided "New workout" form (REQ-AC09) in two sections, as a class runs them: **Weights**
- * (strength sets, build to a max) then **Metcon** (for time, AMRAP, EMOM, …). Each section has
- * its own quick-start templates and add menu, so picking "5 × 5 strength" and then "AMRAP 20"
- * builds the whole day. The domain builder runs on every edit, so the same validation as Review
- * (REQ-AX05) shows as you type and **Create** stays disabled while anything blocks. Create saves a
- * draft and opens Review; nothing is sent from here.
+ * Guided "New workout" form (REQ-AC09) in class run order: **Warm-up**, then **Weights**
+ * (strength sets), then **Metcon** (for time, AMRAP, EMOM, …), then **Cool-down & other**.
+ * Each section has its own quick-start templates and add menu, so picking "5 × 5 strength" and
+ * then "AMRAP 20" builds the whole day. The domain builder runs on every edit, so the same
+ * validation as Review (REQ-AX05) shows as you type and **Create** stays disabled while
+ * anything blocks. Create saves a draft and opens Review; nothing is sent from here.
  */
 @Composable
 fun ManualWorkoutScreen(vm: AppViewModel, onCreated: (String) -> Unit, back: () -> Unit) {
@@ -131,13 +131,17 @@ fun ManualWorkoutScreen(vm: AppViewModel, onCreated: (String) -> Unit, back: () 
 }
 
 private fun sectionSubtitle(s: WorkoutSection) = when (s) {
+    WorkoutSection.WARMUP -> "Warm-up and skill, before the lifting"
     WorkoutSection.WEIGHTS -> "One lift per session, set by set"
-    else -> "For time, AMRAP, EMOM, Tabata, intervals"
+    WorkoutSection.METCON -> "For time, AMRAP, EMOM, Tabata, intervals"
+    WorkoutSection.OTHER -> "Accessory and cool-down, after the metcon"
 }
 
 private fun emptySectionText(s: WorkoutSection) = when (s) {
+    WorkoutSection.WARMUP -> "No warm-up? Leave this empty."
     WorkoutSection.WEIGHTS -> "No lifting today? Leave this empty."
-    else -> "No metcon yet."
+    WorkoutSection.METCON -> "No metcon yet."
+    WorkoutSection.OTHER -> "No cool-down or extra work."
 }
 
 private fun blockingSummary(b: ManualBuild): String {
@@ -159,10 +163,10 @@ private fun AddPart(section: WorkoutSection, onAdd: (ManualFormat) -> Unit) {
     val accent = sectionColors(section).accent
     val formats = ManualFormat.of(section)
     Box {
-        // Weights has one format (Strength sets), so its button adds it directly.
+        // Sections with one format add it directly; the others open the picker.
         OutlinedButton(onClick = { if (formats.size == 1) onAdd(formats.single()) else open = true }, colors = ButtonDefaults.outlinedButtonColors(contentColor = accent)) {
             Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 6.dp))
-            Text(if (section == WorkoutSection.WEIGHTS) "Add weights" else "Add metcon")
+            Text("Add ${section.label.lowercase()}")
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             formats.forEach { f -> DropdownMenuItem(text = { Text(f.label) }, onClick = { open = false; onAdd(f) }) }

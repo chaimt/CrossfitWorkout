@@ -119,7 +119,7 @@ Payload: `{ "xid": "<transfer uuid>", "ix": 0, "n": 3, "len": 9012, "sha": "<hex
 | `ti` | title, ≤ 28 chars |
 | `date`/`tz` | scheduled local date + IANA zone (REQ-WN01) |
 | `u` | athlete display unit for weights (`"kg"`/`"lb"`) — default for pickers only; every load carries its own unit |
-| `p` | 1–6 parts, in run order, only parts with `runOnWatch = true` |
+| `p` | 1–6 parts, in class run order (warm-up/skill → weights → metcon → other, cool-down last; the phone sorts at compile, REQ-DM14), only parts with `runOnWatch = true` |
 
 ### 4.1 Part
 

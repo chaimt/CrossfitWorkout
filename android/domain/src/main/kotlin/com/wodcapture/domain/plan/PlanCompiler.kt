@@ -31,6 +31,7 @@ import com.wodcapture.domain.model.MaxEffort
 import com.wodcapture.domain.model.MeasureKind
 import com.wodcapture.domain.model.NotForTime
 import com.wodcapture.domain.model.Part
+import com.wodcapture.domain.model.WorkoutSection
 import com.wodcapture.domain.model.PercentOfBodyweight
 import com.wodcapture.domain.model.PercentOfMax
 import com.wodcapture.domain.model.Rest
@@ -85,7 +86,9 @@ class PlanCompiler(private val catalog: MovementCatalog) {
         }
         val errors = mutableListOf<CompileError>()
         val warnings = mutableListOf<String>()
-        val parts = workout.parts.filter { it.effectiveRunOnWatch }
+        // Canonical class run order (warm-up → weights → metcon → other, cool-down last):
+        // the phone sorts here; the watch just runs plan order.
+        val parts = WorkoutSection.runOrdered(workout.parts.filter { it.effectiveRunOnWatch })
         if (parts.isEmpty()) errors += CompileError("no_parts", "No part runs on the watch")
         if (parts.size > WatchLimits.PARTS) errors += CompileError("too_many_parts", "${parts.size} parts; the watch takes at most ${WatchLimits.PARTS}")
         val title = workout.title.ifBlank { parts.firstNotNullOfOrNull { it.title } ?: "Workout" }

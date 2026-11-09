@@ -39,8 +39,9 @@ data class ManualWorkoutForm(
 )
 
 /**
- * Formats offered by the form; each maps to one REQ-DM04 format (Custom → REQ-DM18 fallback) and
- * belongs to exactly one [section] of the form (weights or metcon).
+ * Formats offered by the form; each maps to one REQ-DM04 format (Custom → REQ-DM18 fallback).
+ * Strength sets are the weights section; every other format can run in warm-up, metcon or the
+ * trailing section — the part's kind decides which ([ManualForms.sectionOf]).
  */
 enum class ManualFormat(val label: String, val section: WorkoutSection) {
     STRENGTH("Strength sets", WorkoutSection.WEIGHTS),
@@ -54,26 +55,34 @@ enum class ManualFormat(val label: String, val section: WorkoutSection) {
     ;
 
     companion object {
-        /** The formats offered when adding a part to [section]. */
-        fun of(section: WorkoutSection): List<ManualFormat> = entries.filter { it.section == section }
+        /**
+         * The formats offered when adding a part to [section]: one lift for weights, every
+         * timed format for warm-up, metcon and the trailing section.
+         */
+        fun of(section: WorkoutSection): List<ManualFormat> = when (section) {
+            WorkoutSection.WEIGHTS -> listOf(STRENGTH)
+            WorkoutSection.WARMUP, WorkoutSection.METCON, WorkoutSection.OTHER ->
+                entries.filter { it != STRENGTH }
+        }
     }
 }
 
 /** A heading of the weights picker and its lifts, A–Z. */
 data class LiftGroup(val title: String, val lifts: List<Movement>)
 
-/** The two sections of the form, in the order a class runs them: lift first, then the metcon. */
-val MANUAL_SECTIONS: List<WorkoutSection> = listOf(WorkoutSection.WEIGHTS, WorkoutSection.METCON)
+/** The sections of the form, in class run order: warm-up first, then lift, metcon, cooldown last. */
+val MANUAL_SECTIONS: List<WorkoutSection> =
+    listOf(WorkoutSection.WARMUP, WorkoutSection.WEIGHTS, WorkoutSection.METCON, WorkoutSection.OTHER)
 
 /**
- * Part kinds offered in each form section (the section itself comes from the format). A weights
- * part is always strength (owner request 2026-11-05: no accessory choice). Warm-up, skill and
- * cool-down pieces are timed like a metcon, so they live in the metcon section.
+ * Part kinds offered in each form section. A weights part is always strength (owner request
+ * 2026-11-05: no accessory choice); warm-up/skill open the class and cooldown/other close it.
  */
 fun kindsFor(section: WorkoutSection): List<PartKind> = when (section) {
+    WorkoutSection.WARMUP -> listOf(PartKind.WARMUP, PartKind.SKILL)
     WorkoutSection.WEIGHTS -> listOf(PartKind.STRENGTH)
-    WorkoutSection.METCON, WorkoutSection.OTHER ->
-        listOf(PartKind.METCON, PartKind.WARMUP, PartKind.SKILL, PartKind.COOLDOWN, PartKind.OTHER)
+    WorkoutSection.METCON -> listOf(PartKind.METCON)
+    WorkoutSection.OTHER -> listOf(PartKind.ACCESSORY, PartKind.COOLDOWN, PartKind.OTHER)
 }
 
 /** What a max-effort part measures, with the score type it implies. */
@@ -217,13 +226,18 @@ object ManualForms {
     fun effectiveLabel(form: ManualWorkoutForm, part: ManualPartForm): String =
         part.label.trim().ifBlank { defaultLabel(form.parts.indexOfFirst { it.id == part.id }, form.parts.size) }
 
-    /** Which form section [part] sits in (follows its format). */
-    fun sectionOf(part: ManualPartForm): WorkoutSection = part.format.section
+    /** Which form section [part] sits in: strength sets lift; the kind decides the rest. */
+    fun sectionOf(part: ManualPartForm): WorkoutSection = when {
+        part.format == ManualFormat.STRENGTH -> WorkoutSection.WEIGHTS
+        part.kind == PartKind.WARMUP || part.kind == PartKind.SKILL -> WorkoutSection.WARMUP
+        part.kind == PartKind.METCON -> WorkoutSection.METCON
+        else -> WorkoutSection.OTHER
+    }
 
     /** Parts of [form] in [section], in workout order. */
     fun partsIn(form: ManualWorkoutForm, section: WorkoutSection): List<ManualPartForm> = form.parts.filter { sectionOf(it) == section }
 
-    /** Weights before metcon, keeping the order inside each section. */
+    /** Warm-up first, then weights, then metcon, trailing work last — order inside each section kept. */
     fun ordered(parts: List<ManualPartForm>): List<ManualPartForm> = MANUAL_SECTIONS.flatMap { s -> parts.filter { sectionOf(it) == s } }
 
     /** Adds a [format] part at the end of its section. */
@@ -302,16 +316,26 @@ object ManualForms {
         part.sets.lastOrNull()?.copy(id = ids.newId()) ?: ManualSetForm(id = ids.newId())
 
     /**
-     * Switches [part] to [format]: kind follows the format's section (weights → always strength;
-     * metcon → metcon unless warm-up/skill/…), and a strength part gets its lift and a first set so
-     * the form never shows an empty card. Weights parts have no label or name of their own (owner
-     * request 2026-11-05), so moving a part there clears them rather than keeping hidden values.
+     * Switches [part] to [format]: the kind follows the format and its section (strength sets →
+     * always strength; a move into warm-up picks warm-up, into the trailing section picks
+     * cool-down, unless the current kind already fits), and a strength part gets its lift and a
+     * first set so the form never shows an empty card. Weights parts have no label or name of
+     * their own (owner request 2026-11-05), so moving a part there clears them rather than
+     * keeping hidden values.
      */
     fun withFormat(part: ManualPartForm, format: ManualFormat, ids: IdSource): ManualPartForm {
+        val targetSection = when {
+            format == ManualFormat.STRENGTH -> WorkoutSection.WEIGHTS
+            part.kind == PartKind.WARMUP || part.kind == PartKind.SKILL -> WorkoutSection.WARMUP
+            part.kind == PartKind.METCON -> WorkoutSection.METCON
+            else -> WorkoutSection.OTHER
+        }
         val kind = when {
-            part.kind in kindsFor(format.section) -> part.kind
-            format.section == WorkoutSection.WEIGHTS -> PartKind.STRENGTH
-            else -> PartKind.METCON
+            format == ManualFormat.STRENGTH -> PartKind.STRENGTH
+            part.kind in kindsFor(targetSection) -> part.kind
+            targetSection == WorkoutSection.WARMUP -> PartKind.WARMUP
+            targetSection == WorkoutSection.METCON -> PartKind.METCON
+            else -> PartKind.COOLDOWN
         }
         val strength = format == ManualFormat.STRENGTH
         val lift = if (strength && part.lift == null) newLift(ids) else part.lift
@@ -319,7 +343,7 @@ object ManualForms {
         val movements = if (format != ManualFormat.STRENGTH && format != ManualFormat.CUSTOM && part.movements.isEmpty()) {
             listOf(newMovement(ids))
         } else part.movements
-        val weights = format.section == WorkoutSection.WEIGHTS
+        val weights = format == ManualFormat.STRENGTH
         return part.copy(
             format = format,
             kind = kind,
