@@ -17,7 +17,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/** Weights and metcon stay separate sections of the manual form (owner request 2026-11-05). */
+/** Weights and metcon stay in separate form sections, ordered into class run order (owner request 2026-11-05, run order 2026-11-07). */
 class ManualSectionsTest {
     private val ids = IdSource.sequential("a0000000")
     private val builder = ManualWorkoutBuilder(IdSource.sequential("b0000000"))
@@ -27,8 +27,16 @@ class ManualSectionsTest {
     @Test
     fun everyFormatBelongsToOneSection() {
         assertEquals(listOf(ManualFormat.STRENGTH), ManualFormat.of(WorkoutSection.WEIGHTS))
-        assertEquals(ManualFormat.entries.size, MANUAL_SECTIONS.sumOf { ManualFormat.of(it).size })
-        assertEquals(MANUAL_SECTIONS.toSet(), ManualTemplates.all.map { it.section }.toSet())
+        // Strength sets lift; every other format can open in warm-up, run the metcon, or close
+        // in the trailing section — so those three sections offer the same timed formats.
+        val timed = ManualFormat.entries.filter { it != ManualFormat.STRENGTH }
+        assertEquals(timed, ManualFormat.of(WorkoutSection.WARMUP))
+        assertEquals(timed, ManualFormat.of(WorkoutSection.METCON))
+        assertEquals(timed, ManualFormat.of(WorkoutSection.OTHER))
+        assertEquals(
+            setOf(WorkoutSection.WEIGHTS, WorkoutSection.METCON),
+            ManualTemplates.all.map { it.section }.toSet(),
+        )
     }
 
     @Test
@@ -87,8 +95,28 @@ class ManualSectionsTest {
     fun canonicalPartsMapToSections() {
         assertEquals(WorkoutSection.WEIGHTS, WorkoutSection.of(Part(id = "p", kind = PartKind.METCON, format = StrengthSets())))
         assertEquals(WorkoutSection.METCON, WorkoutSection.of(Part(id = "p", format = Amrap(durationSec = 600))))
-        assertEquals(WorkoutSection.OTHER, WorkoutSection.of(Part(id = "p", kind = PartKind.WARMUP, format = Amrap(durationSec = 300))))
-        assertEquals(WorkoutSection.WEIGHTS, WorkoutSection.of(Part(id = "p", kind = PartKind.ACCESSORY, format = Amrap(durationSec = 300))))
+        assertEquals(WorkoutSection.WARMUP, WorkoutSection.of(Part(id = "p", kind = PartKind.WARMUP, format = Amrap(durationSec = 300))))
+        assertEquals(WorkoutSection.WEIGHTS, WorkoutSection.of(Part(id = "p", kind = PartKind.ACCESSORY, format = StrengthSets())))
+        assertEquals(WorkoutSection.OTHER, WorkoutSection.of(Part(id = "p", kind = PartKind.ACCESSORY, format = Amrap(durationSec = 300))))
+        assertEquals(WorkoutSection.OTHER, WorkoutSection.of(Part(id = "p", kind = PartKind.COOLDOWN, format = Amrap(durationSec = 300))))
+    }
+
+    @Test
+    fun runOrderIsWarmupWeightsMetconTrailingWithCooldownLast() {
+        fun part(id: String, kind: PartKind) = Part(id = id, kind = kind, format = Amrap(durationSec = 300))
+        val shuffled = listOf(
+            part("cooldown", PartKind.COOLDOWN),
+            part("metcon", PartKind.METCON),
+            Part(id = "strength", kind = PartKind.STRENGTH, format = StrengthSets()),
+            part("warmup", PartKind.WARMUP),
+            part("other", PartKind.OTHER),
+            part("skill", PartKind.SKILL),
+            part("accessory", PartKind.ACCESSORY),
+        )
+        assertEquals(
+            listOf("warmup", "skill", "strength", "metcon", "other", "accessory", "cooldown"),
+            WorkoutSection.runOrdered(shuffled).map { it.id },
+        )
     }
 
     @Test

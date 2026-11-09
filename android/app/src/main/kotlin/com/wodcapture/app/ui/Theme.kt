@@ -17,8 +17,9 @@ import androidx.compose.ui.unit.dp
 import com.wodcapture.domain.model.WorkoutSection
 
 /*
- * WOD Capture look: warm orange for the metcon (and the brand), steel blue for weights, neutral
- * grey surfaces. The two section colours are the same everywhere (library badges, builder and
+ * WOD Capture look: warm orange for the metcon (and the brand), steel blue for weights,
+ * a calm accent for warm-up, neutral surfaces for the trailing section.
+ * grey surfaces. The section colours are the same everywhere (library badges, builder and
  * review headers) so the athlete reads "blue = lifting, orange = conditioning" at a glance.
  */
 
@@ -91,8 +92,9 @@ data class SectionColors(val accent: Color, val onAccent: Color, val container: 
 fun sectionColors(section: WorkoutSection): SectionColors {
     val c: ColorScheme = MaterialTheme.colorScheme
     return when (section) {
+        WorkoutSection.WARMUP -> SectionColors(c.tertiary, c.onTertiary, c.tertiaryContainer, c.onTertiaryContainer)
         WorkoutSection.WEIGHTS -> SectionColors(c.secondary, c.onSecondary, c.secondaryContainer, c.onSecondaryContainer)
         WorkoutSection.METCON -> SectionColors(c.primary, c.onPrimary, c.primaryContainer, c.onPrimaryContainer)
-        WorkoutSection.OTHER -> SectionColors(c.tertiary, c.onTertiary, c.tertiaryContainer, c.onTertiaryContainer)
+        WorkoutSection.OTHER -> SectionColors(c.surfaceVariant, c.onSurfaceVariant, c.surfaceContainer, c.onSurface)
     }
 }

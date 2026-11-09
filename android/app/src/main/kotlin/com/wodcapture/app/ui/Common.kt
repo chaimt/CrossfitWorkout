@@ -182,8 +182,8 @@ fun Panel(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, content:
 }
 
 /**
- * A workout part card: a coloured strip on the left marks its section (blue weights, orange
- * metcon), so a long day stays readable while scrolling.
+ * A workout part card: a coloured strip on the left marks its section (warm-up, blue weights,
+ * orange metcon, trailing), so a long day stays readable while scrolling.
  */
 @Composable
 fun SectionCard(section: WorkoutSection, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
@@ -203,7 +203,7 @@ fun SectionCard(section: WorkoutSection, modifier: Modifier = Modifier, content:
     }
 }
 
-/** Big section heading ("Weights" / "Metcon") with a short explanation. */
+/** Big section heading ("Warm-up" / "Weights" / "Metcon" / "Cool-down & other") with a short explanation. */
 @Composable
 fun SectionHeader(section: WorkoutSection, subtitle: String? = null, trailing: @Composable RowScope.() -> Unit = {}) {
     val colors = sectionColors(section)

@@ -16,19 +16,13 @@ class HomeMenu extends WatchUi.Menu2 {
         Menu2.initialize({:title => "WOD Coach"});
         var app = CoachApp.instance();
         if (app.recovered != null) {
-            addItem(new WatchUi.IconMenuItem("Recovered", "Interrupted - saved", :recovered,
-            WatchUi.loadResource(Rez.Drawables.MenuRecovered), null));
+            addItem(new WatchUi.MenuItem("Recovered", "Interrupted - saved", :recovered, null));
         }
-        addItem(new WatchUi.IconMenuItem("Today", _today(), :today,
-            WatchUi.loadResource(Rez.Drawables.MenuToday), null));
-        addItem(new WatchUi.IconMenuItem("Workouts", _inbox(), :workouts,
-            WatchUi.loadResource(Rez.Drawables.MenuWorkouts), null));
-        addItem(new WatchUi.IconMenuItem("History", _history(), :history,
-            WatchUi.loadResource(Rez.Drawables.MenuHistory), null));
-        addItem(new WatchUi.IconMenuItem("Settings", null, :settings,
-            WatchUi.loadResource(Rez.Drawables.MenuSettings), null));
-        addItem(new WatchUi.IconMenuItem("Sync now", _sync(), :sync,
-            WatchUi.loadResource(Rez.Drawables.MenuSync), null));
+        addItem(new WatchUi.MenuItem("Today", _today(), :today, null));
+        addItem(new WatchUi.MenuItem("Workouts", _inbox(), :workouts, null));
+        addItem(new WatchUi.MenuItem("History", _history(), :history, null));
+        addItem(new WatchUi.MenuItem("Settings", null, :settings, null));
+        addItem(new WatchUi.MenuItem("Sync now", _sync(), :sync, null));
     }
 
     function refresh() as Void {

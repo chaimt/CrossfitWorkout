@@ -212,7 +212,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
             if (movementId == null) issues += blocking("lift_not_in_list", "Choose the lift from the list", form.id, rowId, "movementId")
         }
 
-        private val weights: Boolean get() = form.format.section == WorkoutSection.WEIGHTS
+        private val weights: Boolean get() = form.format == ManualFormat.STRENGTH
 
         private fun item(m: ManualMovementForm): Item {
             val name = m.name.trim()

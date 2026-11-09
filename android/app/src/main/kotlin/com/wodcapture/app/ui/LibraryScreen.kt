@@ -89,7 +89,7 @@ fun LibraryScreen(vm: AppViewModel, open: (String) -> Unit, capture: () -> Unit,
                 )
             }
             if (shown.isEmpty()) item {
-                if (library.isEmpty()) EmptyState("No workouts yet", "Scan today's whiteboard, or build the weights and the metcon by hand.")
+                if (library.isEmpty()) EmptyState("No workouts yet", "Scan today's whiteboard, or build the warm-up, weights and metcon by hand.")
                 else EmptyState("Nothing matches “$query”", "Try a movement name such as “thruster”.")
             }
             items(shown, key = { it.id }) { w ->
@@ -132,7 +132,7 @@ private fun StartActions(capture: () -> Unit, newWorkout: () -> Unit) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         StartTile("Capture", "Scan the whiteboard, a photo or text", c.primary, c.onPrimary, Modifier.weight(1f), capture)
         // REQ-AC09: guided form, no photo, text or network needed.
-        StartTile("New workout", "Build the weights and the metcon", c.secondaryContainer, c.onSecondaryContainer, Modifier.weight(1f), newWorkout, plus = true)
+        StartTile("New workout", "Build the warm-up, weights and metcon", c.secondaryContainer, c.onSecondaryContainer, Modifier.weight(1f), newWorkout, plus = true)
     }
 }
 

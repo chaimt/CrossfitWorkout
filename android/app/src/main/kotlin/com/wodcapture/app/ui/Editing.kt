@@ -28,14 +28,15 @@ object Editing {
     fun updatePart(w: Workout, partId: String, f: (Part) -> Part) = w.copy(parts = w.parts.map { if (it.id == partId) f(it) else it })
 
     /**
-     * Adds [part] at the end of its section: a weights part goes after the last weights part (or
-     * first, ahead of the metcon), anything else at the end. When the existing labels are the
-     * plain sequence (A, B, C… or one blank), they are re-lettered so the order still reads
-     * A, B, C; hand-typed labels such as "WOD" are left alone and the new part gets its position letter.
+     * Adds [part] at the end of its run rank (warm-up/skill first, weights, metcon, trailing
+     * work last, cool-down final), keeping the existing relative order around it. When the
+     * existing labels are the plain sequence (A, B, C… or one blank), they are re-lettered so
+     * the order still reads A, B, C; hand-typed labels such as "WOD" are left alone and the new
+     * part gets its position letter.
      */
     fun insertPart(w: Workout, part: Part): Workout {
-        val section = WorkoutSection.of(part)
-        val at = if (section == WorkoutSection.WEIGHTS) w.parts.indexOfLast { WorkoutSection.of(it) == WorkoutSection.WEIGHTS } + 1 else w.parts.size
+        val rank = WorkoutSection.runRank(part)
+        val at = w.parts.indexOfLast { WorkoutSection.runRank(it) <= rank } + 1
         val sequential = w.parts.isEmpty() || w.parts.map { it.label }.let { ls -> ls == listOf("") || ls == ls.indices.map { letter(it) } }
         val parts = w.parts.toMutableList().apply { add(at, part.copy(label = letter(at))) }
         return w.copy(parts = if (sequential) parts.mapIndexed { i, p -> p.copy(label = letter(i)) } else parts)

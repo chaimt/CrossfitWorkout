@@ -90,7 +90,7 @@ import java.io.File
 /**
  * Review and edit (REQ-AE01–AE06): photos next to the parsed parts, low-confidence highlights,
  * warnings first, a structured editor, level choice, the exact watch preview, Send / Save.
- * Parts stay in watch order but are grouped under Weights / Metcon headers.
+ * Parts stay in class run order (warm-up → weights → metcon → trailing) under section headers.
  */
 @Composable
 fun ReviewScreen(vm: AppViewModel, id: String, back: () -> Unit, logResult: (String) -> Unit) {
@@ -149,8 +149,12 @@ private fun ReviewContent(vm: AppViewModel, e: WorkoutEntity, back: () -> Unit, 
             }
             item {
                 Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AddSectionButton(WorkoutSection.WARMUP, Modifier.weight(1f)) { draft = Editing.insertPart(draft, newWarmupPart(vm)) }
                     AddSectionButton(WorkoutSection.WEIGHTS, Modifier.weight(1f)) { draft = Editing.insertPart(draft, newWeightsPart(vm)) }
+                }
+                Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     AddSectionButton(WorkoutSection.METCON, Modifier.weight(1f)) { draft = Editing.insertPart(draft, newMetconPart(vm)) }
+                    AddSectionButton(WorkoutSection.OTHER, Modifier.weight(1f)) { draft = Editing.insertPart(draft, newCooldownPart(vm)) }
                 }
             }
             item { Preview(review.compile, draft.parts.associate { it.label.ifBlank { "W" } to WorkoutSection.of(it) }) }
@@ -179,11 +183,23 @@ private fun newWeightsPart(vm: AppViewModel): Part {
     return Part(id = vm.newId(), kind = PartKind.STRENGTH, format = StrengthSets(), scoring = Scoring(ScoreType.LOAD), body = listOf(lift))
 }
 
+private fun newWarmupPart(vm: AppViewModel) = Part(
+    id = vm.newId(), kind = PartKind.WARMUP, format = Amrap(durationSec = 600),
+    scoring = Scoring(ScoreType.COMPLETION),
+    body = listOf(Item(vm.newId(), name = "New warm-up movement", measure = Measure(MeasureKind.REPS, 10.0))),
+)
+
+private fun newCooldownPart(vm: AppViewModel) = Part(
+    id = vm.newId(), kind = PartKind.COOLDOWN, format = Amrap(durationSec = 300),
+    scoring = Scoring(ScoreType.COMPLETION),
+    body = listOf(Item(vm.newId(), name = "New cool-down movement", measure = Measure(MeasureKind.REPS, 10.0))),
+)
+
 @Composable
 private fun AddSectionButton(section: WorkoutSection, modifier: Modifier, onClick: () -> Unit) {
     OutlinedButton(onClick = onClick, modifier = modifier, colors = ButtonDefaults.outlinedButtonColors(contentColor = sectionColors(section).accent)) {
         Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 6.dp))
-        Text(if (section == WorkoutSection.WEIGHTS) "Add weights" else "Add metcon")
+        Text("Add ${section.label.lowercase()}")
     }
 }
 
@@ -205,7 +221,7 @@ private fun ParseStatus(vm: AppViewModel, e: WorkoutEntity, job: com.wodcapture.
             }
             // Manual Retry creates a new job (REQ-AX18).
             JobState.FAILED.name -> Banner("Parse failed: ${job.error}", error = true, action = { TextButton(onClick = { vm.parse(e.id) }) { Text("Retry") } })
-            else -> if (empty) Banner("Nothing parsed yet. Parse it, or add the weights and metcon below.", action = {
+            else -> if (empty) Banner("Nothing parsed yet. Parse it, or add the warm-up, weights and metcon below.", action = {
                 Button(onClick = { vm.parse(e.id) }) { Text("Parse") }
             })
         }
@@ -450,7 +466,12 @@ private fun Preview(r: CompileResult, sections: Map<String, WorkoutSection>) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     r.plan.p.forEach { p ->
                         Column {
-                            val heading = if (sections[p.l] == WorkoutSection.WEIGHTS) Color(0xFFA9BEFF) else Color(0xFFFF9666)
+                            val heading = when (sections[p.l]) {
+                                WorkoutSection.WARMUP -> Color(0xFF9ED8C8)
+                                WorkoutSection.WEIGHTS -> Color(0xFFA9BEFF)
+                                WorkoutSection.METCON -> Color(0xFFFF9666)
+                                else -> Color(0xFFC9C9D1)
+                            }
                             Text("${p.l} · ${p.n}${if (p.fb) " (manual timer)" else ""}", style = MaterialTheme.typography.titleSmall, color = heading)
                             p.ln.forEach { Text(it, fontFamily = FontFamily.Monospace) }
                             p.sets?.forEach { s ->
