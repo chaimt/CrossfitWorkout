@@ -2,13 +2,18 @@ package com.wodcapture.domain.manual
 
 import com.wodcapture.domain.IdSource
 import com.wodcapture.domain.TestSupport
+import com.wodcapture.domain.catalog.Movement
 import com.wodcapture.domain.model.AbsoluteLoad
 import com.wodcapture.domain.model.Amrap
+import com.wodcapture.domain.model.BodyTree
+import com.wodcapture.domain.model.Group
 import com.wodcapture.domain.model.Item
 import com.wodcapture.domain.model.Mass
 import com.wodcapture.domain.model.MassUnit
+import com.wodcapture.domain.model.NotForTime
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.PartKind
+import com.wodcapture.domain.model.ScoreType
 import com.wodcapture.domain.model.StrengthSets
 import com.wodcapture.domain.model.WorkoutSection
 import com.wodcapture.domain.plan.WatchLimits
@@ -27,21 +32,21 @@ class ManualSectionsTest {
     @Test
     fun everyFormatBelongsToOneSection() {
         assertEquals(listOf(ManualFormat.STRENGTH), ManualFormat.of(WorkoutSection.WEIGHTS))
-        // Strength sets lift; every other format can open in warm-up, run the metcon, or close
-        // in the trailing section — so those three sections offer the same timed formats.
-        val timed = ManualFormat.entries.filter { it != ManualFormat.STRENGTH }
-        assertEquals(timed, ManualFormat.of(WorkoutSection.WARMUP))
+        // Warm-up is a for-quality list, not metcon timers; metcon and the trailing
+        // section share the timed formats.
+        assertEquals(listOf(ManualFormat.FOR_QUALITY), ManualFormat.of(WorkoutSection.WARMUP))
+        val timed = ManualFormat.entries.filter { it != ManualFormat.STRENGTH && it != ManualFormat.FOR_QUALITY }
         assertEquals(timed, ManualFormat.of(WorkoutSection.METCON))
         assertEquals(timed, ManualFormat.of(WorkoutSection.OTHER))
         assertEquals(
-            setOf(WorkoutSection.WEIGHTS, WorkoutSection.METCON),
+            setOf(WorkoutSection.WARMUP, WorkoutSection.WEIGHTS, WorkoutSection.METCON),
             ManualTemplates.all.map { it.section }.toSet(),
         )
     }
 
     @Test
     fun weightsAreAddedAheadOfTheMetcon() {
-        val form = ManualForms.addPart(blank(), ManualFormat.STRENGTH, ids)
+        val form = ManualForms.addPart(blank(), WorkoutSection.WEIGHTS, ManualFormat.STRENGTH, ids)
         assertEquals(listOf(ManualFormat.STRENGTH, ManualFormat.FOR_TIME), form.parts.map { it.format })
         assertEquals(listOf("A", "B"), form.parts.map { ManualForms.effectiveLabel(form, it) })
         val built = builder.build(form).workout
@@ -71,13 +76,44 @@ class ManualSectionsTest {
 
     @Test
     fun aFormatChangeAcrossSectionsMovesThePartAndItsKind() {
-        val form = ManualForms.addPart(blank(), ManualFormat.AMRAP, ids)
+        val form = ManualForms.addPart(blank(), WorkoutSection.METCON, ManualFormat.AMRAP, ids)
         val amrap = form.parts.last()
         val moved = ManualForms.updatePart(form, amrap.id) { ManualForms.withFormat(it, ManualFormat.STRENGTH, ids) }
         assertEquals(amrap.id, moved.parts.first().id)
         assertEquals(PartKind.STRENGTH, moved.parts.first().kind)
         val warmup = ManualForms.withFormat(amrap.copy(kind = PartKind.WARMUP), ManualFormat.TABATA, ids)
         assertEquals(PartKind.WARMUP, warmup.kind)
+    }
+
+    @Test
+    fun forQualityIsTheOnlyWarmupFormat() {
+        // Add warm-up produces a for-quality list under Warm-up, never a metcon timer.
+        val added = ManualForms.addPart(blank(), WorkoutSection.WARMUP, ManualFormat.FOR_QUALITY, ids)
+        val warmup = ManualForms.partsIn(added, WorkoutSection.WARMUP).single()
+        assertEquals(ManualFormat.FOR_QUALITY, warmup.format)
+        assertEquals(PartKind.WARMUP, warmup.kind)
+        // Switching a metcon to for-quality moves it into warm-up with kind Warm-up.
+        val moved = ManualForms.withFormat(
+            ManualForms.addPart(blank(), WorkoutSection.METCON, ManualFormat.AMRAP, ids).parts.last(),
+            ManualFormat.FOR_QUALITY, ids,
+        )
+        assertEquals(PartKind.WARMUP, moved.kind)
+        assertEquals(WorkoutSection.WARMUP, ManualForms.sectionOf(moved))
+    }
+
+    @Test
+    fun forQualityBuildsNotForTimeWithAcceptedFallback() {
+        val built = builder.build(blank().copy(parts = listOf(ManualTemplates.cardioWarmup(ids))))
+        assertTrue(built.canCreate, built.report.blocking.toString())
+        val part = built.workout.parts.single()
+        assertTrue(part.format is NotForTime, part.format.toString())
+        assertEquals(PartKind.WARMUP, part.kind)
+        assertEquals(ScoreType.NONE, part.scoring.type)
+        assertEquals(true, part.fallback?.accepted)
+        assertEquals(2, part.body.filterIsInstance<Group>().single().repeat)
+        // Every movement resolves in the catalog.
+        val missing = BodyTree.items(part.body).filter { it.movementId != null && TestSupport.catalog.byId(it.movementId) == null }
+        assertTrue(missing.isEmpty(), missing.map { it.movementId }.toString())
     }
 
     @Test
@@ -117,6 +153,39 @@ class ManualSectionsTest {
             listOf("warmup", "skill", "strength", "metcon", "other", "accessory", "cooldown"),
             WorkoutSection.runOrdered(shuffled).map { it.id },
         )
+    }
+
+    @Test
+    fun warmupTypesComeFromAFixedListWithACustomOption() {
+        val warmups = ManualForms.warmupMovements(TestSupport.catalog)
+        assertEquals(
+            listOf(
+                "jumping_jack", "high_knees", "butt_kicks", "jog", "single_under", "double_under",
+                "row", "air_bike", "skierg", "mountain_climber", "lateral_shuffle", "bear_crawl",
+                "inchworm_push_up", "burpee", "skipping",
+            ),
+            warmups.map { it.id },
+        )
+        // Display names match the owner's list.
+        assertEquals(
+            listOf(
+                "Jumping Jacks", "High Knees", "Butt Kicks", "Jogging", "Jump Rope (Single Unders)", "Double Unders",
+                "Rowing", "Assault Bike / Echo Bike", "SkiErg", "Mountain Climbers", "Lateral Shuffles", "Bear Crawls",
+                "Inchworms", "Light Burpees", "Skipping",
+            ),
+            warmups.map { ManualForms.warmupLabel(it.id, it.name) },
+        )
+        // A list pick pins the catalog ID and the owner's label.
+        val picked = ManualForms.pickWarmup(
+            ManualMovementForm(id = "m", name = "", measure = com.wodcapture.domain.model.MeasureKind.DURATION),
+            warmups.first { it.id == "air_bike" },
+        )
+        assertEquals("air_bike", picked.movementId)
+        assertEquals("Assault Bike / Echo Bike", picked.name)
+        // Every quick-start warm-up movement is in the list; search still filters it.
+        val cardio = ManualTemplates.cardioWarmup(ids).movements
+        assertTrue(cardio.map { it.movementId }.all { it in warmups.map { m -> m.id } }, cardio.map { it.movementId }.toString())
+        assertEquals(listOf("jog"), ManualForms.warmupMovements(TestSupport.catalog, "jog").map { it.id })
     }
 
     @Test
@@ -213,12 +282,12 @@ class ManualSectionsTest {
     @Test
     fun templateLoadsAreGivenInTheSettingsUnit() {
         val thrusterKg = ManualTemplates.apply(blank(), template("For time 21-15-9"), ids).parts.single().movements.first()
-        assertEquals(43.0 to 29.0, thrusterKg.load to thrusterKg.loadFemale)
+        assertEquals(43.0, thrusterKg.load)
         val swingKg = ManualTemplates.apply(blank(), template("EMOM 10"), ids).parts.single().movements.first()
-        assertEquals(24.0 to 16.0, swingKg.load to swingKg.loadFemale)
+        assertEquals(24.0, swingKg.load)
         val lbForm = ManualForms.blank(ids, "2026-11-05", "Asia/Jerusalem", MassUnit.LB)
         val thrusterLb = ManualTemplates.apply(lbForm, template("For time 21-15-9"), ids).parts.single().movements.first()
-        assertEquals(95.0 to 65.0, thrusterLb.load to thrusterLb.loadFemale)
+        assertEquals(95.0, thrusterLb.load)
     }
 
     @Test

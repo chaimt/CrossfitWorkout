@@ -45,6 +45,7 @@ data class ManualWorkoutForm(
  */
 enum class ManualFormat(val label: String, val section: WorkoutSection) {
     STRENGTH("Strength sets", WorkoutSection.WEIGHTS),
+    FOR_QUALITY("For quality", WorkoutSection.METCON),
     FOR_TIME("For time", WorkoutSection.METCON),
     AMRAP("AMRAP", WorkoutSection.METCON),
     EMOM("EMOM / E#MOM", WorkoutSection.METCON),
@@ -56,13 +57,14 @@ enum class ManualFormat(val label: String, val section: WorkoutSection) {
 
     companion object {
         /**
-         * The formats offered when adding a part to [section]: one lift for weights, every
-         * timed format for warm-up, metcon and the trailing section.
+         * The formats offered when adding a part to [section]: one lift for weights, one
+         * for-quality list for warm-up, every timed format for metcon and the trailing section.
          */
         fun of(section: WorkoutSection): List<ManualFormat> = when (section) {
             WorkoutSection.WEIGHTS -> listOf(STRENGTH)
-            WorkoutSection.WARMUP, WorkoutSection.METCON, WorkoutSection.OTHER ->
-                entries.filter { it != STRENGTH }
+            WorkoutSection.WARMUP -> listOf(FOR_QUALITY)
+            WorkoutSection.METCON, WorkoutSection.OTHER ->
+                entries.filter { it != STRENGTH && it != FOR_QUALITY }
         }
     }
 }
@@ -75,11 +77,12 @@ val MANUAL_SECTIONS: List<WorkoutSection> =
     listOf(WorkoutSection.WARMUP, WorkoutSection.WEIGHTS, WorkoutSection.METCON, WorkoutSection.OTHER)
 
 /**
- * Part kinds offered in each form section. A weights part is always strength (owner request
- * 2026-11-05: no accessory choice); warm-up/skill open the class and cooldown/other close it.
+ * Part kinds offered in each form section. A weights part is always strength and a warm-up part
+ * is always a for-quality warm-up (owner request 2026-11-05, 2026-11-09: no accessory or skill
+ * choice); parsed skill parts still group under Warm-up via [WorkoutSection.of].
  */
 fun kindsFor(section: WorkoutSection): List<PartKind> = when (section) {
-    WorkoutSection.WARMUP -> listOf(PartKind.WARMUP, PartKind.SKILL)
+    WorkoutSection.WARMUP -> listOf(PartKind.WARMUP)
     WorkoutSection.WEIGHTS -> listOf(PartKind.STRENGTH)
     WorkoutSection.METCON -> listOf(PartKind.METCON)
     WorkoutSection.OTHER -> listOf(PartKind.ACCESSORY, PartKind.COOLDOWN, PartKind.OTHER)
@@ -164,16 +167,8 @@ data class ManualMovementForm(
     val distanceUnit: DistanceUnit = DistanceUnit.M,
     /** Duration measure as m:ss. */
     val durationText: String = "",
-    /**
-     * Load (per implement), in the form's [ManualWorkoutForm.loadUnit]. With [maleFemale] it is the
-     * male value of an explicit M/F pair.
-     */
+    /** Load (per implement), in the form's [ManualWorkoutForm.loadUnit]. */
     val load: Double? = null,
-    /** Explicit M/F prescription: the female fields below are used and the pair is labelled. */
-    val maleFemale: Boolean = false,
-    val amountFemale: Double? = null,
-    val loadFemale: Double? = null,
-    val heightFemale: Double? = null,
     /** Implements held at once (2 = double DB/KB). */
     val implementCount: Int = 1,
     /** Box height or wall-ball target. */
@@ -240,9 +235,17 @@ object ManualForms {
     /** Warm-up first, then weights, then metcon, trailing work last — order inside each section kept. */
     fun ordered(parts: List<ManualPartForm>): List<ManualPartForm> = MANUAL_SECTIONS.flatMap { s -> parts.filter { sectionOf(it) == s } }
 
-    /** Adds a [format] part at the end of its section. */
-    fun addPart(form: ManualWorkoutForm, format: ManualFormat, ids: IdSource): ManualWorkoutForm =
-        form.copy(parts = ordered(form.parts + newPart(ids, form.parts.size, format)))
+    /** Adds a [format] part at the end of [section]. */
+    fun addPart(form: ManualWorkoutForm, section: WorkoutSection, format: ManualFormat, ids: IdSource): ManualWorkoutForm {
+        val seedKind = when (section) {
+            WorkoutSection.WARMUP -> PartKind.WARMUP
+            WorkoutSection.WEIGHTS -> PartKind.STRENGTH
+            WorkoutSection.METCON -> PartKind.METCON
+            WorkoutSection.OTHER -> PartKind.COOLDOWN
+        }
+        val seeded = withFormat(ManualPartForm(id = ids.newId(), kind = seedKind), format, ids)
+        return form.copy(parts = ordered(form.parts + seeded))
+    }
 
     fun removePart(form: ManualWorkoutForm, partId: String): ManualWorkoutForm = form.copy(parts = form.parts.filter { it.id != partId })
 
@@ -326,12 +329,14 @@ object ManualForms {
     fun withFormat(part: ManualPartForm, format: ManualFormat, ids: IdSource): ManualPartForm {
         val targetSection = when {
             format == ManualFormat.STRENGTH -> WorkoutSection.WEIGHTS
+            format == ManualFormat.FOR_QUALITY -> WorkoutSection.WARMUP
             part.kind == PartKind.WARMUP || part.kind == PartKind.SKILL -> WorkoutSection.WARMUP
             part.kind == PartKind.METCON -> WorkoutSection.METCON
             else -> WorkoutSection.OTHER
         }
         val kind = when {
             format == ManualFormat.STRENGTH -> PartKind.STRENGTH
+            format == ManualFormat.FOR_QUALITY -> PartKind.WARMUP
             part.kind in kindsFor(targetSection) -> part.kind
             targetSection == WorkoutSection.WARMUP -> PartKind.WARMUP
             targetSection == WorkoutSection.METCON -> PartKind.METCON
@@ -373,6 +378,20 @@ object ManualForms {
             }
         })
     }
+
+    /**
+     * Applies a warm-up list pick to a movement row: the row keeps its measure and amount
+     * and takes the owner's label plus the catalog ID, implement and default units
+     * (none of the 15 needs a load).
+     */
+    fun pickWarmup(row: ManualMovementForm, m: Movement): ManualMovementForm = row.copy(
+        name = warmupLabel(m.id, m.name),
+        movementId = m.id,
+        implement = implementOf(m),
+        distanceUnit = distanceUnit(m) ?: row.distanceUnit,
+        heightIsTarget = m.target != null,
+        heightUnit = (m.target ?: m.height)?.m?.u?.let(::lengthUnit) ?: row.heightUnit,
+    )
 
     /** Applies a catalog pick to a movement row: name, ID, implement and the catalog's default measure. */
     fun pick(row: ManualMovementForm, m: Movement, schemePart: Boolean): ManualMovementForm {
@@ -431,6 +450,66 @@ object ManualForms {
 
     /** Whether a movement can carry a load (catalog `loadable` Y/optional, or free text). */
     fun loadable(catalog: MovementCatalog, movementId: String?): Boolean = catalog.byId(movementId)?.loadable != "N"
+
+    /**
+     * Warm-up types offered in the Warm-up section (owner request 2026-11-09): the 15 general
+     * cardio drills of the "Cardio warm-up" quick start, in that order, labelled exactly as
+     * the owner listed them. Free text stays allowed, so a custom warm-up is kept as
+     * `movementId = null`.
+     */
+    val WARMUP_MOVEMENT_IDS = listOf(
+        "jumping_jack",
+        "high_knees",
+        "butt_kicks",
+        "jog",
+        "single_under",
+        "double_under",
+        "row",
+        "air_bike",
+        "skierg",
+        "mountain_climber",
+        "lateral_shuffle",
+        "bear_crawl",
+        "inchworm_push_up",
+        "burpee",
+        "skipping",
+    )
+
+    /** Display labels for [WARMUP_MOVEMENT_IDS], exactly the owner's list. */
+    val WARMUP_LABELS = mapOf(
+        "jumping_jack" to "Jumping Jacks",
+        "high_knees" to "High Knees",
+        "butt_kicks" to "Butt Kicks",
+        "jog" to "Jogging",
+        "single_under" to "Jump Rope (Single Unders)",
+        "double_under" to "Double Unders",
+        "row" to "Rowing",
+        "air_bike" to "Assault Bike / Echo Bike",
+        "skierg" to "SkiErg",
+        "mountain_climber" to "Mountain Climbers",
+        "lateral_shuffle" to "Lateral Shuffles",
+        "bear_crawl" to "Bear Crawls",
+        "inchworm_push_up" to "Inchworms",
+        "burpee" to "Light Burpees",
+        "skipping" to "Skipping",
+    )
+
+    /** Owner's label for a warm-up catalog ID, falling back to the row's stored name. */
+    fun warmupLabel(movementId: String?, fallback: String): String =
+        movementId?.let { WARMUP_LABELS[it] } ?: fallback
+
+    /**
+     * The warm-up picker list: [WARMUP_MOVEMENT_IDS] resolved against [catalog] in order,
+     * skipping any ID the catalog does not (yet) know. [query] filters by name or
+     * unambiguous alias.
+     */
+    fun warmupMovements(catalog: MovementCatalog, query: String = ""): List<Movement> {
+        val q = query.trim()
+        return WARMUP_MOVEMENT_IDS.mapNotNull { catalog.byId(it) }.filter { m ->
+            q.isEmpty() || m.name.contains(q, ignoreCase = true) ||
+                m.aliases.any { it !in m.ambiguousAliases && it.startsWith(q, ignoreCase = true) }
+        }
+    }
 
     /** Bodyweight-only movements need no implement; others keep the catalog implement for load rules. */
     private fun implementOf(m: Movement): String? = m.implement.takeIf { it !in setOf("none", "bodyweight") }

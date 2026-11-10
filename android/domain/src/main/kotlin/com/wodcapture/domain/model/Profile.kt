@@ -3,15 +3,6 @@ package com.wodcapture.domain.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** Which side of an M/F split the athlete takes (REQ-DM10). */
-@Serializable
-enum class SexSelection {
-    @SerialName("male") MALE,
-    @SerialName("female") FEMALE,
-    /** Every split must be chosen in review; blocks resolved preview until chosen (§4.4). */
-    @SerialName("always_ask") ALWAYS_ASK,
-}
-
 /** How prescriptions are converted between kg and lb (REQ-DM19). */
 @Serializable
 enum class ConversionMode {
@@ -49,7 +40,6 @@ data class AthleteProfile(
     val boardUnit: MassUnit = MassUnit.KG,
     /** Per-implement gear unit (`barbell` → kg, `kettlebell` → lb, …). */
     val gearUnits: Map<String, MassUnit> = emptyMap(),
-    val sex: SexSelection = SexSelection.MALE,
     val bodyweight: Mass? = null,
     val bars: List<Bar> = listOf(
         Bar("men", "Men's bar", Mass(20.0, MassUnit.KG)),

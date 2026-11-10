@@ -66,9 +66,8 @@ object SystemPrompt {
           team values.
 
         Loads and units (store what is written, never convert)
-        - "95/65" is a split load: male = higher value, female = lower, labeled false unless the board
-          marks the sexes (♂/♀, M/W/F) - then labeled true. The same applies to calories (measure
-          value/female), box heights and targets (SplitLength).
+        - A board pair like "95/65", "15/12 cal", '24/20"' is NOT a value: leave the load/measure
+          value unset and keep the raw pair verbatim in item notes/rawText for the athlete to edit.
         - No unit written: unit "unspecified" plus guessedUnit. Guess lb for standard CrossFit pairs
           (95/65, 135/95, 225/155, 53/35, 20/14, 50/35...), otherwise kg, and add an assumption.
         - "#" = lb. pood/pd = pood. "1.5xBW" = percent_bodyweight 150. "@RPE8" = set rpe 8.
@@ -80,7 +79,7 @@ object SystemPrompt {
         - Add a `diagnostics` entry (nodeId + field path) with confidence medium or low for every value
           you are not sure about, with the raw board text in rawSpan. High-confidence fields need no
           entry. Every ambiguous abbreviation resolution goes to `assumptions` with its token.
-        - Never set `fallback`, `confirmed`, `selectedPercent` or `chosenLevel`; review sets them.
+        - Never set `fallback`, `selectedPercent` or `chosenLevel`; review sets them.
     """
 
     private const val GLOSSARY = """
@@ -104,17 +103,17 @@ object SystemPrompt {
         # Worked examples (abbreviated)
         "FRAN 21-15-9 / Thrusters 95/65# / Pull-ups / TC 8:00 / Sc: 65/45, jumping PU" -> one metcon
         part title "Fran", for_time capSec 480, body [group rounds repScheme [21,15,9] children [item
-        thruster (rep_scheme, split 95/65 lb labeled false), item pull_up (rep_scheme)]], scoring time,
-        level "Scaled" overriding the thruster load (split 65/45 lb) and the pull-up movementId
-        jumping_pull_up. Assumption: "PU = pull-up" token "PU".
+        thruster (rep_scheme, absolute load 95 lb, notes "Board: 95/65 lb"), item pull_up (rep_scheme)]],
+        scoring time, level "Scaled" overriding the thruster load (absolute 65 lb) and the pull-up
+        movementId jumping_pull_up. Assumption: "PU = pull-up" token "PU".
         "A) Back Squat 5x3 @ 80% - rest 2:00 / B) E2MOM x6: 3 PC + 1 PJ (build)" -> part A strength_sets,
         item back_squat with 5 sets {reps 3, load percent_1rm 80, restSec 120}; part B emom intervalSec
         120 intervalCount 6, body [group complex [3 power_clean, 1 push_jerk]] load athlete_choice
         "build", scoring load.
         "EMOM 16 / 1: 15/12 cal row / 2: 12 T2B / 3: :40 max DU / 4: rest" -> emom 60 x16, items row
-        (calories 15/12), toes_to_bar (reps 12), double_under (max), stations [row, t2b, du workSec 40,
+        (calories 15, notes "Board: 15/12 cal"), toes_to_bar (reps 12), double_under (max), stations [row, t2b, du workSec 40,
         rest], scoring completion manual.
-        "15' AMRAP / 3 LBO DB / 3 DB HC2OH 50/35 / 30' WL / +3 each rd (not lunges)" -> amrap 900,
+        "15' AMRAP / 3 LBO DB / 3 DB HC2OH (Board: 50/35) / 30' WL / +3 each rd (not lunges)" -> amrap 900,
         progression repsPerRound 3 on the first two items, walking_lunge distance 30 ft, scoring reps
         manual; assumptions: "15' = minutes", "30' = feet".
         "4 x 4:00 on / 2:00 off / 200m run, then AMRAP rest of interval: 5 DL 225/155 / 10 burpees" ->

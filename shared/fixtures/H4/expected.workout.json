@@ -27,8 +27,7 @@
           "name": "Lateral burpee over DB",
           "measure": {
             "kind": "reps",
-            "value": 3.0,
-            "labeled": false
+            "value": 3.0
           },
           "count": 1,
           "modifiers": [],
@@ -45,21 +44,14 @@
           "name": "DB hang clean-to-overhead",
           "measure": {
             "kind": "reps",
-            "value": 3.0,
-            "labeled": false
+            "value": 3.0
           },
           "load": {
-            "kind": "split",
-            "male": {
+            "kind": "absolute",
+            "mass": {
               "value": 50.0,
               "unit": "lb"
-            },
-            "female": {
-              "value": 35.0,
-              "unit": "lb"
-            },
-            "labeled": false,
-            "confirmed": false
+            }
           },
           "implement": "dumbbell",
           "count": 1,
@@ -68,7 +60,8 @@
           "progression": {
             "repsPerRound": 3
           },
-          "sets": []
+          "sets": [],
+          "notes": "Board: 50/35 lb"
         },
         {
           "type": "item",
@@ -78,7 +71,6 @@
           "measure": {
             "kind": "distance",
             "value": 30.0,
-            "labeled": false,
             "unit": "ft"
           },
           "count": 1,

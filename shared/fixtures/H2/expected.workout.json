@@ -141,8 +141,7 @@
               "name": "Power clean",
               "measure": {
                 "kind": "reps",
-                "value": 3.0,
-                "labeled": false
+                "value": 3.0
               },
               "load": {
                 "kind": "athlete_choice",
@@ -161,8 +160,7 @@
               "name": "Push jerk",
               "measure": {
                 "kind": "reps",
-                "value": 1.0,
-                "labeled": false
+                "value": 1.0
               },
               "count": 1,
               "modifiers": [],

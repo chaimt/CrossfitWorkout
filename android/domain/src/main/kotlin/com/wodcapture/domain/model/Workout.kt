@@ -150,8 +150,8 @@ data class Item(
     val rawText: String? = null,
     val measure: Measure? = null,
     val load: LoadSpec? = null,
-    val height: SplitLength? = null,
-    val target: SplitLength? = null,
+    val height: Length? = null,
+    val target: Length? = null,
     val implement: String? = null,
     /** Implements used at once (2 = double DB/KB). Load is per implement (REQ-DM19). */
     val count: Int = 1,
@@ -216,15 +216,14 @@ enum class ItemRole {
 data class Progression(val repsPerRound: Int)
 
 /**
- * One measure of an item (REQ-DM05). [value]/[female] carry an optional M/F alternative
- * (`15/12 cal`); [labeled] is true when the board marked the sexes explicitly.
+ * One measure of an item (REQ-DM05): a single value, e.g. `15 cal`.
+ * A board pair like `15/12 cal` is unparsed text: the single value stays unset
+ * and the raw pair is preserved in the item/measure notes for the athlete to edit.
  */
 @Serializable
 data class Measure(
     val kind: MeasureKind,
     val value: Double? = null,
-    val female: Double? = null,
-    val labeled: Boolean = false,
     /** Distance unit for [MeasureKind.DISTANCE]. */
     val unit: DistanceUnit? = null,
 )
@@ -240,14 +239,6 @@ enum class MeasureKind {
     @SerialName("duration") DURATION,
 }
 
-/** Box height / target as an optional M/F pair of lengths. */
-@Serializable
-data class SplitLength(
-    val male: Length,
-    val female: Length? = null,
-    val labeled: Boolean = false,
-)
-
 // ---------------------------------------------------------------------------------------------
 // Loads (REQ-DM06, REQ-DM11, REQ-DM19)
 // ---------------------------------------------------------------------------------------------
@@ -260,19 +251,6 @@ sealed interface LoadSpec
 @Serializable
 @SerialName("absolute")
 data class AbsoluteLoad(val mass: Mass) : LoadSpec
-
-/**
- * An M/F pair. [labeled] = the board said which is which; otherwise "higher = male" is only a
- * suggestion that review must [confirmed] (§4.4).
- */
-@Serializable
-@SerialName("split")
-data class SplitLoad(
-    val male: Mass,
-    val female: Mass,
-    val labeled: Boolean = false,
-    val confirmed: Boolean = false,
-) : LoadSpec
 
 /** % of a rep max. A range ([percentMax]) needs a [selectedPercent] before resolution. */
 @Serializable

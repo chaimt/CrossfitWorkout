@@ -156,8 +156,8 @@
         "rawText": { "type": "string" },
         "measure": { "$ref": "#/$defs/Measure" },
         "load": { "$ref": "#/$defs/LoadSpec" },
-        "height": { "$ref": "#/$defs/SplitLength" },
-        "target": { "$ref": "#/$defs/SplitLength" },
+        "height": { "$ref": "#/$defs/Length" },
+        "target": { "$ref": "#/$defs/Length" },
         "implement": { "type": "string" },
         "count": { "type": "integer", "minimum": 1, "maximum": 4 },
         "side": { "enum": ["each", "alternating", "total"] },
@@ -207,9 +207,7 @@
       "required": ["kind"],
       "properties": {
         "kind": { "enum": ["reps", "rep_scheme", "max", "calories", "distance", "duration"] },
-        "value": { "type": "number", "description": "Male / single value; seconds for duration." },
-        "female": { "type": "number" },
-        "labeled": { "type": "boolean", "description": "Board marked M/F explicitly." },
+        "value": { "type": "number", "description": "Single value; seconds for duration. Board pairs like 15/12 are not values: keep them in notes/rawText." },
         "unit": { "enum": ["m", "km", "mi", "ft", "yd"] }
       }
     },
@@ -220,16 +218,6 @@
       "properties": {
         "value": { "type": "number" },
         "unit": { "enum": ["in", "cm", "ft", "m"] }
-      }
-    },
-    "SplitLength": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["male"],
-      "properties": {
-        "male": { "$ref": "#/$defs/Length" },
-        "female": { "$ref": "#/$defs/Length" },
-        "labeled": { "type": "boolean" }
       }
     },
     "Mass": {
@@ -245,7 +233,6 @@
     "LoadSpec": {
       "anyOf": [
         { "$ref": "#/$defs/AbsoluteLoad" },
-        { "$ref": "#/$defs/SplitLoad" },
         { "$ref": "#/$defs/PercentOfMax" },
         { "$ref": "#/$defs/PercentOfBodyweight" },
         { "$ref": "#/$defs/BodyweightLoad" },
@@ -258,17 +245,6 @@
     "AbsoluteLoad": {
       "type": "object", "additionalProperties": false, "required": ["kind", "mass"],
       "properties": { "kind": { "const": "absolute" }, "mass": { "$ref": "#/$defs/Mass" } }
-    },
-    "SplitLoad": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "male", "female"],
-      "description": "M/F pair. Unlabeled pairs: higher value as male, labeled=false (review confirms).",
-      "properties": {
-        "kind": { "const": "split" },
-        "male": { "$ref": "#/$defs/Mass" },
-        "female": { "$ref": "#/$defs/Mass" },
-        "labeled": { "type": "boolean" },
-        "confirmed": { "type": "boolean", "description": "Set by review only." }
-      }
     },
     "PercentOfMax": {
       "type": "object", "additionalProperties": false, "required": ["kind", "percent"],

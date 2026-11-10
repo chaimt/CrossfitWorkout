@@ -67,12 +67,12 @@ import com.wodcapture.domain.model.Item
 import com.wodcapture.domain.model.MaxEffort
 import com.wodcapture.domain.model.Measure
 import com.wodcapture.domain.model.MeasureKind
+import com.wodcapture.domain.model.NotForTime
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.PartKind
 import com.wodcapture.domain.model.Rest
 import com.wodcapture.domain.model.ScoreType
 import com.wodcapture.domain.model.Scoring
-import com.wodcapture.domain.model.SexSelection
 import com.wodcapture.domain.model.StrengthSets
 import com.wodcapture.domain.model.Tabata
 import com.wodcapture.domain.model.Workout
@@ -103,11 +103,10 @@ fun ReviewScreen(vm: AppViewModel, id: String, back: () -> Unit, logResult: (Str
 private fun ReviewContent(vm: AppViewModel, e: WorkoutEntity, back: () -> Unit, logResult: (String) -> Unit) {
     var draft by remember(e.id, e.revision) { mutableStateOf(DomainJson.decodeWorkout(e.workoutJson)) }
     var levels by remember(e.id) { mutableStateOf(mapOf<String, String>()) }
-    var sex by remember(e.id) { mutableStateOf<SexSelection?>(null) }
     val settings by vm.settings.collectAsState()
     val job by vm.observeJob(e.id).collectAsState(initial = null)
     val parse = remember(e.parseJson) { vm.parseResultOf(e) }
-    val review = remember(draft, levels, sex, settings) { vm.review(draft, levels, sex) }
+    val review = remember(draft, levels, settings) { vm.review(draft, levels) }
     val lowConfidence = parse?.diagnostics.orEmpty().filter { it.confidence != Confidence.HIGH }.mapNotNull { d -> d.nodeId?.let { it to d } }.toMap()
     val images = remember(e.imagePaths) { Json.decodeFromString(ListSerializer(String.serializer()), e.imagePaths).map(::File) }
     var zoom by remember { mutableStateOf<File?>(null) }
@@ -130,9 +129,6 @@ private fun ReviewContent(vm: AppViewModel, e: WorkoutEntity, back: () -> Unit, 
                     Field("Title", draft.title, Modifier.fillMaxWidth()) { draft = draft.copy(title = it) }
                     DateField(draft.date.orEmpty(), Modifier.fillMaxWidth().padding(top = 8.dp)) {
                         draft = draft.copy(date = it.ifBlank { null })
-                    }
-                    if (settings.profile.sex == SexSelection.ALWAYS_ASK) {
-                        Choice("Split loads for", sex ?: SexSelection.ALWAYS_ASK, listOf(SexSelection.MALE, SexSelection.FEMALE), { it.name.lowercase() }, Modifier.fillMaxWidth().padding(top = 8.dp)) { sex = it }
                     }
                 }
             }
@@ -160,7 +156,7 @@ private fun ReviewContent(vm: AppViewModel, e: WorkoutEntity, back: () -> Unit, 
             item { Preview(review.compile, draft.parts.associate { it.label.ifBlank { "W" } to WorkoutSection.of(it) }) }
         }
         ActionBar(top = {
-            Button(enabled = review.compile is CompileResult.Success, onClick = { vm.sendToWatch(e, draft, levels, sex) }, modifier = Modifier.fillMaxWidth()) {
+            Button(enabled = review.compile is CompileResult.Success, onClick = { vm.sendToWatch(e, draft, levels) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Send to watch")
             }
         }) {
@@ -250,7 +246,8 @@ private fun Findings(review: ReviewState, parse: com.wodcapture.domain.model.Par
 
 private val formatNames = mapOf(
     "for_time" to "For time", "amrap" to "AMRAP", "emom" to "EMOM", "tabata" to "Tabata", "intervals" to "Intervals",
-    "max_effort" to "Max effort", "strength_sets" to "Strength sets", "build_to_max" to "Build to max", "other" to "Other",
+    "max_effort" to "Max effort", "strength_sets" to "Strength sets", "build_to_max" to "Build to max",
+    "not_for_time" to "For quality", "other" to "Other",
 )
 
 private fun pretty(name: String) = name.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
@@ -308,7 +305,6 @@ private fun PartEditor(
             }
         }
         if (part.fallback?.accepted == true) Hint("Manual timer: no automatic movement/interrupt/rest cues")
-        TextButton(onClick = { onChange(confirmSplits(part)) }) { Text("Confirm M/F splits") }
     }
 }
 
@@ -317,7 +313,6 @@ private fun acceptFallback(p: Part, timer: FallbackTimer): Part {
     return ReviewActions.acceptFallback(w, p.id, timer).parts[0]
 }
 
-private fun confirmSplits(p: Part): Part = ReviewActions.confirmSplits(Workout(id = "x", parts = listOf(p))).parts[0]
 
 @Composable
 private fun FormatEditor(part: Part, onChange: (com.wodcapture.domain.model.Format) -> Unit) {
@@ -350,6 +345,7 @@ private fun FormatEditor(part: Part, onChange: (com.wodcapture.domain.model.Form
             TimeField("Window", f.windowSec, Modifier) { onChange(f.copy(windowSec = it)) }
         }
         is StrengthSets -> Hint("Sets × reps and rest are edited per lift below")
+        NotForTime -> Hint("For-quality list: movements run in order on a manual timer, no score")
         else -> Hint("Format edited as text in notes (v1)")
     }
 }
@@ -447,11 +443,10 @@ private fun ItemEditor(vm: AppViewModel, part: Part, item: Item, onChange: (Part
             Choice("Measure", measure.kind, MeasureKind.entries, { pretty(it.name) }, cell) { k -> set { it.copy(measure = measure.copy(kind = k)) } }
             if (measure.kind !in setOf(MeasureKind.REP_SCHEME, MeasureKind.MAX)) {
                 DoubleField("Value", measure.value, cell) { v -> set { it.copy(measure = measure.copy(value = v)) } }
-                DoubleField("Female value", measure.female, cell) { v -> set { it.copy(measure = measure.copy(female = v)) } }
             }
         }
         var loadText by remember(item.id) { mutableStateOf(LoadText.format(item.load)) }
-        Field("Load", loadText, cell, placeholder = "95/65 lb, 43 kg, 80%") { t -> loadText = t; set { it.copy(load = LoadText.parse(t)) } }
+        Field("Load", loadText, cell, placeholder = "43 kg, 95 lb, 80%") { t -> loadText = t; set { it.copy(load = LoadText.parse(t)) } }
         IntField("Implements", item.count, cell) { n -> set { it.copy(count = n ?: 1) } }
     }
 }

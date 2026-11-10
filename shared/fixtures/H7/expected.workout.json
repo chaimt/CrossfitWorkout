@@ -32,7 +32,6 @@
           "measure": {
             "kind": "distance",
             "value": 200.0,
-            "labeled": false,
             "unit": "m"
           },
           "count": 1,
@@ -54,27 +53,21 @@
               "name": "Deadlift",
               "measure": {
                 "kind": "reps",
-                "value": 5.0,
-                "labeled": false
+                "value": 5.0
               },
               "load": {
-                "kind": "split",
-                "male": {
+                "kind": "absolute",
+                "mass": {
                   "value": 225.0,
                   "unit": "lb"
-                },
-                "female": {
-                  "value": 155.0,
-                  "unit": "lb"
-                },
-                "labeled": false,
-                "confirmed": false
+                }
               },
               "implement": "barbell",
               "count": 1,
               "modifiers": [],
               "role": "main",
-              "sets": []
+              "sets": [],
+              "notes": "Board: 225/155 lb"
             },
             {
               "type": "item",
@@ -83,8 +76,7 @@
               "name": "Burpee",
               "measure": {
                 "kind": "reps",
-                "value": 10.0,
-                "labeled": false
+                "value": 10.0
               },
               "count": 1,
               "modifiers": [],

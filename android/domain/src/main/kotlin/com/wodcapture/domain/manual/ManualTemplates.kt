@@ -24,6 +24,9 @@ object ManualTemplates {
     private const val TITLE_JOIN = " + "
 
     val all: List<ManualTemplate> = listOf(
+        ManualTemplate("Cardio warm-up", WorkoutSection.WARMUP, ::cardioWarmup),
+        ManualTemplate("Cardio + mobility", WorkoutSection.WARMUP, ::cardioMobility),
+        ManualTemplate("Burgener", WorkoutSection.WARMUP, ::burgener),
         ManualTemplate("5 × 5 · 70–80%", WorkoutSection.WEIGHTS, ::strength5x5),
         ManualTemplate("5 × 3 · 80–85%", WorkoutSection.WEIGHTS, ::strength5x3),
         ManualTemplate("3 × 5 · 70–80%", WorkoutSection.WEIGHTS, ::strength3x5),
@@ -57,7 +60,7 @@ object ManualTemplates {
             Equivalents.lookup(implement, it, MassUnit.LB, unit) ?: MassMath.roundToStep(MassMath.fromKg(it * MassMath.KG_PER_LB, unit), 0.5)
         }
         return part.copy(
-            movements = part.movements.map { m -> m.copy(load = convert(m.implement, m.load), loadFemale = convert(m.implement, m.loadFemale)) },
+            movements = part.movements.map { m -> m.copy(load = convert(m.implement, m.load)) },
             sets = part.sets.map { s -> s.copy(load = convert(part.lift?.implement, s.load)) },
         )
     }
@@ -86,7 +89,7 @@ object ManualTemplates {
         intervalCount = 10,
         movements = listOf(
             reps(ids, "american_kettlebell_swing", "Kettlebell swing", 15.0).copy(
-                implement = "kettlebell", load = 53.0, loadFemale = 35.0, maleFemale = true,
+                implement = "kettlebell", load = 53.0,
             ),
             reps(ids, "burpee", "Burpee", 10.0),
         ),
@@ -99,7 +102,7 @@ object ManualTemplates {
         movements = listOf(
             ManualMovementForm(
                 id = ids.newId(), name = "Thruster", movementId = "thruster", implement = "barbell", measure = MeasureKind.REP_SCHEME,
-                load = 95.0, loadFemale = 65.0, maleFemale = true,
+                load = 95.0,
             ),
             ManualMovementForm(id = ids.newId(), name = "Pull-up", movementId = "pull_up", measure = MeasureKind.REP_SCHEME),
         ),
@@ -156,8 +159,66 @@ object ManualTemplates {
         movements = emptyList(),
     )
 
+    /**
+     * General CrossFit warm-up: 2 rounds of easy cardio drills at conversational pace,
+     * x time per exercise. For-quality, not timed rounds.
+     */
+    fun cardioWarmup(ids: IdSource) = part(ids, ManualFormat.FOR_QUALITY).copy(
+        kind = PartKind.WARMUP,
+        rounds = 2,
+        movements = listOf(
+            timed(ids, "jumping_jack", "Jumping Jacks", "0:30"),
+            timed(ids, "high_knees", "High Knees", "0:30"),
+            timed(ids, "butt_kicks", "Butt Kicks", "0:30"),
+            timed(ids, "jog", "Jogging", "1:00"),
+            timed(ids, "single_under", "Jump Rope (Single Unders)", "0:30"),
+            timed(ids, "double_under", "Double Unders", "0:30"),
+            timed(ids, "row", "Rowing", "1:00"),
+            timed(ids, "air_bike", "Assault Bike / Echo Bike", "1:00"),
+            timed(ids, "skierg", "SkiErg", "1:00"),
+            timed(ids, "mountain_climber", "Mountain Climbers", "0:30"),
+            timed(ids, "lateral_shuffle", "Lateral Shuffles", "0:30"),
+            timed(ids, "bear_crawl", "Bear Crawls", "0:30"),
+            timed(ids, "inchworm_push_up", "Inchworms", "0:30"),
+            timed(ids, "burpee", "Light Burpees", "0:30"),
+            timed(ids, "skipping", "Skipping", "0:30"),
+        ),
+    )
+
+    /**
+     * A generic class warm-up: easy monostructural cardio, then two rounds of a squat,
+     * a push and a pull at warm-up effort. For-quality, not timed rounds.
+     */
+    fun cardioMobility(ids: IdSource) = part(ids, ManualFormat.FOR_QUALITY).copy(
+        kind = PartKind.WARMUP,
+        rounds = 2,
+        movements = listOf(
+            timed(ids, "row", "Row", "2:00"),
+            reps(ids, "air_squat", "Air squat", 10.0),
+            reps(ids, "push_up", "Push-up", 10.0),
+            reps(ids, "ring_row", "Ring row", 10.0),
+        ),
+    )
+
+    /**
+     * The Burgener warm-up for the snatch (crossfit.com/essentials/foundational-movement-snatch):
+     * down-and-finish, elbows high and outside, muscle snatch, power-snatch land, snatch land —
+     * drilled with a PVC pipe or an empty bar before any snatch session. For-quality.
+     */
+    fun burgener(ids: IdSource) = part(ids, ManualFormat.FOR_QUALITY).copy(
+        kind = PartKind.WARMUP,
+        name = "Burgener warm-up",
+        movements = listOf(
+            reps(ids, "muscle_snatch", "Down and finish + muscle snatch", 3.0),
+            reps(ids, "snatch_balance", "Snatch land + snatch balance", 3.0),
+        ),
+    )
+
     private fun part(ids: IdSource, format: ManualFormat) = ManualPartForm(id = ids.newId(), label = "", format = format)
 
     private fun reps(ids: IdSource, movementId: String, name: String, n: Double) =
         ManualMovementForm(id = ids.newId(), name = name, movementId = movementId, measure = MeasureKind.REPS, amount = n)
+
+    private fun timed(ids: IdSource, movementId: String, name: String, time: String) =
+        ManualMovementForm(id = ids.newId(), name = name, movementId = movementId, measure = MeasureKind.DURATION, durationText = time)
 }

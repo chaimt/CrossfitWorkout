@@ -11,6 +11,7 @@ import com.wodcapture.domain.model.Group
 import com.wodcapture.domain.model.Intervals
 import com.wodcapture.domain.model.Item
 import com.wodcapture.domain.model.MaxEffort
+import com.wodcapture.domain.model.NotForTime
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.RepTarget
 import com.wodcapture.domain.model.ScoreType
@@ -75,7 +76,7 @@ object Editing {
         return item.copy(sets = sets)
     }
 
-    val formatTypes = listOf("for_time", "amrap", "emom", "tabata", "intervals", "max_effort", "strength_sets", "build_to_max")
+    val formatTypes = listOf("for_time", "amrap", "emom", "tabata", "intervals", "max_effort", "strength_sets", "build_to_max", "not_for_time")
 
     fun formatType(f: Format): String = when (f) {
         is ForTime -> "for_time"
@@ -86,6 +87,7 @@ object Editing {
         is MaxEffort -> "max_effort"
         is StrengthSets -> "strength_sets"
         is BuildToMax -> "build_to_max"
+        is NotForTime -> "not_for_time"
         else -> "other"
     }
 
@@ -98,6 +100,7 @@ object Editing {
         "intervals" -> Intervals(rounds = 4, workSec = 240, restSec = 120)
         "max_effort" -> MaxEffort(windowSec = 60)
         "strength_sets" -> StrengthSets()
+        "not_for_time" -> NotForTime
         else -> BuildToMax()
     }
 
@@ -106,6 +109,7 @@ object Editing {
         "amrap", "intervals" -> ScoreType.ROUNDS_REPS
         "strength_sets", "build_to_max" -> ScoreType.LOAD
         "max_effort", "tabata" -> ScoreType.REPS
+        "not_for_time" -> ScoreType.NONE
         else -> ScoreType.COMPLETION
     }
 }

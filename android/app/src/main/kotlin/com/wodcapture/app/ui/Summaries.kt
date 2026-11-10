@@ -10,6 +10,7 @@ import com.wodcapture.domain.model.Format
 import com.wodcapture.domain.model.Intervals
 import com.wodcapture.domain.model.Item
 import com.wodcapture.domain.model.MaxEffort
+import com.wodcapture.domain.model.NotForTime
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.StrengthSets
 import com.wodcapture.domain.model.Tabata
@@ -36,6 +37,7 @@ object Summaries {
         is BuildToMax -> "Build to ${if (f.repsPerSet == 1) "1RM" else "${f.repsPerSet}RM"}"
         is StrengthSets -> "Strength sets"
         is CustomSegments -> "Custom"
+        NotForTime -> "For quality"
         else -> "Workout"
     }
 

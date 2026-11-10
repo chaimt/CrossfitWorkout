@@ -1,5 +1,6 @@
 package com.wodcapture.app.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AssistChip
@@ -41,6 +43,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -71,12 +75,12 @@ import com.wodcapture.domain.validation.ValidationIssue
 private typealias PartEdit = ((ManualPartForm) -> ManualPartForm) -> Unit
 
 /**
- * Guided "New workout" form (REQ-AC09) in class run order: **Warm-up**, then **Weights**
- * (strength sets), then **Metcon** (for time, AMRAP, EMOM, …), then **Cool-down & other**.
- * Each section has its own quick-start templates and add menu, so picking "5 × 5 strength" and
- * then "AMRAP 20" builds the whole day. The domain builder runs on every edit, so the same
- * validation as Review (REQ-AX05) shows as you type and **Create** stays disabled while
- * anything blocks. Create saves a draft and opens Review; nothing is sent from here.
+ * Guided "New workout" form (REQ-AC09) in class run order: **Warm-up** (for-quality lists),
+ * then **Weights** (strength sets), then **Metcon** (for time, AMRAP, EMOM, …), then
+ * **Cool-down & other**. Each section has its own quick-start templates and add menu, so picking
+ * "5 × 5 strength" and then "AMRAP 20" builds the whole day. The domain builder runs on every
+ * edit, so the same validation as Review (REQ-AX05) shows as you type and **Create** stays
+ * disabled while anything blocks. Create saves a draft and opens Review; nothing is sent here.
  */
 @Composable
 fun ManualWorkoutScreen(vm: AppViewModel, onCreated: (String) -> Unit, back: () -> Unit) {
@@ -120,7 +124,7 @@ fun ManualWorkoutScreen(vm: AppViewModel, onCreated: (String) -> Unit, back: () 
                 }
                 item(key = "add-$section") {
                     if (parts.isEmpty()) Hint(emptySectionText(section), Modifier.padding(bottom = 4.dp))
-                    AddPart(section) { format -> edit { ManualForms.addPart(it, format, ids) } }
+                    AddPart(section) { format -> edit { ManualForms.addPart(it, section, format, ids) } }
                 }
             }
         }
@@ -131,7 +135,7 @@ fun ManualWorkoutScreen(vm: AppViewModel, onCreated: (String) -> Unit, back: () 
 }
 
 private fun sectionSubtitle(s: WorkoutSection) = when (s) {
-    WorkoutSection.WARMUP -> "Warm-up and skill, before the lifting"
+    WorkoutSection.WARMUP -> "For-quality list, before the lifting"
     WorkoutSection.WEIGHTS -> "One lift per session, set by set"
     WorkoutSection.METCON -> "For time, AMRAP, EMOM, Tabata, intervals"
     WorkoutSection.OTHER -> "Accessory and cool-down, after the metcon"
@@ -199,10 +203,11 @@ private fun PartCard(
         if (ManualFormat.of(section).size > 1) FormatChips(section, part.format) { f -> onChange { ManualForms.withFormat(it, f, ids) } }
         // Weights parts are always strength and need no label or name (owner request 2026-11-05):
         // the lift says what it is and the builder letters the part.
+        // Warm-up parts are always a for-quality list of kind Warm-up, so they need no type picker.
         if (section != WorkoutSection.WEIGHTS) Grid {
             Field("Label", part.label, Modifier.weight(1f), placeholder = label.ifBlank { "auto" }) { v -> onChange { it.copy(label = v) } }
             Field("Name (optional)", part.name, Modifier.weight(1f), placeholder = "e.g. Fran") { v -> onChange { it.copy(name = v) } }
-            Choice("Type", part.kind, kindsFor(section), ::kindName, Modifier.weight(1f)) { k -> onChange { it.copy(kind = k) } }
+            if (section != WorkoutSection.WARMUP) Choice("Type", part.kind, kindsFor(section), ::kindName, Modifier.weight(1f)) { k -> onChange { it.copy(kind = k) } }
         }
         FormatFields(part, onChange)
         when (part.format) {
@@ -245,6 +250,9 @@ private fun FormatFields(part: ManualPartForm, onChange: PartEdit) {
         else -> Grid {
             val cell = Modifier
             when (part.format) {
+                ManualFormat.FOR_QUALITY -> {
+                    IntField("Rounds (usually 2–3)", part.rounds, cell) { v -> onChange { it.copy(rounds = v) } }
+                }
                 ManualFormat.FOR_TIME -> {
                     Field("Rep scheme", part.repSchemeText, cell, placeholder = "21-15-9") { v -> onChange { ManualForms.withRepScheme(it, v) } }
                     IntField("Rounds", part.rounds, cell) { v -> onChange { it.copy(rounds = v) } }
@@ -270,6 +278,7 @@ private fun FormatFields(part: ManualPartForm, onChange: PartEdit) {
                     Field("Window", part.durationText, cell, placeholder = "m:ss") { v -> onChange { it.copy(durationText = v) } }
                     IntField("Attempts (no window)", part.attempts, cell) { v -> onChange { it.copy(attempts = v) } }
                 }
+                ManualFormat.FOR_QUALITY -> Unit
                 ManualFormat.STRENGTH, ManualFormat.CUSTOM -> Unit
             }
         }
@@ -309,9 +318,10 @@ private fun MovementRows(catalog: MovementCatalog, part: ManualPartForm, unit: M
     fun editRow(id: String, f: (ManualMovementForm) -> ManualMovementForm) =
         onChange { p -> p.copy(movements = p.movements.map { if (it.id == id) f(it) else it }) }
     Text(if (part.format == ManualFormat.CUSTOM) "Movements (optional)" else "Movements", style = MaterialTheme.typography.titleSmall)
+    val warmup = part.format == ManualFormat.FOR_QUALITY
     part.movements.forEach { row ->
         MovementRow(
-            catalog, row, unit, schemePart = ManualForms.usesScheme(part),
+            catalog, row, unit, schemePart = ManualForms.usesScheme(part), warmup = warmup,
             onChange = { f -> editRow(row.id, f) },
             onRemove = { onChange { p -> p.copy(movements = p.movements.filter { it.id != row.id }) } },
         )
@@ -329,14 +339,83 @@ private fun MovementRow(
     row: ManualMovementForm,
     unit: MassUnit,
     schemePart: Boolean,
+    warmup: Boolean,
     onChange: ((ManualMovementForm) -> ManualMovementForm) -> Unit,
     onRemove: () -> Unit,
 ) {
     RowBox {
-        MovementName(catalog, row.name, row.movementId, onName = { v ->
-            onChange { it.copy(name = v, movementId = it.movementId.takeIf { id -> catalog.byId(id)?.name == v }) }
-        }, onPick = { m -> onChange { ManualForms.pick(it, m, schemePart) } }, onRemove = onRemove)
+        if (warmup) {
+            WarmupName(catalog, row.name, row.movementId, onName = { v ->
+                onChange { it.copy(name = v, movementId = it.movementId.takeIf { id -> catalog.byId(id)?.name == v }) }
+            }, onPick = { m -> onChange { ManualForms.pickWarmup(it, m) } }, onRemove = onRemove)
+        } else {
+            MovementName(catalog, row.name, row.movementId, onName = { v ->
+                onChange { it.copy(name = v, movementId = it.movementId.takeIf { id -> catalog.byId(id)?.name == v }) }
+            }, onPick = { m -> onChange { ManualForms.pick(it, m, schemePart) } }, onRemove = onRemove)
+        }
         MovementDetails(catalog.byId(row.movementId), row, unit, onChange)
+    }
+}
+
+/**
+ * Warm-up type picker (owner request 2026-11-09): a dropdown of the 15 general cardio
+ * drills, with "Type my own" for a custom warm-up. A custom entry behaves like the
+ * metcon free-text field (catalog autocomplete, smarter cues when picked).
+ */
+@Composable
+private fun WarmupName(
+    catalog: MovementCatalog,
+    name: String,
+    movementId: String?,
+    onName: (String) -> Unit,
+    onPick: (Movement) -> Unit,
+    onRemove: () -> Unit,
+) {
+    var open by remember { mutableStateOf(false) }
+    // Untouched rows start on the list; a stored named row without a catalog ID is the
+    // athlete's own text (reopen it as custom), and rows the athlete starts typing stay
+    // custom until a list pick pins a catalog ID.
+    var custom by remember { mutableStateOf(false) }
+    var customActive by remember(movementId, name) { mutableStateOf(movementId == null && name.isNotBlank()) }
+    val options = remember { ManualForms.warmupMovements(catalog) }
+    if (!custom && !customActive) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            val current = ManualForms.warmupLabel(movementId, name)
+            Box(Modifier.weight(1f)) {
+                OutlinedTextField(
+                    value = current, onValueChange = {}, readOnly = true, singleLine = true,
+                    label = { Text("Type", maxLines = 1) },
+                    placeholder = { Text("Pick a type…") },
+                    trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
+                    shape = MaterialTheme.shapes.small,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Box(
+                    Modifier.matchParentSize().clip(MaterialTheme.shapes.small)
+                        .clickable(role = Role.DropdownList) { open = true }
+                        .semantics { contentDescription = "Warm-up type" },
+                )
+            }
+            IconButton(onClick = onRemove) { Icon(Icons.Filled.Close, contentDescription = "Remove ${current.ifBlank { "movement" }}") }
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            options.forEach { m ->
+                DropdownMenuItem(text = { Text(ManualForms.warmupLabel(m.id, m.name)) }, onClick = { open = false; onPick(m) })
+            }
+            DropdownMenuItem(
+                text = { Text("Type my own") },
+                onClick = { open = false; custom = true; customActive = true; onName("") },
+            )
+        }
+        if (movementId != null) Hint("From the movement catalog")
+    } else {
+        MovementName(
+            catalog, name, movementId,
+            onName = onName,
+            onPick = { m -> custom = false; customActive = false; onPick(m) },
+            onRemove = onRemove,
+        )
+        TextButton(onClick = { custom = false; customActive = false; onName("") }) { Text("Back to the list") }
     }
 }
 
@@ -354,8 +433,7 @@ private fun MovementDetails(
         when (row.measure) {
             MeasureKind.REPS, MeasureKind.CALORIES, MeasureKind.DISTANCE -> {
                 val label = measureName(row.measure)
-                DoubleField(if (row.maleFemale) "$label (M)" else label, row.amount, cell) { v -> onChange { it.copy(amount = v) } }
-                if (row.maleFemale) DoubleField("$label (F)", row.amountFemale, cell) { v -> onChange { it.copy(amountFemale = v) } }
+                DoubleField(label, row.amount, cell) { v -> onChange { it.copy(amount = v) } }
                 if (row.measure == MeasureKind.DISTANCE) {
                     Choice("Unit", row.distanceUnit, DistanceUnit.entries, { it.wire }, cell) { u -> onChange { it.copy(distanceUnit = u) } }
                 }
@@ -367,8 +445,7 @@ private fun MovementDetails(
     if (catalogMovement?.loadable != "N") Grid {
         val cell = Modifier
         // The unit is the app setting (Settings → Units), not chosen per movement.
-        DoubleField(if (row.maleFemale) "Load (M, ${unit.wire})" else "Load (${unit.wire})", row.load, cell) { v -> onChange { it.copy(load = v) } }
-        if (row.maleFemale) DoubleField("Load (F, ${unit.wire})", row.loadFemale, cell) { v -> onChange { it.copy(loadFemale = v) } }
+        DoubleField("Load (${unit.wire})", row.load, cell) { v -> onChange { it.copy(load = v) } }
         if (row.load != null) Choice("Implements", row.implementCount, listOf(1, 2), { if (it == 1) "Single" else "Double" }, cell) { n ->
             onChange { it.copy(implementCount = n) }
         }
@@ -377,14 +454,9 @@ private fun MovementDetails(
     if (wantsHeight) Grid {
         val cell = Modifier
         val label = if (row.heightIsTarget) "Target" else "Box height"
-        DoubleField(if (row.maleFemale) "$label (M)" else label, row.height, cell) { v -> onChange { it.copy(height = v) } }
-        if (row.maleFemale) DoubleField("$label (F)", row.heightFemale, cell) { v -> onChange { it.copy(heightFemale = v) } }
+        DoubleField(label, row.height, cell) { v -> onChange { it.copy(height = v) } }
         Choice("Unit", row.heightUnit, LengthUnit.entries, { it.wire }, cell) { u -> onChange { it.copy(heightUnit = u) } }
     }
-    FilterChip(
-        selected = row.maleFemale, onClick = { onChange { it.copy(maleFemale = !it.maleFemale) } },
-        label = { Text("Separate M/F values") }, modifier = Modifier.semantics { contentDescription = "Separate male and female values" },
-    )
 }
 
 private fun measureName(k: MeasureKind): String = when (k) {

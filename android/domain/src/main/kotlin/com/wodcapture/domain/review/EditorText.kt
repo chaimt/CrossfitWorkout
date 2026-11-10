@@ -12,17 +12,15 @@ import com.wodcapture.domain.model.PercentOfBodyweight
 import com.wodcapture.domain.model.PercentOfMax
 import com.wodcapture.domain.model.RelativeToTopLoad
 import com.wodcapture.domain.model.RpeLoad
-import com.wodcapture.domain.model.SplitLoad
 
 /**
- * Board-style load notation for the structured editor (REQ-AE02, Appendix D): "95/65 lb",
+ * Board-style load notation for the structured editor (REQ-AE02, Appendix D):
  * "43 kg", "95#", "1.5 pood", "80%", "70-75%", "1.5xBW", "BW", "RPE 8", "-10%", free text.
- * Pairs typed in review count as a confirmed mapping (the athlete chose the order).
+ * A board pair like "95/65" is not a value: keep it in notes/rawText and enter one value.
  */
 object LoadText {
     private val NUM = "(\\d+(?:\\.\\d+)?)"
     private val unitRe = "\\s*(kg|kgs|lb|lbs|#|pood|pd)?"
-    private val split = Regex("^$NUM\\s*/\\s*$NUM$unitRe$", RegexOption.IGNORE_CASE)
     private val single = Regex("^$NUM$unitRe$", RegexOption.IGNORE_CASE)
     private val pct = Regex("^@?\\s*$NUM(?:\\s*-\\s*$NUM)?\\s*%$")
     private val bw = Regex("^$NUM\\s*x\\s*BW$", RegexOption.IGNORE_CASE)
@@ -41,10 +39,6 @@ object LoadText {
             val hi = m.groupValues[2].takeIf { it.isNotEmpty() }?.toDouble()
             return PercentOfMax(m.groupValues[1].toDouble(), percentMax = hi)
         }
-        split.matchEntire(t)?.let { m ->
-            val u = unit(m.groupValues[3], defaultUnit)
-            return SplitLoad(Mass(m.groupValues[1].toDouble(), u), Mass(m.groupValues[2].toDouble(), u), labeled = false, confirmed = true)
-        }
         single.matchEntire(t)?.let { m -> return AbsoluteLoad(Mass(m.groupValues[1].toDouble(), unit(m.groupValues[2], defaultUnit))) }
         return AthleteChoiceLoad(t)
     }
@@ -60,7 +54,6 @@ object LoadText {
         null, NoLoad -> ""
         BodyweightLoad -> "BW"
         is AbsoluteLoad -> mass(l.mass)
-        is SplitLoad -> "${MassMath.format(l.male.value)}/${MassMath.format(l.female.value)} ${MassMath.unitLabel(l.female.unit)}".trim()
         is PercentOfMax -> (l.percentMax?.let { "${MassMath.format(l.percent)}-${MassMath.format(it)}%" } ?: "${MassMath.format(l.percent)}%")
         is PercentOfBodyweight -> "${MassMath.format(l.percent / 100)}xBW"
         is RpeLoad -> "RPE ${MassMath.format(l.value)}"

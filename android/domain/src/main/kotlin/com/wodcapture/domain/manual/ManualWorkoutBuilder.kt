@@ -24,14 +24,13 @@ import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.MaxEffort
 import com.wodcapture.domain.model.Measure
 import com.wodcapture.domain.model.MeasureKind
+import com.wodcapture.domain.model.NotForTime
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.RepTarget
 import com.wodcapture.domain.model.ScoreType
 import com.wodcapture.domain.model.Scoring
 import com.wodcapture.domain.model.Source
 import com.wodcapture.domain.model.SourceKind
-import com.wodcapture.domain.model.SplitLength
-import com.wodcapture.domain.model.SplitLoad
 import com.wodcapture.domain.model.Station
 import com.wodcapture.domain.model.StrengthSet
 import com.wodcapture.domain.model.StrengthSets
@@ -149,6 +148,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
                 inner = InnerMode.AMRAP,
             )
             ManualFormat.STRENGTH -> StrengthSets()
+            ManualFormat.FOR_QUALITY -> NotForTime
             ManualFormat.MAX_EFFORT -> MaxEffort(
                 windowSec = time(form.durationText, "Window", "durationText"),
                 attempts = form.attempts,
@@ -169,15 +169,20 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
         // ---------------------------------------------------------------- body
 
         private fun body(): List<BodyNode> = when (form.format) {
-            ManualFormat.FOR_TIME -> forTimeBody()
+            ManualFormat.FOR_TIME, ManualFormat.FOR_QUALITY -> forTimeBody()
             ManualFormat.STRENGTH -> strengthBody()
             ManualFormat.CUSTOM -> customLines() + form.movements.map(::item)
             else -> form.movements.map(::item)
         }
 
-        /** Rep scheme → one rounds group whose length is the scheme; rounds > 1 → a repeated group. */
+        /** Rep scheme → one rounds group whose length is the scheme; rounds > 1 → a repeated group;
+         * for-quality warm-ups list their movements repeated [rounds] times (no scoring). */
         private fun forTimeBody(): List<BodyNode> {
             val items = form.movements.map(::item)
+            if (form.format == ManualFormat.FOR_QUALITY) {
+                val rounds = form.rounds ?: 1
+                return if (rounds != 1) listOf(Group(ids.newId(), GroupKind.ROUNDS, repeat = rounds, children = items)) else items
+            }
             val scheme = repScheme()
             val rounds = form.rounds ?: 1
             if (scheme.isNotEmpty()) {
@@ -231,34 +236,29 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
         }
 
         private fun measure(m: ManualMovementForm): Measure {
-            val female = m.amountFemale.takeIf { m.maleFemale }
-            val labeled = female != null
             return when (m.measure) {
                 MeasureKind.REPS -> {
                     if (m.amount != null && m.amount != Math.rint(m.amount)) {
                         issues += blocking("invalid_bounds", "Reps must be whole numbers", form.id, m.id, "amount")
                     }
-                    Measure(MeasureKind.REPS, m.amount, female, labeled)
+                    Measure(MeasureKind.REPS, m.amount)
                 }
-                MeasureKind.CALORIES -> Measure(MeasureKind.CALORIES, m.amount, female, labeled)
-                MeasureKind.DISTANCE -> Measure(MeasureKind.DISTANCE, m.amount, female, labeled, unit = m.distanceUnit)
+                MeasureKind.CALORIES -> Measure(MeasureKind.CALORIES, m.amount)
+                MeasureKind.DISTANCE -> Measure(MeasureKind.DISTANCE, m.amount, unit = m.distanceUnit)
                 MeasureKind.DURATION -> Measure(MeasureKind.DURATION, time(m.durationText, "Duration", "durationText")?.toDouble())
                 MeasureKind.REP_SCHEME, MeasureKind.MAX -> Measure(m.measure)
             }
         }
 
-        /** Single value → as written; explicit M/F pair → labelled split (no review confirmation). */
+        /** Single value → as written. */
         private fun load(m: ManualMovementForm): LoadSpec? {
-            val male = m.load ?: return null
-            val female = m.loadFemale.takeIf { m.maleFemale }
-            return if (female != null) SplitLoad(Mass(male, unit), Mass(female, unit), labeled = true)
-            else AbsoluteLoad(Mass(male, unit))
+            val v = m.load ?: return null
+            return AbsoluteLoad(Mass(v, unit))
         }
 
-        private fun height(m: ManualMovementForm): SplitLength? {
-            val male = m.height ?: return null
-            val female = m.heightFemale.takeIf { m.maleFemale }
-            return SplitLength(Length(male, m.heightUnit), female?.let { Length(it, m.heightUnit) }, labeled = female != null)
+        private fun height(m: ManualMovementForm): Length? {
+            val v = m.height ?: return null
+            return Length(v, m.heightUnit)
         }
 
         /**
@@ -300,6 +300,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
          */
         private fun scoring(): Scoring = when (form.format) {
             ManualFormat.FOR_TIME -> Scoring(ScoreType.TIME)
+            ManualFormat.FOR_QUALITY -> Scoring(ScoreType.NONE)
             ManualFormat.AMRAP -> Scoring(ScoreType.ROUNDS_REPS)
             ManualFormat.EMOM -> Scoring(ScoreType.COMPLETION, manual = true)
             ManualFormat.TABATA -> Scoring(ScoreType.REPS, manual = mixedMeasures())
@@ -314,7 +315,12 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
         }.toSet().size > 1
 
         private fun fallback(): Fallback? {
-            if (form.format != ManualFormat.CUSTOM) return null
+            if (form.format != ManualFormat.CUSTOM && form.format != ManualFormat.FOR_QUALITY) return null
+            if (form.format == ManualFormat.FOR_QUALITY) {
+                // For-quality lists never run a dedicated watch mode; the list shows under a
+                // manual count-up timer (REQ-DM18).
+                return Fallback(accepted = true, reason = WARMUP_REASON)
+            }
             val sec = time(form.durationText, "Timer", "durationText")
             if (form.customTimer == FallbackTimer.COUNT_DOWN && sec == null && form.durationText.isBlank()) {
                 issues += blocking("missing_duration", "Countdown needs a length", form.id, path = "durationText")
@@ -339,5 +345,6 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
         private const val TABATA_ROUNDS = 8
         private val SCHEME_SEPARATORS = Regex("[-,/\\s]+")
         const val CUSTOM_REASON = "Custom format: manual timer and score"
+        const val WARMUP_REASON = "For-quality warm-up: manual timer, no score"
     }
 }

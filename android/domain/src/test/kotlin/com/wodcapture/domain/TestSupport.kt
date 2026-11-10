@@ -5,7 +5,6 @@ import com.wodcapture.domain.model.AthleteProfile
 import com.wodcapture.domain.model.Mass
 import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.RepMax
-import com.wodcapture.domain.model.SexSelection
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -20,10 +19,9 @@ object TestSupport {
     val goldenDir: File = File(System.getProperty("golden.dir") ?: "../shared/fixtures")
     private val update = System.getProperty("golden.update") == "true"
 
-    /** Fixture athlete: male, kg, 80 kg bodyweight, back squat 1RM 125 kg, Appendix D equivalents. */
+    /** Fixture athlete: kg, 80 kg bodyweight, back squat 1RM 125 kg, Appendix D equivalents. */
     val profile = AthleteProfile(
         displayUnit = MassUnit.KG,
-        sex = SexSelection.MALE,
         bodyweight = Mass(80.0, MassUnit.KG),
         repMaxes = listOf(RepMax("back_squat", 1, Mass(125.0, MassUnit.KG))),
     )

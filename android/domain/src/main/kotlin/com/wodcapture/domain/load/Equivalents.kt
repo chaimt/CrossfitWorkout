@@ -56,15 +56,4 @@ object Equivalents {
             MassUnit.UNSPECIFIED -> null
         }
     }
-
-    /** Standard CrossFit pound pairs: an unmarked pair matching one is read as lb (§4.1). */
-    val standardLbPairs: Set<Pair<Double, Double>> = setOf(
-        95.0 to 65.0, 135.0 to 95.0, 225.0 to 155.0, 53.0 to 35.0, 20.0 to 14.0, 185.0 to 125.0,
-        155.0 to 105.0, 115.0 to 75.0, 75.0 to 55.0, 65.0 to 45.0, 50.0 to 35.0, 35.0 to 20.0,
-        275.0 to 185.0, 315.0 to 205.0, 45.0 to 35.0, 70.0 to 53.0, 14.0 to 10.0, 245.0 to 165.0,
-        250.0 to 175.0, 165.0 to 115.0, 105.0 to 75.0, 85.0 to 65.0,
-    )
-
-    fun isStandardLbPair(a: Double, b: Double): Boolean =
-        (maxOf(a, b) to minOf(a, b)) in standardLbPairs
 }

@@ -1295,13 +1295,103 @@
       "id": "jumping_jack",
       "name": "Jumping jack",
       "aliases": [
-        "JJ"
+        "JJ",
+        "jumping jacks"
       ],
       "ambiguousAliases": [],
       "category": "gymnastics",
       "measure": "reps",
       "loadable": "N",
       "implement": "bodyweight"
+    },
+    {
+      "id": "high_knees",
+      "name": "High knees",
+      "aliases": [
+        "high knee",
+        "HK"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "butt_kicks",
+      "name": "Butt kicks",
+      "aliases": [
+        "butt kick",
+        "butt kickers",
+        "BK"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "skipping",
+      "name": "Skipping",
+      "aliases": [
+        "skip",
+        "skips",
+        "skip drills"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "mountain_climber",
+      "name": "Mountain climber",
+      "aliases": [
+        "mountain climbers",
+        "MC"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "lateral_shuffle",
+      "name": "Lateral shuffle",
+      "aliases": [
+        "lateral shuffles",
+        "side shuffle",
+        "side shuffles"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight",
+      "measures": [
+        "reps",
+        "ft"
+      ]
+    },
+    {
+      "id": "jog",
+      "name": "Jog",
+      "aliases": [
+        "jogging",
+        "easy jog"
+      ],
+      "ambiguousAliases": [],
+      "category": "monostructural",
+      "measure": "m",
+      "loadable": "N",
+      "implement": "none",
+      "measures": [
+        "m",
+        "s"
+      ]
     },
     {
       "id": "plank",
@@ -1461,6 +1551,20 @@
         "cal",
         "m"
       ]
+    },
+    {
+      "id": "jump_rope",
+      "name": "Jump rope",
+      "aliases": [
+        "jump rope",
+        "single jump",
+        "jump-rope"
+      ],
+      "ambiguousAliases": [],
+      "category": "monostructural",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "jump_rope"
     },
     {
       "id": "double_under",

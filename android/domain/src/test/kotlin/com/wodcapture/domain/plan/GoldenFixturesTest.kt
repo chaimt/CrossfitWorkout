@@ -50,7 +50,6 @@ class GoldenFixturesTest {
     /** Parts that need a reviewed fallback must not compile before review (REQ-DM18, TS08). */
     @TestFactory
     fun unreviewedExpectations() = listOf(
-        Fixtures.h1 to "split_unconfirmed",
         Fixtures.h2 to "fallback_required",
         Fixtures.h5 to "fallback_required",
         Fixtures.h6 to "fallback_required",

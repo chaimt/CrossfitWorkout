@@ -8,7 +8,6 @@ import com.wodcapture.domain.model.Item
 import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.RepTarget
-import com.wodcapture.domain.model.SexSelection
 import com.wodcapture.domain.model.StrengthSet
 import com.wodcapture.domain.model.Workout
 import com.wodcapture.domain.protocol.EnvelopeCodec
@@ -64,13 +63,12 @@ class PlanCompilerTest {
     }
 
     @Test
-    fun femaleScaledLevelUsesOverrides() {
+    fun scaledLevelUsesOverrides() {
         val w = Fixtures.h1.review(Fixtures.h1.expected)
-        val r = success(compiler.compile(w, TestSupport.profile.copy(sex = SexSelection.FEMALE), Fixtures.h1.identity, CompileOptions(levels = mapOf(w.parts[0].id to "Scaled"))))
+        val r = success(compiler.compile(w, TestSupport.profile, Fixtures.h1.identity, CompileOptions(levels = mapOf(w.parts[0].id to "Scaled"))))
         val part = r.plan.p[0]
         assertEquals("Scaled", part.lv)
-        // "(Scaled 45 lb)" would exceed 28 characters, so only the resolved load is shown.
-        assertEquals("Thruster 20 kg", part.ln[2])
+        assertEquals("Thruster 29 kg", part.ln[2])
         assertEquals("Jumping pull-up", part.ln[3])
     }
 

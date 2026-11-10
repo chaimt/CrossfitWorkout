@@ -20,7 +20,6 @@ import com.wodcapture.domain.manual.ManualWorkoutForm
 import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.ParseResult
 import com.wodcapture.domain.model.RepMax
-import com.wodcapture.domain.model.SexSelection
 import com.wodcapture.domain.model.Workout
 import com.wodcapture.domain.model.WorkoutResult
 import com.wodcapture.domain.parser.CloudLlmParser
@@ -134,28 +133,28 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun parseResultOf(entity: WorkoutEntity): ParseResult? = entity.parseJson?.let { runCatching { DomainJson.decodeParseResult(it) }.getOrNull() }
 
-    fun review(w: Workout, levels: Map<String, String>, sex: SexSelection?): ReviewState {
+    fun review(w: Workout, levels: Map<String, String>): ReviewState {
         val s = settings.value
         val report = WorkoutValidator.validate(w)
-        val compile = c.compiler.compile(w, s.profile, PlanIdentity("00000000-0000-4000-8000-000000000000", 1), options(levels, sex))
+        val compile = c.compiler.compile(w, s.profile, PlanIdentity("00000000-0000-4000-8000-000000000000", 1), options(levels))
         return ReviewState(report, compile)
     }
 
-    private fun options(levels: Map<String, String>, sex: SexSelection?) = CompileOptions(
-        levels = levels, sexOverride = sex, defaultDate = LocalDate.now().toString(), defaultTimeZone = ZoneId.systemDefault().id,
+    private fun options(levels: Map<String, String>) = CompileOptions(
+        levels = levels, defaultDate = LocalDate.now().toString(), defaultTimeZone = ZoneId.systemDefault().id,
     )
 
     /**
      * "Send to watch" (REQ-AE05): save first, compile with the chosen levels, keep a stable plan
      * lineage per workout + target and queue `plan.put`; then prompt to open WOD Coach (REQ-AW03).
      */
-    fun sendToWatch(entity: WorkoutEntity, edited: Workout, levels: Map<String, String>, sex: SexSelection?) = viewModelScope.launch(Dispatchers.IO) {
+    fun sendToWatch(entity: WorkoutEntity, edited: Workout, levels: Map<String, String>) = viewModelScope.launch(Dispatchers.IO) {
         val saved = if (DomainJson.encodeWorkout(edited) != entity.workoutJson) c.workouts.saveRevision(entity, edited, nowSec()) else entity
         val workout = DomainJson.decodeWorkout(saved.workoutJson)
         val target = c.currentTarget() ?: run { message.value = "No watch selected (Device screen)"; return@launch }
         val prior = dao.plan(workout.id, target.key)
         val planId = prior?.planId ?: c.ids.newId()
-        val first = c.compiler.compile(workout, settings.value.profile, PlanIdentity(planId, prior?.revision ?: 1), options(levels, sex))
+        val first = c.compiler.compile(workout, settings.value.profile, PlanIdentity(planId, prior?.revision ?: 1), options(levels))
         if (first !is CompileResult.Success) { message.value = "Cannot send: " + (first as CompileResult.Failure).errors.joinToString { it.message }; return@launch }
         val firstJson = WireJson.encodeToString(WatchPlan.serializer(), first.plan)
         val unchanged = prior != null && prior.planJson == firstJson

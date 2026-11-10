@@ -27,8 +27,7 @@
           "name": "Pull-up",
           "measure": {
             "kind": "reps",
-            "value": 5.0,
-            "labeled": false
+            "value": 5.0
           },
           "count": 1,
           "modifiers": [],
@@ -42,8 +41,7 @@
           "name": "Push-up",
           "measure": {
             "kind": "reps",
-            "value": 10.0,
-            "labeled": false
+            "value": 10.0
           },
           "count": 1,
           "modifiers": [],
@@ -57,8 +55,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 15.0,
-            "labeled": false
+            "value": 15.0
           },
           "count": 1,
           "modifiers": [],
@@ -72,8 +69,7 @@
           "name": "Row",
           "measure": {
             "kind": "calories",
-            "value": 10.0,
-            "labeled": false
+            "value": 10.0
           },
           "count": 1,
           "modifiers": [],

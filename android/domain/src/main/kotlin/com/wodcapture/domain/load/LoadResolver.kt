@@ -13,8 +13,6 @@ import com.wodcapture.domain.model.PercentOfBodyweight
 import com.wodcapture.domain.model.PercentOfMax
 import com.wodcapture.domain.model.RelativeToTopLoad
 import com.wodcapture.domain.model.RpeLoad
-import com.wodcapture.domain.model.SexSelection
-import com.wodcapture.domain.model.SplitLoad
 
 /** How a resolved load was obtained; shown in review and preview (REQ-AE04). */
 enum class ResolutionMethod { AS_WRITTEN, EQUIVALENT, ARITHMETIC, PERCENT_1RM, PERCENT_BODYWEIGHT }
@@ -41,7 +39,7 @@ sealed interface ResolvedLoad {
     /** Load must be entered on the watch (missing RM, back-off, RPE, athlete choice). Never 0. */
     data class Manual(val reason: String, val entryUnit: MassUnit, val count: Int, val note: String? = null) : ResolvedLoad
 
-    /** Review must choose first (unconfirmed split, "always ask", unselected % range). Blocks Send. */
+    /** Review must choose first (unselected % range, missing reference). Blocks Send. */
     data class NeedsChoice(val reason: String) : ResolvedLoad
 }
 
@@ -56,15 +54,14 @@ data class LoadContext(
  * Resolves [LoadSpec]s against an [AthleteProfile] (REQ-DM11, REQ-DM19, §4.1, Appendix D).
  * Pure and deterministic; never invents a rep max or a zero load.
  */
-class LoadResolver(private val profile: AthleteProfile, private val sexOverride: SexSelection? = null) {
+class LoadResolver(private val profile: AthleteProfile) {
 
     fun resolve(spec: LoadSpec?, ctx: LoadContext): ResolvedLoad {
         val target = profile.unitFor(ctx.implement)
         return when (spec) {
             null, NoLoad -> ResolvedLoad.Unloaded
             BodyweightLoad -> ResolvedLoad.Bodyweight
-            is AbsoluteLoad -> convertPrescription(spec.mass, null, ctx, target)
-            is SplitLoad -> resolveSplit(spec, ctx, target)
+            is AbsoluteLoad -> convertPrescription(spec.mass, ctx, target)
             is PercentOfMax -> resolvePercentOfMax(spec, ctx, target)
             is PercentOfBodyweight -> resolvePercentBw(spec, ctx, target)
             is RpeLoad -> ResolvedLoad.Manual("rpe", target, ctx.count, "RPE ${MassMath.format(spec.value)}: enter load")
@@ -75,31 +72,16 @@ class LoadResolver(private val profile: AthleteProfile, private val sexOverride:
         }
     }
 
-    private fun effectiveSex(): SexSelection = sexOverride ?: profile.sex
-
-    private fun resolveSplit(spec: SplitLoad, ctx: LoadContext, target: MassUnit): ResolvedLoad {
-        // §4.4: "higher = male" is only a suggestion until review confirms the mapping.
-        if (!spec.labeled && !spec.confirmed) return ResolvedLoad.NeedsChoice("split_unconfirmed")
-        val side = when (effectiveSex()) {
-            SexSelection.MALE -> spec.male
-            SexSelection.FEMALE -> spec.female
-            SexSelection.ALWAYS_ASK -> return ResolvedLoad.NeedsChoice("sex_always_ask")
-        }
-        val partner = if (side === spec.male) spec.female else spec.male
-        return convertPrescription(side, partner, ctx, target)
-    }
-
-    /** Resolves an unmarked unit: parser guess, else lb for standard pairs, else the board unit (§4.1). */
-    fun concreteUnit(m: Mass, partner: Mass?): MassUnit = when {
+    /** Resolves an unmarked unit: parser guess, else the board unit (§4.1). */
+    fun concreteUnit(m: Mass): MassUnit = when {
         m.unit != MassUnit.UNSPECIFIED -> m.unit
         m.guessedUnit != null && m.guessedUnit != MassUnit.UNSPECIFIED -> m.guessedUnit
-        partner != null && Equivalents.isStandardLbPair(m.value, partner.value) -> MassUnit.LB
         else -> profile.boardUnit
     }
 
     /** Converts a written prescription to the athlete's unit (REQ-DM19). */
-    fun convertPrescription(written: Mass, partner: Mass?, ctx: LoadContext, target: MassUnit): ResolvedLoad {
-        val unit = concreteUnit(written, partner)
+    fun convertPrescription(written: Mass, ctx: LoadContext, target: MassUnit): ResolvedLoad {
+        val unit = concreteUnit(written)
         val warnings = if (written.unit == MassUnit.UNSPECIFIED) listOf("ambiguous_unit") else emptyList()
         val source = Mass(written.value, unit)
         if (written.value <= 0) return ResolvedLoad.Manual("nonpositive_load", target, ctx.count)

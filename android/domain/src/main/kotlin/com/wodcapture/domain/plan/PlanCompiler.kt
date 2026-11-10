@@ -37,9 +37,7 @@ import com.wodcapture.domain.model.PercentOfMax
 import com.wodcapture.domain.model.Rest
 import com.wodcapture.domain.model.RpeLoad
 import com.wodcapture.domain.model.ScoreType
-import com.wodcapture.domain.model.SexSelection
 import com.wodcapture.domain.model.Side
-import com.wodcapture.domain.model.SplitLength
 import com.wodcapture.domain.model.StrengthSet
 import com.wodcapture.domain.model.StrengthSets
 import com.wodcapture.domain.model.Tabata
@@ -55,8 +53,6 @@ data class PlanIdentity(val planId: String, val planRevision: Int)
 data class CompileOptions(
     /** partId → level name; missing = the part's chosen level or Rx. */
     val levels: Map<String, String> = emptyMap(),
-    /** Overrides the profile's sex selection (answers "always ask"). */
-    val sexOverride: SexSelection? = null,
     /** Used when the workout has no scheduled date / zone. */
     val defaultDate: String = "1970-01-01",
     val defaultTimeZone: String = "UTC",
@@ -93,9 +89,8 @@ class PlanCompiler(private val catalog: MovementCatalog) {
         if (parts.size > WatchLimits.PARTS) errors += CompileError("too_many_parts", "${parts.size} parts; the watch takes at most ${WatchLimits.PARTS}")
         val title = workout.title.ifBlank { parts.firstNotNullOfOrNull { it.title } ?: "Workout" }
         if (title.length > WatchLimits.LINE) errors += CompileError("title_too_long", "Title '$title' is longer than ${WatchLimits.LINE} characters")
-        val sex = options.sexOverride ?: profile.sex
         val compiled = parts.mapNotNull { part ->
-            val ctx = PartCompiler(catalog, profile, sex, part, options.levels[part.id])
+            val ctx = PartCompiler(catalog, profile, part, options.levels[part.id])
             ctx.compile().also { errors += ctx.errors; warnings += ctx.warnings }
         }
         if (errors.isNotEmpty()) return CompileResult.Failure(errors)
@@ -124,14 +119,13 @@ class PlanCompiler(private val catalog: MovementCatalog) {
 private class PartCompiler(
     private val catalog: MovementCatalog,
     private val profile: AthleteProfile,
-    private val sex: SexSelection,
     private val original: Part,
     private val levelOverride: String?,
 ) {
     val errors = mutableListOf<CompileError>()
     val warnings = mutableListOf<String>()
-    private val resolver = LoadResolver(profile, sex)
-    private val expander = RepSchemeExpander(sex)
+    private val resolver = LoadResolver(profile)
+    private val expander = RepSchemeExpander()
     private lateinit var part: Part
     private val lines = mutableListOf<String>()
     private var fallback = false
@@ -571,11 +565,7 @@ private class PartCompiler(
 
     private fun quantity(item: Item, workSec: Int?): String {
         val m = item.measure
-        val v = when {
-            m == null -> null
-            part.hints?.partner != null && m.female != null -> "${MassMath.format(m.value ?: 0.0)}/${MassMath.format(m.female)}"
-            else -> (if (sex == SexSelection.FEMALE && m.female != null) m.female else m.value)?.let { MassMath.format(it) }
-        }
+        val v = m?.value?.let { MassMath.format(it) }
         val window = workSec?.let { DisplayText.clock(it) + " " }.orEmpty()
         return window + when (m?.kind) {
             MeasureKind.REPS -> "$v "
@@ -587,8 +577,7 @@ private class PartCompiler(
         }
     }
 
-    private fun lengthText(s: SplitLength): String {
-        val l = if (sex == SexSelection.FEMALE && s.female != null) s.female else s.male
+    private fun lengthText(l: com.wodcapture.domain.model.Length): String {
         return "${MassMath.format(l.value)} ${l.unit.wire}"
     }
 

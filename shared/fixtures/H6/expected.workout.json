@@ -28,15 +28,13 @@
           "name": "Bike",
           "measure": {
             "kind": "calories",
-            "value": 100.0,
-            "female": 80.0,
-            "labeled": false
+            "value": 100.0
           },
           "count": 1,
           "modifiers": [],
           "role": "main",
           "sets": [],
-          "notes": "split"
+          "notes": "Board: 100/80 cal (split)"
         },
         {
           "type": "item",
@@ -45,26 +43,19 @@
           "name": "Burpee box jump-over",
           "measure": {
             "kind": "reps",
-            "value": 60.0,
-            "labeled": false
+            "value": 60.0
           },
           "height": {
-            "male": {
-              "value": 24.0,
-              "unit": "in"
-            },
-            "female": {
-              "value": 20.0,
-              "unit": "in"
-            },
-            "labeled": false
+            "value": 24.0,
+            "unit": "in"
           },
           "count": 1,
           "modifiers": [
             "synchro"
           ],
           "role": "main",
-          "sets": []
+          "sets": [],
+          "notes": "Board: 24/20 in"
         },
         {
           "type": "item",
@@ -73,21 +64,14 @@
           "name": "DB snatch",
           "measure": {
             "kind": "reps",
-            "value": 40.0,
-            "labeled": false
+            "value": 40.0
           },
           "load": {
-            "kind": "split",
-            "male": {
+            "kind": "absolute",
+            "mass": {
               "value": 50.0,
               "unit": "lb"
-            },
-            "female": {
-              "value": 35.0,
-              "unit": "lb"
-            },
-            "labeled": false,
-            "confirmed": false
+            }
           },
           "implement": "dumbbell",
           "count": 1,
@@ -95,7 +79,7 @@
           "modifiers": [],
           "role": "main",
           "sets": [],
-          "notes": "switch every 10"
+          "notes": "Board: 50/35 lb; switch every 10"
         }
       ],
       "scoring": {

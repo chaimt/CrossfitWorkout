@@ -37,8 +37,6 @@ import com.wodcapture.domain.model.Scoring
 import com.wodcapture.domain.model.Side
 import com.wodcapture.domain.model.Source
 import com.wodcapture.domain.model.SourceKind
-import com.wodcapture.domain.model.SplitLength
-import com.wodcapture.domain.model.SplitLoad
 import com.wodcapture.domain.model.Station
 import com.wodcapture.domain.model.StrengthSet
 import com.wodcapture.domain.model.StrengthSets
@@ -61,7 +59,7 @@ data class HFixture(
 
 /**
  * Hand-authored expected parses of Appendix H (REQ-AX12, REQ-TS08). IDs are deterministic
- * (`fid`), loads are stored as written, splits unconfirmed and fallbacks not yet accepted —
+ * (`fid`), loads are stored as written, board pairs kept as notes, fallbacks not yet accepted —
  * exactly what a correct parser should return before review.
  */
 object Fixtures {
@@ -69,7 +67,6 @@ object Fixtures {
     private const val TZ = "Asia/Jerusalem"
     private fun lb(v: Double) = Mass(v, MassUnit.LB)
     private fun kg(v: Double) = Mass(v, MassUnit.KG)
-    private fun split(m: Mass, f: Mass) = SplitLoad(m, f)
     private fun reps(n: Int) = Measure(MeasureKind.REPS, n.toDouble())
     private val scheme = Measure(MeasureKind.REP_SCHEME)
 
@@ -91,7 +88,7 @@ object Fixtures {
                     Group(
                         node(1, 1), GroupKind.ROUNDS, repeat = 3, repScheme = listOf(21, 15, 9),
                         children = listOf(
-                            Item(node(1, 2), "thruster", "Thruster", measure = scheme, load = split(lb(95.0), lb(65.0)), implement = "barbell"),
+                            Item(node(1, 2), "thruster", "Thruster", measure = scheme, load = AbsoluteLoad(lb(95.0)), notes = "Board: 95/65 lb", implement = "barbell"),
                             Item(node(1, 3), "pull_up", "Pull-up", measure = scheme),
                         ),
                     ),
@@ -101,14 +98,14 @@ object Fixtures {
                     Level(
                         "Scaled",
                         listOf(
-                            Override(node(1, 2), load = split(lb(65.0), lb(45.0))),
+                            Override(node(1, 2), load = AbsoluteLoad(lb(65.0))),
                             Override(node(1, 3), movementId = "jumping_pull_up", name = "Jumping pull-up"),
                         ),
                     ),
                 ),
             ),
         ),
-        review = ReviewActions::confirmSplits,
+        review = { it },
     )
 
     val h2 = HFixture(
@@ -150,7 +147,7 @@ object Fixtures {
                 id = fid(3, 1, 1), kind = PartKind.METCON,
                 format = Emom(60, 16, stations = listOf(Station(node(3, 1)), Station(node(3, 2)), Station(node(3, 3), workSec = 40), Station(null))),
                 body = listOf(
-                    Item(node(3, 1), "row", "Row", measure = Measure(MeasureKind.CALORIES, 15.0, female = 12.0)),
+                    Item(node(3, 1), "row", "Row", measure = Measure(MeasureKind.CALORIES, 15.0), notes = "Board: 15/12 cal"),
                     Item(node(3, 2), "toes_to_bar", "Toes-to-bar", measure = reps(12)),
                     Item(node(3, 3), "double_under", "Double-under", measure = Measure(MeasureKind.MAX)),
                 ),
@@ -170,14 +167,14 @@ object Fixtures {
                     Item(node(4, 1), "lateral_burpee_over_the_dumbbell", "Lateral burpee over DB", measure = reps(3), progression = Progression(3)),
                     Item(
                         node(4, 2), "dumbbell_hang_clean_to_overhead", "DB hang clean-to-overhead", measure = reps(3),
-                        load = split(lb(50.0), lb(35.0)), implement = "dumbbell", progression = Progression(3),
+                        load = AbsoluteLoad(lb(50.0)), notes = "Board: 50/35 lb", implement = "dumbbell", progression = Progression(3),
                     ),
                     Item(node(4, 3), "walking_lunge", "Walking lunge", measure = Measure(MeasureKind.DISTANCE, 30.0, unit = DistanceUnit.FT)),
                 ),
                 scoring = Scoring(ScoreType.REPS, manual = true),
             ),
         ),
-        review = ReviewActions::confirmSplits,
+        review = { it },
     )
 
     val h5 = HFixture(
@@ -191,7 +188,7 @@ object Fixtures {
                         node(5, 1), GroupKind.ROUNDS, repeat = 3,
                         children = listOf(
                             Item(node(5, 2), "run", "Run", measure = Measure(MeasureKind.DISTANCE, 400.0, unit = DistanceUnit.M)),
-                            Item(node(5, 3), "american_kettlebell_swing", "Kettlebell swing", measure = reps(21), load = split(kg(24.0), kg(16.0)), implement = "kettlebell"),
+                            Item(node(5, 3), "american_kettlebell_swing", "Kettlebell swing", measure = reps(21), load = AbsoluteLoad(kg(24.0)), notes = "Board: 24/16 kg", implement = "kettlebell"),
                             Item(node(5, 4), "chest_to_bar_pull_up", "Chest-to-bar pull-up", measure = reps(12)),
                             Rest(node(5, 5), 180, inClock = false, betweenOnly = true),
                         ),
@@ -201,7 +198,7 @@ object Fixtures {
                 scoring = Scoring(ScoreType.TIME, aggregation = AggregationOp.EACH),
             ),
         ),
-        review = { w -> ReviewActions.acceptRequiredFallbacks(ReviewActions.confirmSplits(w)) },
+        review = { w -> ReviewActions.acceptRequiredFallbacks(w) },
     )
 
     val h6 = HFixture(
@@ -212,20 +209,20 @@ object Fixtures {
                 id = fid(6, 1, 1), kind = PartKind.METCON, format = ForTime(capSec = 1800),
                 hints = PartHints(partner = PartnerHint(2, splitRule = "split as needed", synchro = true, notes = "P2 holds plank while P1 snatches")),
                 body = listOf(
-                    Item(node(6, 1), "air_bike", "Bike", measure = Measure(MeasureKind.CALORIES, 100.0, female = 80.0), notes = "split"),
+                    Item(node(6, 1), "air_bike", "Bike", measure = Measure(MeasureKind.CALORIES, 100.0), notes = "Board: 100/80 cal (split)"),
                     Item(
                         node(6, 2), "burpee_box_jump_over", "Burpee box jump-over", measure = reps(60),
-                        height = SplitLength(Length(24.0, LengthUnit.IN), Length(20.0, LengthUnit.IN)), modifiers = listOf("synchro"),
+                        height = Length(24.0, LengthUnit.IN), notes = "Board: 24/20 in", modifiers = listOf("synchro"),
                     ),
                     Item(
-                        node(6, 3), "dumbbell_snatch", "DB snatch", measure = reps(40), load = split(lb(50.0), lb(35.0)),
-                        implement = "dumbbell", side = Side.ALTERNATING, notes = "switch every 10",
+                        node(6, 3), "dumbbell_snatch", "DB snatch", measure = reps(40), load = AbsoluteLoad(lb(50.0)),
+                        implement = "dumbbell", side = Side.ALTERNATING, notes = "Board: 50/35 lb; switch every 10",
                     ),
                 ),
                 scoring = Scoring(ScoreType.TIME),
             ),
         ),
-        review = { w -> ReviewActions.acceptRequiredFallbacks(ReviewActions.confirmSplits(w)) },
+        review = { w -> ReviewActions.acceptRequiredFallbacks(w) },
     )
 
     val h7 = HFixture(
@@ -239,7 +236,7 @@ object Fixtures {
                     Group(
                         node(7, 2), GroupKind.ROUNDS,
                         children = listOf(
-                            Item(node(7, 3), "deadlift", "Deadlift", measure = reps(5), load = split(lb(225.0), lb(155.0)), implement = "barbell"),
+                            Item(node(7, 3), "deadlift", "Deadlift", measure = reps(5), load = AbsoluteLoad(lb(225.0)), notes = "Board: 225/155 lb", implement = "barbell"),
                             Item(node(7, 4), "burpee", "Burpee", measure = reps(10)),
                         ),
                     ),
@@ -247,7 +244,7 @@ object Fixtures {
                 scoring = Scoring(ScoreType.ROUNDS_REPS, aggregation = AggregationOp.SUM),
             ),
         ),
-        review = ReviewActions::confirmSplits,
+        review = { it },
     )
 
     val h8 = HFixture(
@@ -290,7 +287,7 @@ object Fixtures {
                         node(8, 5), GroupKind.ROUNDS, repeat = 10, repScheme = (1..10).toList(),
                         children = listOf(
                             Item(node(8, 6), "deadlift", "Deadlift", measure = scheme, load = PercentOfBodyweight(150.0), implement = "barbell"),
-                            Item(node(8, 7), "box_jump", "Box jump", measure = scheme, height = SplitLength(Length(30.0, LengthUnit.IN), Length(24.0, LengthUnit.IN))),
+                            Item(node(8, 7), "box_jump", "Box jump", measure = scheme, height = Length(30.0, LengthUnit.IN), notes = "Board: 30/24 in"),
                         ),
                     ),
                 ),

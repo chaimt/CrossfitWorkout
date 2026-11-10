@@ -11,8 +11,6 @@ import com.wodcapture.domain.model.PercentOfBodyweight
 import com.wodcapture.domain.model.PercentOfMax
 import com.wodcapture.domain.model.RelativeToTopLoad
 import com.wodcapture.domain.model.RepMax
-import com.wodcapture.domain.model.SexSelection
-import com.wodcapture.domain.model.SplitLoad
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -121,28 +119,18 @@ class LoadResolverTest {
     }
 
     @Test
-    fun unlabeledSplitNeedsReviewConfirmation() {
-        val split = SplitLoad(lb(95.0), lb(65.0))
-        assertEquals("split_unconfirmed", assertIs<ResolvedLoad.NeedsChoice>(LoadResolver(profile).resolve(split, barbell)).reason)
-        val confirmed = split.copy(confirmed = true)
-        assertEquals(kg(43.0), resolved(LoadResolver(profile).resolve(confirmed, barbell)).mass)
-        assertEquals(kg(29.0), resolved(LoadResolver(profile.copy(sex = SexSelection.FEMALE)).resolve(confirmed, barbell)).mass)
-        assertEquals("sex_always_ask", assertIs<ResolvedLoad.NeedsChoice>(LoadResolver(profile.copy(sex = SexSelection.ALWAYS_ASK)).resolve(confirmed, barbell)).reason)
-        // Explicit labels win without confirmation.
-        assertIs<ResolvedLoad.Resolved>(LoadResolver(profile).resolve(split.copy(labeled = true), barbell))
-        // The review screen's answer to "always ask".
-        assertIs<ResolvedLoad.Resolved>(LoadResolver(profile.copy(sex = SexSelection.ALWAYS_ASK), SexSelection.MALE).resolve(confirmed, barbell))
+    fun absoluteLoadResolvesViaAppendixD() {
+        assertEquals(kg(43.0), resolved(LoadResolver(profile).resolve(AbsoluteLoad(lb(95.0)), barbell)).mass)
     }
 
     @Test
-    fun unmarkedUnitsGuessLbForStandardPairsElseBoardUnit() {
+    fun unmarkedUnitsUseParserGuessElseBoardUnit() {
         val r = LoadResolver(profile)
         val un = MassUnit.UNSPECIFIED
-        assertEquals(MassUnit.LB, r.concreteUnit(Mass(95.0, un), Mass(65.0, un)))
-        assertEquals(MassUnit.KG, r.concreteUnit(Mass(60.0, un), Mass(40.0, un)))
-        assertEquals(MassUnit.LB, r.concreteUnit(Mass(60.0, un, guessedUnit = MassUnit.LB), null))
-        val res = resolved(r.resolve(SplitLoad(Mass(95.0, un), Mass(65.0, un), confirmed = true), barbell))
-        assertEquals(kg(43.0), res.mass)
+        assertEquals(MassUnit.KG, r.concreteUnit(Mass(60.0, un)))
+        assertEquals(MassUnit.LB, r.concreteUnit(Mass(60.0, un, guessedUnit = MassUnit.LB)))
+        val res = resolved(r.resolve(AbsoluteLoad(Mass(95.0, un)), barbell))
+        assertEquals(Mass(95.0, MassUnit.KG), res.mass)
         assertEquals(listOf("ambiguous_unit"), res.warnings)
     }
 

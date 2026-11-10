@@ -39,27 +39,21 @@
               "movementId": "thruster",
               "name": "Thruster",
               "measure": {
-                "kind": "rep_scheme",
-                "labeled": false
+                "kind": "rep_scheme"
               },
               "load": {
-                "kind": "split",
-                "male": {
+                "kind": "absolute",
+                "mass": {
                   "value": 95.0,
                   "unit": "lb"
-                },
-                "female": {
-                  "value": 65.0,
-                  "unit": "lb"
-                },
-                "labeled": false,
-                "confirmed": false
+                }
               },
               "implement": "barbell",
               "count": 1,
               "modifiers": [],
               "role": "main",
-              "sets": []
+              "sets": [],
+              "notes": "Board: 95/65 lb"
             },
             {
               "type": "item",
@@ -67,8 +61,7 @@
               "movementId": "pull_up",
               "name": "Pull-up",
               "measure": {
-                "kind": "rep_scheme",
-                "labeled": false
+                "kind": "rep_scheme"
               },
               "count": 1,
               "modifiers": [],
@@ -90,17 +83,11 @@
             {
               "targetId": "f0120000-0000-4000-8000-000000000002",
               "load": {
-                "kind": "split",
-                "male": {
+                "kind": "absolute",
+                "mass": {
                   "value": 65.0,
                   "unit": "lb"
-                },
-                "female": {
-                  "value": 45.0,
-                  "unit": "lb"
-                },
-                "labeled": false,
-                "confirmed": false
+                }
               }
             },
             {

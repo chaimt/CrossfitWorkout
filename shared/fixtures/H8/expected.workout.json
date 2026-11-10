@@ -267,8 +267,7 @@
               "movementId": "deadlift",
               "name": "Deadlift",
               "measure": {
-                "kind": "rep_scheme",
-                "labeled": false
+                "kind": "rep_scheme"
               },
               "load": {
                 "kind": "percent_bodyweight",
@@ -286,24 +285,17 @@
               "movementId": "box_jump",
               "name": "Box jump",
               "measure": {
-                "kind": "rep_scheme",
-                "labeled": false
+                "kind": "rep_scheme"
               },
               "height": {
-                "male": {
-                  "value": 30.0,
-                  "unit": "in"
-                },
-                "female": {
-                  "value": 24.0,
-                  "unit": "in"
-                },
-                "labeled": false
+                "value": 30.0,
+                "unit": "in"
               },
               "count": 1,
               "modifiers": [],
               "role": "main",
-              "sets": []
+              "sets": [],
+              "notes": "Board: 30/24 in"
             }
           ]
         }

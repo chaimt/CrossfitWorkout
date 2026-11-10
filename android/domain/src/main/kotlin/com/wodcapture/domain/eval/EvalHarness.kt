@@ -78,7 +78,7 @@ object EvalHarness {
             when (n) {
                 is Item -> {
                     out["$k.movement"] = FieldCategory.MOVEMENTS to (n.movementId ?: "?" + n.name.lowercase())
-                    n.measure?.let { m -> out["$k.measure"] = FieldCategory.REPS to "${m.kind}:${m.value}:${m.female}:${m.unit}" }
+                    n.measure?.let { m -> out["$k.measure"] = FieldCategory.REPS to "${m.kind}:${m.value}:${m.unit}" }
                     n.load?.let { out["$k.load"] = FieldCategory.LOADS to loadKey(it) }
                     if (n.sets.isNotEmpty()) {
                         out["$k.sets"] = FieldCategory.REPS to n.sets.joinToString(",") { s -> "${s.reps.value}-${s.reps.upTo}-${s.reps.max}" }
@@ -96,10 +96,7 @@ object EvalHarness {
     }
 
     private fun loadKey(l: com.wodcapture.domain.model.LoadSpec): String =
-        DomainJson.storage.encodeToJsonElement(com.wodcapture.domain.model.LoadSpec.serializer(), l).let { e ->
-            // Confirmation is a review flag, not parser output.
-            (e as JsonObject).filterKeys { it != "confirmed" }.toString()
-        }
+        DomainJson.storage.encodeToJsonElement(com.wodcapture.domain.model.LoadSpec.serializer(), l).toString()
 
     private fun json(e: JsonElement): Map<String, JsonElement> = (e as? JsonObject)?.filterKeys { it != "type" }?.let { o ->
         o + mapOf("type" to (e.jsonObject["type"] ?: JsonPrimitive("")))

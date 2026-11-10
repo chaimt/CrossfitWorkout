@@ -27,8 +27,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -42,8 +41,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 2.0,
-            "labeled": false
+            "value": 2.0
           },
           "count": 1,
           "modifiers": [],
@@ -57,8 +55,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 3.0,
-            "labeled": false
+            "value": 3.0
           },
           "count": 1,
           "modifiers": [],
@@ -72,8 +69,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 4.0,
-            "labeled": false
+            "value": 4.0
           },
           "count": 1,
           "modifiers": [],
@@ -87,8 +83,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 5.0,
-            "labeled": false
+            "value": 5.0
           },
           "count": 1,
           "modifiers": [],
@@ -102,8 +97,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 6.0,
-            "labeled": false
+            "value": 6.0
           },
           "count": 1,
           "modifiers": [],
@@ -117,8 +111,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 7.0,
-            "labeled": false
+            "value": 7.0
           },
           "count": 1,
           "modifiers": [],
@@ -132,8 +125,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 8.0,
-            "labeled": false
+            "value": 8.0
           },
           "count": 1,
           "modifiers": [],
@@ -147,8 +139,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 9.0,
-            "labeled": false
+            "value": 9.0
           },
           "count": 1,
           "modifiers": [],
@@ -162,8 +153,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 10.0,
-            "labeled": false
+            "value": 10.0
           },
           "count": 1,
           "modifiers": [],
@@ -177,8 +167,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 11.0,
-            "labeled": false
+            "value": 11.0
           },
           "count": 1,
           "modifiers": [],
@@ -192,8 +181,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 12.0,
-            "labeled": false
+            "value": 12.0
           },
           "count": 1,
           "modifiers": [],
@@ -207,8 +195,7 @@
           "name": "Air squat",
           "measure": {
             "kind": "reps",
-            "value": 13.0,
-            "labeled": false
+            "value": 13.0
           },
           "count": 1,
           "modifiers": [],

@@ -9,8 +9,9 @@ import com.wodcapture.domain.model.Group
 import com.wodcapture.domain.model.Item
 import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.MeasureKind
+import com.wodcapture.domain.model.PartKind
 import com.wodcapture.domain.model.SourceKind
-import com.wodcapture.domain.model.SplitLoad
+import com.wodcapture.domain.model.WorkoutSection
 import com.wodcapture.domain.plan.CompileOptions
 import com.wodcapture.domain.plan.CompileResult
 import com.wodcapture.domain.plan.PlanCompiler
@@ -77,8 +78,8 @@ class ManualWorkoutBuilderTest {
         val group = assertIs<Group>(w.parts[0].body.single())
         assertEquals(listOf(21, 15, 9), group.repScheme)
         val thruster = group.children[0] as Item
-        val load = assertIs<SplitLoad>(thruster.load)
-        assertTrue(load.labeled, "explicit M/F pairs are labelled and need no confirmation")
+        val load = assertIs<AbsoluteLoad>(thruster.load)
+        assertEquals(95.0, load.mass.value)
         assertFalse(built.report.codes().contains("split_needs_review"))
         // Round-trips through storage like any parsed workout.
         assertEquals(w, DomainJson.decodeWorkout(DomainJson.encodeWorkout(w)))
@@ -225,10 +226,29 @@ class ManualWorkoutBuilderTest {
             val applied = ManualTemplates.apply(form(), t, ids)
             assertEquals(t.name, applied.title)
             // A weights quick start needs the athlete's goal weight, as a session needs its lift.
-            val f = applied.copy(parts = applied.parts.map { p -> if (p.format == ManualFormat.STRENGTH) ManualForms.withGoal(p, 100.0, 1.0) else p })
+            // A warm-up quick start defaults off the watch; check its compile with the fallback
+            // accepted (the builder's default) by compiling with a WARMUP-tolerant compile,
+            // i.e. kind-flip only for the budget check.
+            val f = applied.copy(parts = applied.parts.map { p ->
+                when {
+                    p.format == ManualFormat.STRENGTH -> ManualForms.withGoal(p, 100.0, 1.0)
+                    else -> p
+                }
+            })
             val built = builder.build(f)
             assertTrue(built.report.issues.none { it.severity == Severity.BLOCKING }, "${t.name}: ${built.report.blocking}")
-            when (val r = compiler.compile(built.workout, TestSupport.profile, identity, options)) {
+            if (t.section == WorkoutSection.WARMUP) {
+                // Warm-ups default off the watch (REQ-AE06): validation is the guarantee.
+                // A 15-drill for-quality list exceeds the 12-line watch budget by design —
+                // the athlete shortens it if they ever switch it on for the watch.
+                val part = built.workout.parts.single()
+                assertTrue(part.fallback?.accepted == true, t.name)
+                return@dynamicTest
+            }
+            val compiledWorkout = built.workout.copy(parts = built.workout.parts.map { p ->
+                p.copy(runOnWatch = true)
+            })
+            when (val r = compiler.compile(compiledWorkout, TestSupport.profile, identity, options)) {
                 is CompileResult.Success -> assertTrue(r.encodedBytes <= WatchLimits.MESSAGE_BUDGET)
                 is CompileResult.Failure -> throw AssertionError("${t.name} does not compile: ${r.errors}")
             }

@@ -28,8 +28,7 @@
           "name": "Box step-up",
           "measure": {
             "kind": "reps",
-            "value": 1000.0,
-            "labeled": false
+            "value": 1000.0
           },
           "count": 1,
           "modifiers": [],
@@ -44,7 +43,6 @@
           "measure": {
             "kind": "distance",
             "value": 2000.0,
-            "labeled": false,
             "unit": "m"
           },
           "count": 1,

@@ -7,7 +7,6 @@ import com.wodcapture.domain.model.Item
 import com.wodcapture.domain.model.ItemRole
 import com.wodcapture.domain.model.MeasureKind
 import com.wodcapture.domain.model.Rest
-import com.wodcapture.domain.model.SexSelection
 
 /** One concrete step of an expanded round. */
 sealed interface Step {
@@ -40,7 +39,7 @@ data class RoundProgram(
  * Expands rep schemes, nested rounds and progressions into concrete rounds (REQ-DM04,
  * "repeated segment templates are expanded and validated before compilation").
  */
-class RepSchemeExpander(private val sex: SexSelection = SexSelection.MALE) {
+class RepSchemeExpander {
 
     /**
      * Expands [body]. A body with one top-level rounds group (plus buy-in/cash-out items) yields
@@ -85,7 +84,7 @@ class RepSchemeExpander(private val sex: SexSelection = SexSelection.MALE) {
     private fun work(item: Item, round: Int, scheme: Group?): Step.Work {
         val m = item.measure
         val base: Int? = when (m?.kind) {
-            MeasureKind.REPS -> pick(m.value, m.female)?.toInt()
+            MeasureKind.REPS -> m.value?.toInt()
             MeasureKind.REP_SCHEME -> scheme?.repScheme?.getOrNull(round)
             null -> scheme?.repScheme?.getOrNull(round)
             else -> null
@@ -95,8 +94,6 @@ class RepSchemeExpander(private val sex: SexSelection = SexSelection.MALE) {
         return Step.Work(item, reps, countable)
     }
 
-    private fun pick(male: Double?, female: Double?): Double? =
-        if (sex == SexSelection.FEMALE && female != null) female else male
 
     /** Reps of [item] summed over all [rounds] (e.g. 55 per movement for a 1→10 ladder). */
     fun totalRepsFor(item: Item, rounds: List<ExpandedRound>): Int =

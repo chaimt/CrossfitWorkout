@@ -26,8 +26,7 @@
           "name": "Movement number 1 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -40,8 +39,7 @@
           "name": "Movement number 2 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -54,8 +52,7 @@
           "name": "Movement number 3 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -68,8 +65,7 @@
           "name": "Movement number 4 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -82,8 +78,7 @@
           "name": "Movement number 5 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -96,8 +91,7 @@
           "name": "Movement number 6 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -110,8 +104,7 @@
           "name": "Movement number 7 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -124,8 +117,7 @@
           "name": "Movement number 8 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -138,8 +130,7 @@
           "name": "Movement number 9 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -152,8 +143,7 @@
           "name": "Movement number 10 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -166,8 +156,7 @@
           "name": "Movement number 11 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -180,8 +169,7 @@
           "name": "Movement number 12 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -194,8 +182,7 @@
           "name": "Movement number 13 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -208,8 +195,7 @@
           "name": "Movement number 14 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -222,8 +208,7 @@
           "name": "Movement number 15 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -236,8 +221,7 @@
           "name": "Movement number 16 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -250,8 +234,7 @@
           "name": "Movement number 17 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -264,8 +247,7 @@
           "name": "Movement number 18 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -278,8 +260,7 @@
           "name": "Movement number 19 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -292,8 +273,7 @@
           "name": "Movement number 20 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -306,8 +286,7 @@
           "name": "Movement number 21 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -320,8 +299,7 @@
           "name": "Movement number 22 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -334,8 +312,7 @@
           "name": "Movement number 23 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -348,8 +325,7 @@
           "name": "Movement number 24 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -362,8 +338,7 @@
           "name": "Movement number 25 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -376,8 +351,7 @@
           "name": "Movement number 26 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -390,8 +364,7 @@
           "name": "Movement number 27 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -404,8 +377,7 @@
           "name": "Movement number 28 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -418,8 +390,7 @@
           "name": "Movement number 29 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],
@@ -432,8 +403,7 @@
           "name": "Movement number 30 with a long name",
           "measure": {
             "kind": "reps",
-            "value": 1.0,
-            "labeled": false
+            "value": 1.0
           },
           "count": 1,
           "modifiers": [],

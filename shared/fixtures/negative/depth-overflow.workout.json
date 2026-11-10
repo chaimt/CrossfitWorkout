@@ -62,8 +62,7 @@
                               "name": "Air squat",
                               "measure": {
                                 "kind": "reps",
-                                "value": 1.0,
-                                "labeled": false
+                                "value": 1.0
                               },
                               "count": 1,
                               "modifiers": [],

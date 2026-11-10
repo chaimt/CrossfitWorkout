@@ -39,7 +39,6 @@ import com.wodcapture.domain.model.ResultSource
 import com.wodcapture.domain.model.ResultStatus
 import com.wodcapture.domain.model.Score
 import com.wodcapture.domain.model.ScoreType
-import com.wodcapture.domain.model.SexSelection
 import com.wodcapture.domain.model.WorkoutResult
 import com.wodcapture.domain.parser.CloudParserConfig
 import com.wodcapture.domain.parser.CostEstimator
@@ -235,7 +234,6 @@ fun SettingsScreen(vm: AppViewModel, back: () -> Unit) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Choice("Weight unit", p.displayUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }) { u -> profile { it.copy(displayUnit = u) } }
             Choice("Board unit", p.boardUnit, listOf(MassUnit.KG, MassUnit.LB), { it.wire }) { u -> profile { it.copy(boardUnit = u) } }
-            Choice("Split loads", p.sex, SexSelection.entries, { it.name.lowercase() }) { x -> profile { it.copy(sex = x) } }
         }
         DoubleField("Bodyweight (${p.displayUnit.wire})", p.bodyweight?.value) { v -> profile { it.copy(bodyweight = v?.let { x -> Mass(x, it.displayUnit) }) } }
         DoubleField("Bar weight (kg)", p.selectedBar?.weight?.value) { v -> v?.let { w -> profile { pr -> pr.copy(bars = pr.bars.map { b -> if (b.id == pr.selectedBarId) b.copy(weight = Mass(w, MassUnit.KG)) else b }) } } }

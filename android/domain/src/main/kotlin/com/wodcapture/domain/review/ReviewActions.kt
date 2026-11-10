@@ -10,7 +10,6 @@ import com.wodcapture.domain.model.Item
 import com.wodcapture.domain.model.Level
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.Rest
-import com.wodcapture.domain.model.SplitLoad
 import com.wodcapture.domain.model.Workout
 import com.wodcapture.domain.validation.WorkoutValidator
 
@@ -20,28 +19,11 @@ import com.wodcapture.domain.validation.WorkoutValidator
  */
 object ReviewActions {
 
-    /** Confirms the suggested M/F mapping of every unlabeled split ("higher = male"). */
-    fun confirmSplits(w: Workout): Workout = w.copy(parts = w.parts.map { p ->
-        p.copy(
-            body = BodyTree.map(p.body, ::confirmNode),
-            levels = p.levels.map { l -> l.copy(overrides = l.overrides.map { o -> o.copy(load = (o.load as? SplitLoad)?.copy(confirmed = true) ?: o.load) }) },
-        )
-    })
+    /** No-op kept for old callers: single-value model has no M/F splits to confirm. */
+    fun confirmSplits(w: Workout): Workout = w
 
-    private fun confirmNode(n: BodyNode): BodyNode = if (n is Item) n.copy(
-        load = (n.load as? SplitLoad)?.copy(confirmed = true) ?: n.load,
-        sets = n.sets.map { s -> s.copy(load = (s.load as? SplitLoad)?.copy(confirmed = true) ?: s.load) },
-    ) else n
-
-    /** Swaps an unlabeled split whose suggested mapping was wrong, and confirms it. */
-    fun swapSplit(w: Workout, nodeId: String): Workout = w.copy(parts = w.parts.map { p ->
-        p.copy(body = BodyTree.map(p.body) { n ->
-            if (n is Item && n.id == nodeId && n.load is SplitLoad) {
-                val s = n.load
-                n.copy(load = s.copy(male = s.female, female = s.male, confirmed = true))
-            } else n
-        })
-    })
+    /** No-op kept for old callers: single-value model has no M/F splits to swap. */
+    fun swapSplit(w: Workout, nodeId: String): Workout = w
 
     /** Accepts the labeled manual-timer fallback for [partId] (REQ-DM18). */
     fun acceptFallback(w: Workout, partId: String, timer: FallbackTimer, durationSec: Int? = null, capSec: Int? = null): Workout =

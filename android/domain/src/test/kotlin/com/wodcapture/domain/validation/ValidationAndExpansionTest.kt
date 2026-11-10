@@ -22,7 +22,6 @@ import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.Rest
 import com.wodcapture.domain.model.ScoreType
 import com.wodcapture.domain.model.Scoring
-import com.wodcapture.domain.model.SplitLoad
 import com.wodcapture.domain.model.Workout
 import com.wodcapture.domain.plan.CompileOptions
 import com.wodcapture.domain.plan.CompileResult
@@ -80,9 +79,8 @@ class ValidationAndExpansionTest {
     }
 
     @Test
-    fun warningsCoverFreeTextSplitsAndRepMaxNeeds() {
+    fun warningsCoverFreeTextAndRepMaxNeeds() {
         val codes = WorkoutValidator.validate(Fixtures.h1.expected).codes() + WorkoutValidator.validate(Fixtures.h9.expected).codes()
-        assertTrue("split_needs_review" in codes)
         assertTrue("needs_rep_max" in codes)
         val free = Fixtures.h10.expected.copy(parts = listOf(Fixtures.h10.expected.parts[0].copy(body = listOf(Item(fid(99, 2, 1), null, "Sandbag thing", measure = Measure(MeasureKind.REPS, 5.0))))))
         val report = WorkoutValidator.validate(free)
@@ -96,7 +94,7 @@ class ValidationAndExpansionTest {
         val scaled = LevelApplier.apply(part, "Scaled")
         val items = com.wodcapture.domain.model.BodyTree.items(scaled.body)
         assertEquals("jumping_pull_up", items[1].movementId)
-        assertEquals(65.0, (items[0].load as SplitLoad).male.value)
+        assertEquals(65.0, (items[0].load as com.wodcapture.domain.model.AbsoluteLoad).mass.value)
         assertEquals(listOf("Rx", "Scaled"), LevelApplier.levelNames(part))
         val broken = part.copy(levels = listOf(Level("Scaled", listOf(Override("f9990000-0000-4000-8000-000000000001", name = "x")))))
         assertFailsWith<DanglingOverrideException> { LevelApplier.apply(broken, "Scaled") }

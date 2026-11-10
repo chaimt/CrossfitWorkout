@@ -42,14 +42,13 @@
           "name": "Row",
           "measure": {
             "kind": "calories",
-            "value": 15.0,
-            "female": 12.0,
-            "labeled": false
+            "value": 15.0
           },
           "count": 1,
           "modifiers": [],
           "role": "main",
-          "sets": []
+          "sets": [],
+          "notes": "Board: 15/12 cal"
         },
         {
           "type": "item",
@@ -58,8 +57,7 @@
           "name": "Toes-to-bar",
           "measure": {
             "kind": "reps",
-            "value": 12.0,
-            "labeled": false
+            "value": 12.0
           },
           "count": 1,
           "modifiers": [],
@@ -72,8 +70,7 @@
           "movementId": "double_under",
           "name": "Double-under",
           "measure": {
-            "kind": "max",
-            "labeled": false
+            "kind": "max"
           },
           "count": 1,
           "modifiers": [],

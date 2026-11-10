@@ -24,7 +24,6 @@ import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.PercentOfMax
 import com.wodcapture.domain.model.Rest
 import com.wodcapture.domain.model.ScoreType
-import com.wodcapture.domain.model.SplitLoad
 import com.wodcapture.domain.model.StrengthSets
 import com.wodcapture.domain.model.Tabata
 import com.wodcapture.domain.model.WORKOUT_SCHEMA_VERSION
@@ -218,7 +217,6 @@ object WorkoutValidator {
                 }
             }
             if (m.kind == MeasureKind.DISTANCE && m.unit == null) b("missing_unit", "Distance needs a unit", n.id, "measure.unit")
-            if (m.female != null && !m.labeled) warn("split_needs_review", "Confirm which value is male/female", n.id, "measure")
             if (m.kind == MeasureKind.REP_SCHEME && !hasSchemeAncestor(root, n.id)) {
                 b("invalid_rep_scheme", "Item uses a rep scheme but no enclosing group defines one", n.id, "measure")
             }
@@ -251,7 +249,6 @@ object WorkoutValidator {
     ) {
         val masses: List<Mass> = when (load) {
             is AbsoluteLoad -> listOf(load.mass)
-            is SplitLoad -> listOf(load.male, load.female)
             else -> emptyList()
         }
         masses.forEach { m ->
@@ -259,9 +256,6 @@ object WorkoutValidator {
             if (m.unit == MassUnit.UNSPECIFIED) warn("ambiguous_unit", "Unit of ${m.value} is not marked", n.id, path)
             val kg = when (m.unit) { MassUnit.LB -> m.value * 0.4536; MassUnit.POOD -> m.value * 16; else -> m.value }
             if (kg > UNUSUAL_LOAD_KG) warn("unusual_load", "Unusually heavy load ${m.value}", n.id, path)
-        }
-        if (load is SplitLoad && !load.labeled && !load.confirmed) {
-            warn("split_needs_review", "Confirm which load is male/female", n.id, path)
         }
         if (load is PercentOfMax) {
             if (load.percent <= 0 || load.percent > 150) b("invalid_bounds", "Percentage out of range", n.id, path)
