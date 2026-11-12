@@ -39,7 +39,7 @@ tasks:
     cmds:
       - task: android:emulator:run
 
-  sim:
+  android-simulator:
     desc: Run WOD Coach in the Connect IQ simulator and tether the phone/emulator to it (REQ-SY08)
     cmds:
       - task: android:run

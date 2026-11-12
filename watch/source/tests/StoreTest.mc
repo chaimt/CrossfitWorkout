@@ -192,23 +192,46 @@ function testOutboxAckOnlyDeliveryAndRetryBudget(logger as Test.Logger) as Boole
 function testHistoryNeverPrunesUnsent(logger as Test.Logger) as Boolean {
     var kv = new MemKv();
     for (var i = 0; i < 52; i++) {
-        History.add(kv, "r" + i.format("%d"), History.KIND_RESULT, "T", "A", i, "1:00", "completed", {"id" => i});
+        History.add(kv, "r" + i.format("%d"), History.KIND_RESULT, "T", "A", 1000000 + i, "1:00", "completed", {"id" => i});
     }
-    // Nothing delivered yet: all 52 kept (never prune unacknowledged).
+    // Nothing delivered yet: all 52 kept (recent rows never pruned, cap never touches unsent).
     Test.assertEqual(52, History.rows(kv).size());
     Test.assertEqual(52, History.unsent(kv));
     History.markDelivered(kv, "r0");
     History.markDelivered(kv, "r1");
     History.markDelivered(kv, "r2");
     History.markDelivered(kv, "r3");
-    History.add(kv, "r99", History.KIND_RESULT, "T", "A", 99, "1:00", "completed", {"id" => 99});
+    History.add(kv, "r99", History.KIND_RESULT, "T", "A", 1000000 + 99, "1:00", "completed", {"id" => 99});
     Test.assertEqual(50, History.rows(kv).size());
     Test.assert(History.find(kv, "r0") < 0);
     Test.assert(History.find(kv, "r2") < 0);
     Test.assert(History.find(kv, "r3") >= 0);
     // Idempotent add (recovery may run twice).
-    History.add(kv, "r99", History.KIND_RESULT, "T", "A", 99, "1:00", "completed", {"id" => 99});
+    History.add(kv, "r99", History.KIND_RESULT, "T", "A", 1000000 + 99, "1:00", "completed", {"id" => 99});
     Test.assertEqual(50, History.rows(kv).size());
+    return true;
+}
+
+(:test)
+function testHistoryDropsDeliveredRowsOlderThanTwoWeeks(logger as Test.Logger) as Boolean {
+    var kv = new MemKv();
+    var now = 2000000;
+    var old = now - History.RETENTION_SEC - 100;
+    History.add(kv, "old-sent", History.KIND_RESULT, "T", "A", old, "1:00", "completed", {"id" => "old-sent"});
+    History.markDelivered(kv, "old-sent");
+    History.add(kv, "old-pending", History.KIND_RESULT, "T", "A", old, "1:00", "completed", {"id" => "old-pending"});
+    History.add(kv, "fresh-sent", History.KIND_RESULT, "T", "A", now, "1:00", "completed", {"id" => "fresh-sent"});
+    History.markDelivered(kv, "fresh-sent");
+    Test.assertEqual(3, History.rows(kv).size());
+    History.prune(kv, now);
+    // Delivered row older than two weeks is gone; pending old row and
+    // fresh delivered row stay; payload of the dropped row is gone too.
+    Test.assertEqual(2, History.rows(kv).size());
+    Test.assert(History.find(kv, "old-sent") < 0);
+    Test.assert(History.find(kv, "old-pending") >= 0);
+    Test.assert(History.find(kv, "fresh-sent") >= 0);
+    Test.assert(History.object(kv, "old-sent") == null);
+    Test.assert(History.object(kv, "old-pending") != null);
     return true;
 }
 
@@ -231,5 +254,33 @@ function testAdmissionEvictsOnlyAcknowledged(logger as Test.Logger) as Boolean {
     }
     Test.assert(Budget.admit(kv, 2000, 6));
     Test.assert(History.rows(kv).size() < 9);
+    return true;
+}
+
+(:test)
+function testFutureRowsListsPlansAfterTodayEarliestFirst(logger as Test.Logger) as Boolean {
+    var kv = new MemKv();
+    var todayWod = Fx.planWith("10000000-0000-4000-8000-000000000001", 1, Fx.franPart());
+    todayWod["ti"] = "Today WOD";
+    todayWod["date"] = "2026-11-12";
+    var tomorrowWod = Fx.planWith("10000000-0000-4000-8000-000000000002", 1, Fx.franPart());
+    tomorrowWod["ti"] = "Tomorrow WOD";
+    tomorrowWod["date"] = "2026-11-13";
+    var laterWod = Fx.planWith("10000000-0000-4000-8000-000000000003", 1, Fx.franPart());
+    laterWod["ti"] = "Later WOD";
+    laterWod["date"] = "2026-11-20";
+    var oldWod = Fx.planWith("10000000-0000-4000-8000-000000000004", 1, Fx.franPart());
+    oldWod["ti"] = "Old WOD";
+    oldWod["date"] = "2026-11-01";
+    Fx.eqs("ok", Inbox.put(kv, "10000000-0000-4000-8000-000000000003", 1, laterWod, 3, 100000)[0] as String);
+    Fx.eqs("ok", Inbox.put(kv, "10000000-0000-4000-8000-000000000004", 1, oldWod, 4, 100000)[0] as String);
+    Fx.eqs("ok", Inbox.put(kv, "10000000-0000-4000-8000-000000000002", 1, tomorrowWod, 2, 100000)[0] as String);
+    Fx.eqs("ok", Inbox.put(kv, "10000000-0000-4000-8000-000000000001", 1, todayWod, 1, 100000)[0] as String);
+    var rows = Inbox.futureRows(kv, "2026-11-12");
+    Test.assertEqual(2, rows.size());
+    Fx.eqs("Tomorrow WOD", (rows[0] as Array)[IX_TITLE] as String);
+    Fx.eqs("Later WOD", (rows[1] as Array)[IX_TITLE] as String);
+    // Today still resolves to today's plan only.
+    Fx.eqs("Today WOD", (Inbox.todayRow(kv, "2026-11-12") as Array)[IX_TITLE] as String);
     return true;
 }

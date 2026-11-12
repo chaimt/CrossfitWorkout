@@ -4,14 +4,16 @@
 // Finalized Results and SessionSummaries kept on the watch: the outbox's
 // payload source and the on-watch history (REQ-WO03). Objects are
 // immutable once stored (REQ-SY12 "as recorded"); `delivered` flips only on
-// the phone's ack. Retention: at most 50 rows, pruning the oldest
-// *delivered* rows first; unacknowledged objects are never pruned.
+// the phone's ack. Retention: rows newer than 14 days plus at most
+// ROW_CAP rows total, pruning the oldest *delivered* rows first;
+// unacknowledged objects are never pruned.
 //
 // Storage: "hx" = [[id, kind, title, label, t0, scoreText, delivered,
 // bytes, status]] newest first, "o_<id>" = payload Dictionary.
 // Pure apart from Kv; tested in HistoryTest.mc.
 //
 import Toybox.Lang;
+import Toybox.Time;
 
 // History row columns.
 enum {
@@ -28,7 +30,8 @@ enum {
 
 module History {
 
-    const MAX_ROWS = 50;
+    const ROW_CAP = 50;
+    const RETENTION_SEC = 14 * 86400;
     const KIND_RESULT = "r";
     const KIND_SESSION = "s";
 
@@ -69,10 +72,15 @@ module History {
         return kv.put("hx", next);
     }
 
-    //! Drops the oldest delivered rows beyond MAX_ROWS.
+    //! Drops the oldest delivered rows beyond the retention window / cap.
+    //! Rows with a t0 newer than RETENTION_SEC survive regardless of the
+    //! cap; anything older than that is evicted once delivered (new row
+    //! first, then oldest-first down to the cap). Unsent rows never drop.
     function _pruned(kv as Kv, hx as Array) as Array {
+        var now = Time.now().value();
+        hx = _dropDeliveredOlder(kv, hx, now);
         var i = hx.size() - 1;
-        while (hx.size() > MAX_ROWS && i >= 0) {
+        while (hx.size() > ROW_CAP && i >= 0) {
             var r = hx[i] as Array;
             if (r[HX_SENT] as Boolean) {
                 kv.del("o_" + (r[HX_ID] as String));
@@ -81,6 +89,26 @@ module History {
             i--;
         }
         return hx;
+    }
+
+    function _dropDeliveredOlder(kv as Kv, hx as Array, now as Number) as Array {
+        var i = 0;
+        while (i < hx.size()) {
+            var r = hx[i] as Array;
+            var t0 = r[HX_T0] as Number;
+            if ((r[HX_SENT] as Boolean) && t0 != null && now - t0 > RETENTION_SEC) {
+                kv.del("o_" + (r[HX_ID] as String));
+                hx = U.removeAt(hx, i);
+            } else {
+                i++;
+            }
+        }
+        return hx;
+    }
+
+    //! Explicit time source for tests (Time.now is unavailable in :test code).
+    function prune(kv as Kv, now as Number) as Void {
+        kv.put("hx", _dropDeliveredOlder(kv, rows(kv), now));
     }
 
     function markDelivered(kv as Kv, id as String) as Void {

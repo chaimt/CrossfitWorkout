@@ -178,6 +178,7 @@ fun DeviceScreen(vm: AppViewModel, back: () -> Unit) {
     val outbox by vm.outbox.collectAsState()
     val settings by vm.settings.collectAsState()
     val notices by vm.notices.collectAsState()
+    var confirmClear by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize().padding(12.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Bar("Watch", back)
         Text(
@@ -192,6 +193,16 @@ fun DeviceScreen(vm: AppViewModel, back: () -> Unit) {
             OutlinedButton(onClick = vm::refreshDevices) { Text("Refresh devices") }
             OutlinedButton(onClick = vm::openOnWatch) { Text("Open WOD Coach") }
             OutlinedButton(onClick = vm::sendProfile) { Text("Send defaults") }
+            OutlinedButton(onClick = { confirmClear = true }) { Text("Remove all from watch") }
+        }
+        if (confirmClear) {
+            AlertDialog(
+                onDismissRequest = { confirmClear = false },
+                title = { Text("Remove all workouts from watch?") },
+                text = { Text("Queues a delete for every sent workout; the next sync clears the watch inbox. Workouts, results and history on the phone are kept.") },
+                confirmButton = { TextButton(onClick = { vm.clearWatch(); confirmClear = false }) { Text("Remove all") } },
+                dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Cancel") } },
+            )
         }
         Toggle("Use beta app id", settings.useBetaApp) { b -> vm.updateSettings { it.copy(useBetaApp = b) } }
         Toggle("Simulator (TETHERED, restart app)", settings.tethered) { t -> vm.updateSettings { it.copy(tethered = t) } }

@@ -323,8 +323,8 @@ object ManualForms {
      * always strength; a move into warm-up picks warm-up, into the trailing section picks
      * cool-down, unless the current kind already fits), and a strength part gets its lift and a
      * first set so the form never shows an empty card. Weights parts have no label or name of
-     * their own (owner request 2026-11-05), so moving a part there clears them rather than
-     * keeping hidden values.
+     * their own and warm-up parts have no name of their own (owner request 2026-11-05,
+     * 2026-11-11), so moving a part there clears them rather than keeping hidden values.
      */
     fun withFormat(part: ManualPartForm, format: ManualFormat, ids: IdSource): ManualPartForm {
         val targetSection = when {
@@ -349,11 +349,12 @@ object ManualForms {
             listOf(newMovement(ids))
         } else part.movements
         val weights = format == ManualFormat.STRENGTH
+        val warmup = kind == PartKind.WARMUP && format == ManualFormat.FOR_QUALITY
         return part.copy(
             format = format,
             kind = kind,
             label = if (weights) "" else part.label,
-            name = if (weights) "" else part.name,
+            name = if (weights || warmup) "" else part.name,
             lift = lift,
             sets = sets,
             movements = movements,

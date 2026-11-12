@@ -207,7 +207,6 @@ object ManualTemplates {
      */
     fun burgener(ids: IdSource) = part(ids, ManualFormat.FOR_QUALITY).copy(
         kind = PartKind.WARMUP,
-        name = "Burgener warm-up",
         movements = listOf(
             reps(ids, "muscle_snatch", "Down and finish + muscle snatch", 3.0),
             reps(ids, "snatch_balance", "Snatch land + snatch balance", 3.0),

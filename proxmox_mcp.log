@@ -3563,3 +3563,1419 @@
 2026-11-10 21:14:24,626 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
 2026-11-10 21:14:24,626 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
 2026-11-10 21:14:24,626 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 19:18:47,877 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 10.0.0.91
+2026-11-11 19:18:47,917 - mcp.server.lowlevel.server - DEBUG - Initializing server 'ProxmoxMCP'
+2026-11-11 19:18:47,917 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-11-11 19:18:47,917 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-11-11 19:18:47,917 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-11-11 19:18:47,917 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-11-11 19:18:47,917 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-11-11 19:18:47,917 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-11-11 19:18:47,917 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-11-11 19:18:47,936 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for targets: default)
+2026-11-11 19:18:47,950 - proxmox-mcp - INFO - MCP tool exposure mode=all, registered=50, available=50, catalog=50
+2026-11-11 19:18:47,950 - proxmox-mcp - DEBUG - Registered MCP tools: cancel_job, clone_vm, create_backup, create_container, create_snapshot, create_vm, delete_backup, delete_container, delete_iso, delete_snapshot, delete_vm, download_iso, execute_container_command, execute_vm_command, get_cluster_log, get_cluster_status, get_container_config, get_container_ip, get_containers, get_guest_firewall_log, get_job, get_node_firewall_log, get_node_status, get_node_syslog, get_nodes, get_storage, get_task_log, get_vm_config, get_vms, list_backups, list_isos, list_jobs, list_snapshots, list_targets, list_templates, poll_job, reset_vm, restart_container, restore_backup, retry_job, rollback_snapshot, set_container_description, set_vm_description, shutdown_vm, start_container, start_vm, stop_container, stop_vm, update_container_resources, update_container_ssh_keys
+2026-11-11 19:18:47,950 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-11-11 19:18:47,952 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-11-11 19:18:47,958 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2026-11-11 19:18:47,958 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d2de0d0>
+2026-11-11 19:18:47,958 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-11-11 19:18:47,958 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2026-11-11 19:18:47,960 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 19:18:47,961 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d2ddf90>
+2026-11-11 19:18:47,962 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-11-11 19:18:47,962 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListPromptsRequest
+2026-11-11 19:18:47,962 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 19:18:47,973 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d2e4c30>
+2026-11-11 19:18:47,973 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 19:18:47,973 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 19:18:47,974 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 19:18:47,974 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 19:18:47,974 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d2e5350>
+2026-11-11 19:18:47,974 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 19:18:47,974 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 19:18:47,974 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 19:18:47,974 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 19:18:48,050 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d122c30>
+2026-11-11 19:18:48,051 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 19:18:48,051 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 19:18:48,051 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 19:18:48,051 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 19:18:48,051 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d2bf130>
+2026-11-11 19:18:48,051 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 19:18:48,051 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 19:18:48,051 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 19:18:48,051 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 19:18:51,872 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d2bf240>
+2026-11-11 19:18:51,872 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 19:18:51,872 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 19:18:51,872 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 19:18:51,872 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 19:18:51,872 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d2f5450>
+2026-11-11 19:18:51,872 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 19:18:51,873 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 19:18:51,873 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 19:18:51,873 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 19:49:03,425 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d2f4f50>
+2026-11-11 19:49:03,440 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 19:49:03,440 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 19:49:03,442 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 19:49:03,444 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 19:49:03,452 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d2f2030>
+2026-11-11 19:49:03,453 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 19:49:03,453 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 19:49:03,453 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 19:49:03,453 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 19:50:46,103 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d2f2210>
+2026-11-11 19:50:46,104 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 19:50:46,105 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 19:50:46,105 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 19:50:46,105 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 19:50:46,106 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d329a90>
+2026-11-11 19:50:46,106 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 19:50:46,106 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 19:50:46,106 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 19:50:46,107 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 20:18:02,834 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d3298d0>
+2026-11-11 20:18:02,835 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 20:18:02,835 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 20:18:02,836 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 20:18:02,836 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 20:18:02,837 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d2c24e0>
+2026-11-11 20:18:02,837 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 20:18:02,837 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 20:18:02,837 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 20:18:02,837 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 20:34:23,868 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ce9e450>
+2026-11-11 20:34:23,869 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 20:34:23,869 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 20:34:23,869 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 20:34:23,874 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 20:34:23,874 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ce9e390>
+2026-11-11 20:34:23,875 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 20:34:23,875 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 20:34:23,875 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 20:34:23,875 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 20:52:02,972 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10cebb540>
+2026-11-11 20:52:02,972 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 20:52:02,972 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 20:52:02,972 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 20:52:02,974 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 20:52:02,974 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10cebb750>
+2026-11-11 20:52:02,974 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 20:52:02,974 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 20:52:02,974 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 20:52:02,975 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 21:07:40,867 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d325770>
+2026-11-11 21:07:40,867 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 21:07:40,867 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 21:07:40,867 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 21:07:40,867 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 21:07:40,868 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d324730>
+2026-11-11 21:07:40,868 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 21:07:40,868 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 21:07:40,868 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 21:07:40,869 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 21:23:10,840 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d325770>
+2026-11-11 21:23:10,841 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 21:23:10,841 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 21:23:10,841 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 21:23:10,841 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 21:23:10,842 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d325630>
+2026-11-11 21:23:10,842 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 21:23:10,842 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 21:23:10,842 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 21:23:10,842 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 21:39:39,862 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d3253b0>
+2026-11-11 21:39:39,862 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 21:39:39,862 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 21:39:39,862 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 21:39:39,863 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 21:39:39,863 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d325810>
+2026-11-11 21:39:39,864 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 21:39:39,864 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 21:39:39,864 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 21:39:39,864 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 21:57:36,065 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d325590>
+2026-11-11 21:57:36,065 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 21:57:36,065 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 21:57:36,065 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 21:57:36,066 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 21:57:36,066 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d3259f0>
+2026-11-11 21:57:36,066 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 21:57:36,066 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 21:57:36,066 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 21:57:36,066 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 22:09:03,864 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d325590>
+2026-11-11 22:09:03,866 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 22:09:03,866 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 22:09:03,866 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 22:09:03,867 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 22:09:03,869 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d3253b0>
+2026-11-11 22:09:03,869 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 22:09:03,869 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 22:09:03,869 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 22:09:03,870 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 22:17:04,584 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d3256d0>
+2026-11-11 22:17:04,584 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-11 22:17:04,584 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-11 22:17:04,584 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-11 22:17:04,584 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-11 22:17:04,584 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d325450>
+2026-11-11 22:17:04,584 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-11 22:17:04,584 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-11 22:17:04,584 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-11 22:17:04,590 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 02:28:25,921 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 10.0.0.91
+2026-11-12 02:28:25,953 - mcp.server.lowlevel.server - DEBUG - Initializing server 'ProxmoxMCP'
+2026-11-12 02:28:25,953 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-11-12 02:28:25,953 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-11-12 02:28:25,953 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-11-12 02:28:25,953 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-11-12 02:28:25,953 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-11-12 02:28:25,953 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-11-12 02:28:25,953 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-11-12 02:28:25,972 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for targets: default)
+2026-11-12 02:28:25,987 - proxmox-mcp - INFO - MCP tool exposure mode=all, registered=50, available=50, catalog=50
+2026-11-12 02:28:25,987 - proxmox-mcp - DEBUG - Registered MCP tools: cancel_job, clone_vm, create_backup, create_container, create_snapshot, create_vm, delete_backup, delete_container, delete_iso, delete_snapshot, delete_vm, download_iso, execute_container_command, execute_vm_command, get_cluster_log, get_cluster_status, get_container_config, get_container_ip, get_containers, get_guest_firewall_log, get_job, get_node_firewall_log, get_node_status, get_node_syslog, get_nodes, get_storage, get_task_log, get_vm_config, get_vms, list_backups, list_isos, list_jobs, list_snapshots, list_targets, list_templates, poll_job, reset_vm, restart_container, restore_backup, retry_job, rollback_snapshot, set_container_description, set_vm_description, shutdown_vm, start_container, start_vm, stop_container, stop_vm, update_container_resources, update_container_ssh_keys
+2026-11-12 02:28:25,987 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-11-12 02:28:25,989 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-11-12 02:28:25,992 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2026-11-12 02:28:25,992 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ae1a0d0>
+2026-11-12 02:28:25,992 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-11-12 02:28:25,992 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2026-11-12 02:28:25,994 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 02:28:25,996 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ae19f90>
+2026-11-12 02:28:25,996 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-11-12 02:28:25,996 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListPromptsRequest
+2026-11-12 02:28:25,996 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 02:28:26,249 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ae20c30>
+2026-11-12 02:28:26,250 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 02:28:26,250 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 02:28:26,250 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 02:28:26,250 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 02:28:26,250 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ae21350>
+2026-11-12 02:28:26,250 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 02:28:26,250 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 02:28:26,250 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 02:28:26,251 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 02:28:27,443 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ac5ec30>
+2026-11-12 02:28:27,443 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 02:28:27,443 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 02:28:27,443 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 02:28:27,443 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 02:28:27,443 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10adfb130>
+2026-11-12 02:28:27,444 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 02:28:27,444 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 02:28:27,444 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 02:28:27,444 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 02:43:43,137 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10adfb240>
+2026-11-12 02:43:43,138 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 02:43:43,138 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 02:43:43,138 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 02:43:43,138 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 02:43:43,138 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ae31450>
+2026-11-12 02:43:43,138 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 02:43:43,138 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 02:43:43,138 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 02:43:43,139 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:00:46,932 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ae30f50>
+2026-11-12 03:00:46,933 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 03:00:46,933 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 03:00:46,933 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 03:00:46,933 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:00:46,934 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ae2e030>
+2026-11-12 03:00:46,934 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 03:00:46,934 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 03:00:46,934 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 03:00:46,934 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:18:30,127 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ae2e210>
+2026-11-12 03:18:30,127 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 03:18:30,127 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 03:18:30,127 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 03:18:30,127 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:18:30,129 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ae65a90>
+2026-11-12 03:18:30,129 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 03:18:30,129 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 03:18:30,130 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 03:18:30,131 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:35:25,941 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ae65e10>
+2026-11-12 03:35:25,941 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 03:35:25,941 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 03:35:25,941 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 03:35:25,941 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:35:25,942 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10adfe270>
+2026-11-12 03:35:25,942 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 03:35:25,942 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 03:35:25,942 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 03:35:25,942 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:51:05,156 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 10.0.0.91
+2026-11-12 03:51:05,185 - mcp.server.lowlevel.server - DEBUG - Initializing server 'ProxmoxMCP'
+2026-11-12 03:51:05,185 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-11-12 03:51:05,185 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-11-12 03:51:05,185 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-11-12 03:51:05,185 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-11-12 03:51:05,185 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-11-12 03:51:05,185 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-11-12 03:51:05,185 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-11-12 03:51:05,201 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for targets: default)
+2026-11-12 03:51:05,213 - proxmox-mcp - INFO - MCP tool exposure mode=all, registered=50, available=50, catalog=50
+2026-11-12 03:51:05,213 - proxmox-mcp - DEBUG - Registered MCP tools: cancel_job, clone_vm, create_backup, create_container, create_snapshot, create_vm, delete_backup, delete_container, delete_iso, delete_snapshot, delete_vm, download_iso, execute_container_command, execute_vm_command, get_cluster_log, get_cluster_status, get_container_config, get_container_ip, get_containers, get_guest_firewall_log, get_job, get_node_firewall_log, get_node_status, get_node_syslog, get_nodes, get_storage, get_task_log, get_vm_config, get_vms, list_backups, list_isos, list_jobs, list_snapshots, list_targets, list_templates, poll_job, reset_vm, restart_container, restore_backup, retry_job, rollback_snapshot, set_container_description, set_vm_description, shutdown_vm, start_container, start_vm, stop_container, stop_vm, update_container_resources, update_container_ssh_keys
+2026-11-12 03:51:05,213 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-11-12 03:51:05,214 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-11-12 03:51:05,216 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2026-11-12 03:51:05,217 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aa860d0>
+2026-11-12 03:51:05,217 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-11-12 03:51:05,217 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2026-11-12 03:51:05,218 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:51:05,219 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aa85f90>
+2026-11-12 03:51:05,219 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-11-12 03:51:05,219 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListPromptsRequest
+2026-11-12 03:51:05,219 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:51:05,232 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aa8cc30>
+2026-11-12 03:51:05,232 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 03:51:05,232 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 03:51:05,232 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 03:51:05,232 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:51:05,232 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aa8d350>
+2026-11-12 03:51:05,232 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 03:51:05,232 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 03:51:05,232 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 03:51:05,233 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:51:06,386 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a8cac30>
+2026-11-12 03:51:06,386 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 03:51:06,386 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 03:51:06,386 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 03:51:06,386 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:51:06,387 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aa67130>
+2026-11-12 03:51:06,387 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 03:51:06,387 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 03:51:06,387 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 03:51:06,387 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:51:06,684 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aa67240>
+2026-11-12 03:51:06,684 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 03:51:06,684 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 03:51:06,684 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 03:51:06,685 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:51:06,685 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aa9d450>
+2026-11-12 03:51:06,685 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 03:51:06,685 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 03:51:06,685 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 03:51:06,685 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:56:20,955 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aa9cf50>
+2026-11-12 03:56:20,955 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 03:56:20,955 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 03:56:20,955 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 03:56:20,955 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 03:56:20,956 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aa9a030>
+2026-11-12 03:56:20,957 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 03:56:20,957 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 03:56:20,957 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 03:56:20,968 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:12:43,314 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aa9a210>
+2026-11-12 04:12:43,314 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 04:12:43,314 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 04:12:43,314 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 04:12:43,314 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:12:43,314 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aad18d0>
+2026-11-12 04:12:43,315 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 04:12:43,315 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 04:12:43,315 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 04:12:43,315 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:29:36,025 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aad1e10>
+2026-11-12 04:29:36,025 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 04:29:36,025 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 04:29:36,025 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 04:29:36,026 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:29:36,026 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aa6a270>
+2026-11-12 04:29:36,026 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 04:29:36,026 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 04:29:36,026 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 04:29:36,027 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:45:22,231 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a646450>
+2026-11-12 04:45:22,231 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 04:45:22,231 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 04:45:22,231 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 04:45:22,231 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:45:22,232 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a6468d0>
+2026-11-12 04:45:22,232 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 04:45:22,232 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 04:45:22,232 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 04:45:22,232 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:47:24,989 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a663330>
+2026-11-12 04:47:24,989 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 04:47:24,989 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 04:47:24,989 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 04:47:24,989 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:47:24,990 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a6636a0>
+2026-11-12 04:47:24,990 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 04:47:24,990 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 04:47:24,990 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 04:47:24,991 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:57:22,640 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 10.0.0.91
+2026-11-12 04:57:22,658 - mcp.server.lowlevel.server - DEBUG - Initializing server 'ProxmoxMCP'
+2026-11-12 04:57:22,658 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-11-12 04:57:22,658 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-11-12 04:57:22,658 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-11-12 04:57:22,658 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-11-12 04:57:22,658 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-11-12 04:57:22,658 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-11-12 04:57:22,658 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-11-12 04:57:22,673 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for targets: default)
+2026-11-12 04:57:22,685 - proxmox-mcp - INFO - MCP tool exposure mode=all, registered=50, available=50, catalog=50
+2026-11-12 04:57:22,685 - proxmox-mcp - DEBUG - Registered MCP tools: cancel_job, clone_vm, create_backup, create_container, create_snapshot, create_vm, delete_backup, delete_container, delete_iso, delete_snapshot, delete_vm, download_iso, execute_container_command, execute_vm_command, get_cluster_log, get_cluster_status, get_container_config, get_container_ip, get_containers, get_guest_firewall_log, get_job, get_node_firewall_log, get_node_status, get_node_syslog, get_nodes, get_storage, get_task_log, get_vm_config, get_vms, list_backups, list_isos, list_jobs, list_snapshots, list_targets, list_templates, poll_job, reset_vm, restart_container, restore_backup, retry_job, rollback_snapshot, set_container_description, set_vm_description, shutdown_vm, start_container, start_vm, stop_container, stop_vm, update_container_resources, update_container_ssh_keys
+2026-11-12 04:57:22,685 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-11-12 04:57:22,687 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-11-12 04:57:22,688 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2026-11-12 04:57:22,689 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a8c20d0>
+2026-11-12 04:57:22,689 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-11-12 04:57:22,689 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2026-11-12 04:57:22,690 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:57:22,691 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a8c1f90>
+2026-11-12 04:57:22,691 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-11-12 04:57:22,692 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListPromptsRequest
+2026-11-12 04:57:22,692 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:57:22,704 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a8ccc30>
+2026-11-12 04:57:22,704 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 04:57:22,704 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 04:57:22,704 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 04:57:22,704 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:57:22,704 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a8cd350>
+2026-11-12 04:57:22,704 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 04:57:22,704 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 04:57:22,704 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 04:57:22,704 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:57:22,756 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a70ac30>
+2026-11-12 04:57:22,757 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 04:57:22,757 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 04:57:22,757 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 04:57:22,757 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:57:22,757 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a8a7130>
+2026-11-12 04:57:22,757 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 04:57:22,757 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 04:57:22,757 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 04:57:22,757 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:57:23,070 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a8a7240>
+2026-11-12 04:57:23,070 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 04:57:23,070 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 04:57:23,070 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 04:57:23,070 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:57:23,071 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a8dd450>
+2026-11-12 04:57:23,071 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 04:57:23,071 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 04:57:23,071 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 04:57:23,071 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:57:24,273 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a8dcf50>
+2026-11-12 04:57:24,273 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 04:57:24,274 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 04:57:24,274 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 04:57:24,274 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 04:57:24,274 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a8da030>
+2026-11-12 04:57:24,274 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 04:57:24,274 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 04:57:24,274 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 04:57:24,274 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 05:14:21,085 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a8da210>
+2026-11-12 05:14:21,085 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 05:14:21,085 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 05:14:21,085 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 05:14:21,085 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 05:14:21,086 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a9118d0>
+2026-11-12 05:14:21,086 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 05:14:21,086 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 05:14:21,086 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 05:14:21,087 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 05:29:58,980 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a911e10>
+2026-11-12 05:29:58,982 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 05:29:58,982 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 05:29:58,982 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 05:29:58,983 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 05:29:58,984 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a8aa270>
+2026-11-12 05:29:58,984 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 05:29:58,984 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 05:29:58,984 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 05:29:58,985 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 05:45:56,165 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a486450>
+2026-11-12 05:45:56,165 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 05:45:56,165 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 05:45:56,165 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 05:45:56,166 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 05:45:56,166 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a4868d0>
+2026-11-12 05:45:56,166 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 05:45:56,166 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 05:45:56,166 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 05:45:56,166 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 05:58:23,006 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a4a3330>
+2026-11-12 05:58:23,006 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 05:58:23,007 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 05:58:23,007 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 05:58:23,007 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 05:58:23,007 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10a4a35f0>
+2026-11-12 05:58:23,008 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 05:58:23,008 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 05:58:23,008 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 05:58:23,008 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:15:29,621 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 10.0.0.91
+2026-11-12 06:15:29,649 - mcp.server.lowlevel.server - DEBUG - Initializing server 'ProxmoxMCP'
+2026-11-12 06:15:29,649 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-11-12 06:15:29,649 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-11-12 06:15:29,649 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-11-12 06:15:29,649 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-11-12 06:15:29,649 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-11-12 06:15:29,649 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-11-12 06:15:29,649 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-11-12 06:15:29,667 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for targets: default)
+2026-11-12 06:15:29,679 - proxmox-mcp - INFO - MCP tool exposure mode=all, registered=50, available=50, catalog=50
+2026-11-12 06:15:29,679 - proxmox-mcp - DEBUG - Registered MCP tools: cancel_job, clone_vm, create_backup, create_container, create_snapshot, create_vm, delete_backup, delete_container, delete_iso, delete_snapshot, delete_vm, download_iso, execute_container_command, execute_vm_command, get_cluster_log, get_cluster_status, get_container_config, get_container_ip, get_containers, get_guest_firewall_log, get_job, get_node_firewall_log, get_node_status, get_node_syslog, get_nodes, get_storage, get_task_log, get_vm_config, get_vms, list_backups, list_isos, list_jobs, list_snapshots, list_targets, list_templates, poll_job, reset_vm, restart_container, restore_backup, retry_job, rollback_snapshot, set_container_description, set_vm_description, shutdown_vm, start_container, start_vm, stop_container, stop_vm, update_container_resources, update_container_ssh_keys
+2026-11-12 06:15:29,679 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-11-12 06:15:29,681 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-11-12 06:15:29,683 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2026-11-12 06:15:29,683 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b0220d0>
+2026-11-12 06:15:29,683 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-11-12 06:15:29,683 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2026-11-12 06:15:29,684 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:15:29,686 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b021f90>
+2026-11-12 06:15:29,686 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-11-12 06:15:29,686 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListPromptsRequest
+2026-11-12 06:15:29,686 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:15:29,697 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b028c30>
+2026-11-12 06:15:29,697 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 06:15:29,697 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 06:15:29,697 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 06:15:29,697 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:15:29,697 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b029350>
+2026-11-12 06:15:29,697 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 06:15:29,697 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 06:15:29,697 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 06:15:29,697 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:15:29,825 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ae66c30>
+2026-11-12 06:15:29,825 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 06:15:29,825 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 06:15:29,825 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 06:15:29,825 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:15:29,825 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b003130>
+2026-11-12 06:15:29,826 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 06:15:29,826 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 06:15:29,826 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 06:15:29,826 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:15:30,307 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b003240>
+2026-11-12 06:15:30,307 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 06:15:30,307 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 06:15:30,307 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 06:15:30,307 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:15:30,308 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b039450>
+2026-11-12 06:15:30,308 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 06:15:30,308 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 06:15:30,308 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 06:15:30,308 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:15:31,490 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b038f50>
+2026-11-12 06:15:31,490 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 06:15:31,490 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 06:15:31,490 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 06:15:31,490 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:15:31,491 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b036030>
+2026-11-12 06:15:31,491 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 06:15:31,491 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 06:15:31,491 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 06:15:31,491 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:31:56,206 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b036210>
+2026-11-12 06:31:56,206 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 06:31:56,206 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 06:31:56,207 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 06:31:56,207 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:31:56,207 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b06da90>
+2026-11-12 06:31:56,207 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 06:31:56,207 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 06:31:56,207 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 06:31:56,207 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:36:59,734 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b06de10>
+2026-11-12 06:36:59,735 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 06:36:59,735 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 06:36:59,735 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 06:36:59,735 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:36:59,735 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b006270>
+2026-11-12 06:36:59,735 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 06:36:59,735 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 06:36:59,735 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 06:36:59,736 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:54:15,055 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10abe2450>
+2026-11-12 06:54:15,055 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 06:54:15,055 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 06:54:15,055 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 06:54:15,056 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:54:15,056 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10abe2390>
+2026-11-12 06:54:15,057 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 06:54:15,057 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 06:54:15,057 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 06:54:15,057 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:59:24,262 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10abff6a0>
+2026-11-12 06:59:24,262 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 06:59:24,262 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 06:59:24,262 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 06:59:24,262 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 06:59:24,262 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10abff330>
+2026-11-12 06:59:24,262 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 06:59:24,262 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 06:59:24,262 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 06:59:24,263 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 07:15:41,327 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b069770>
+2026-11-12 07:15:41,327 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 07:15:41,328 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 07:15:41,328 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 07:15:41,328 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 07:15:41,328 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b0696d0>
+2026-11-12 07:15:41,328 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 07:15:41,328 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 07:15:41,328 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 07:15:41,329 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 07:31:45,046 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b069770>
+2026-11-12 07:31:45,046 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 07:31:45,046 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 07:31:45,046 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 07:31:45,047 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 07:31:45,048 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b069630>
+2026-11-12 07:31:45,048 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 07:31:45,048 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 07:31:45,048 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 07:31:45,048 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 07:45:34,946 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 10.0.0.91
+2026-11-12 07:45:34,964 - mcp.server.lowlevel.server - DEBUG - Initializing server 'ProxmoxMCP'
+2026-11-12 07:45:34,964 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-11-12 07:45:34,964 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-11-12 07:45:34,964 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-11-12 07:45:34,964 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-11-12 07:45:34,964 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-11-12 07:45:34,964 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-11-12 07:45:34,964 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-11-12 07:45:34,979 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for targets: default)
+2026-11-12 07:45:34,991 - proxmox-mcp - INFO - MCP tool exposure mode=all, registered=50, available=50, catalog=50
+2026-11-12 07:45:34,991 - proxmox-mcp - DEBUG - Registered MCP tools: cancel_job, clone_vm, create_backup, create_container, create_snapshot, create_vm, delete_backup, delete_container, delete_iso, delete_snapshot, delete_vm, download_iso, execute_container_command, execute_vm_command, get_cluster_log, get_cluster_status, get_container_config, get_container_ip, get_containers, get_guest_firewall_log, get_job, get_node_firewall_log, get_node_status, get_node_syslog, get_nodes, get_storage, get_task_log, get_vm_config, get_vms, list_backups, list_isos, list_jobs, list_snapshots, list_targets, list_templates, poll_job, reset_vm, restart_container, restore_backup, retry_job, rollback_snapshot, set_container_description, set_vm_description, shutdown_vm, start_container, start_vm, stop_container, stop_vm, update_container_resources, update_container_ssh_keys
+2026-11-12 07:45:34,991 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-11-12 07:45:34,992 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-11-12 07:45:34,994 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2026-11-12 07:45:34,994 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1093e60d0>
+2026-11-12 07:45:34,994 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-11-12 07:45:34,994 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2026-11-12 07:45:34,996 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 07:45:34,997 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1093e5f90>
+2026-11-12 07:45:34,997 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-11-12 07:45:34,997 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListPromptsRequest
+2026-11-12 07:45:34,997 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 07:45:35,009 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1093ecc30>
+2026-11-12 07:45:35,009 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 07:45:35,009 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 07:45:35,009 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 07:45:35,009 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 07:45:35,010 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1093ed350>
+2026-11-12 07:45:35,010 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 07:45:35,010 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 07:45:35,010 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 07:45:35,010 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 07:45:36,400 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10922ac30>
+2026-11-12 07:45:36,400 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 07:45:36,400 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 07:45:36,400 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 07:45:36,401 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 07:45:36,401 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1093c7130>
+2026-11-12 07:45:36,401 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 07:45:36,401 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 07:45:36,401 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 07:45:36,401 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 07:45:36,554 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1093c7240>
+2026-11-12 07:45:36,554 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 07:45:36,554 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 07:45:36,554 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 07:45:36,554 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 07:45:36,554 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1093fd450>
+2026-11-12 07:45:36,554 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 07:45:36,554 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 07:45:36,554 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 07:45:36,554 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 08:00:25,257 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1093fcf50>
+2026-11-12 08:00:25,257 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 08:00:25,257 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 08:00:25,257 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 08:00:25,257 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 08:00:25,258 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1093f6030>
+2026-11-12 08:00:25,258 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 08:00:25,258 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 08:00:25,258 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 08:00:25,258 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 08:17:17,046 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1093f6210>
+2026-11-12 08:17:17,046 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 08:17:17,046 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 08:17:17,046 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 08:17:17,046 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 08:17:17,047 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1094318d0>
+2026-11-12 08:17:17,047 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 08:17:17,047 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 08:17:17,047 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 08:17:17,048 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 08:34:26,208 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x109431e10>
+2026-11-12 08:34:26,208 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 08:34:26,208 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 08:34:26,208 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 08:34:26,209 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 08:34:26,209 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1093ca270>
+2026-11-12 08:34:26,209 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 08:34:26,209 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 08:34:26,209 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 08:34:26,209 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 08:51:02,019 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1090ca450>
+2026-11-12 08:51:02,019 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 08:51:02,019 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 08:51:02,019 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 08:51:02,019 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 08:51:02,020 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1090ca390>
+2026-11-12 08:51:02,020 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 08:51:02,020 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 08:51:02,020 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 08:51:02,021 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:01:26,794 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 10.0.0.91
+2026-11-12 09:01:26,812 - mcp.server.lowlevel.server - DEBUG - Initializing server 'ProxmoxMCP'
+2026-11-12 09:01:26,812 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-11-12 09:01:26,812 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-11-12 09:01:26,812 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-11-12 09:01:26,812 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-11-12 09:01:26,812 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-11-12 09:01:26,812 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-11-12 09:01:26,812 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-11-12 09:01:26,828 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for targets: default)
+2026-11-12 09:01:26,841 - proxmox-mcp - INFO - MCP tool exposure mode=all, registered=50, available=50, catalog=50
+2026-11-12 09:01:26,841 - proxmox-mcp - DEBUG - Registered MCP tools: cancel_job, clone_vm, create_backup, create_container, create_snapshot, create_vm, delete_backup, delete_container, delete_iso, delete_snapshot, delete_vm, download_iso, execute_container_command, execute_vm_command, get_cluster_log, get_cluster_status, get_container_config, get_container_ip, get_containers, get_guest_firewall_log, get_job, get_node_firewall_log, get_node_status, get_node_syslog, get_nodes, get_storage, get_task_log, get_vm_config, get_vms, list_backups, list_isos, list_jobs, list_snapshots, list_targets, list_templates, poll_job, reset_vm, restart_container, restore_backup, retry_job, rollback_snapshot, set_container_description, set_vm_description, shutdown_vm, start_container, start_vm, stop_container, stop_vm, update_container_resources, update_container_ssh_keys
+2026-11-12 09:01:26,841 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-11-12 09:01:26,842 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-11-12 09:01:26,844 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2026-11-12 09:01:26,844 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d1fa0d0>
+2026-11-12 09:01:26,844 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-11-12 09:01:26,844 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2026-11-12 09:01:26,846 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:01:26,847 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d1f9f90>
+2026-11-12 09:01:26,847 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-11-12 09:01:26,847 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListPromptsRequest
+2026-11-12 09:01:26,847 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:01:26,859 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d204c30>
+2026-11-12 09:01:26,859 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 09:01:26,859 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 09:01:26,859 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 09:01:26,859 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:01:26,860 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d205350>
+2026-11-12 09:01:26,860 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 09:01:26,860 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 09:01:26,860 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 09:01:26,860 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:01:28,216 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d042c30>
+2026-11-12 09:01:28,216 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 09:01:28,216 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 09:01:28,216 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 09:01:28,216 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:01:28,216 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d1df130>
+2026-11-12 09:01:28,216 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 09:01:28,216 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 09:01:28,216 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 09:01:28,217 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:01:28,324 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d1df240>
+2026-11-12 09:01:28,324 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 09:01:28,324 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 09:01:28,324 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 09:01:28,324 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:01:28,324 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d215450>
+2026-11-12 09:01:28,324 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 09:01:28,324 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 09:01:28,324 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 09:01:28,325 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:16:59,255 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d214f50>
+2026-11-12 09:16:59,255 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 09:16:59,255 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 09:16:59,255 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 09:16:59,255 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:16:59,256 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d212030>
+2026-11-12 09:16:59,256 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 09:16:59,256 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 09:16:59,256 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 09:16:59,257 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:32:47,043 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d212210>
+2026-11-12 09:32:47,148 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 09:32:47,148 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 09:32:47,148 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 09:32:47,149 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:32:47,149 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d249710>
+2026-11-12 09:32:47,150 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 09:32:47,150 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 09:32:47,150 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 09:32:47,150 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:48:59,220 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d249b70>
+2026-11-12 09:48:59,221 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 09:48:59,221 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 09:48:59,221 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 09:48:59,221 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 09:48:59,221 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10d1e2270>
+2026-11-12 09:48:59,221 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 09:48:59,221 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 09:48:59,221 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 09:48:59,222 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:02:27,070 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10cee2450>
+2026-11-12 10:02:27,070 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 10:02:27,070 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 10:02:27,070 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 10:02:27,071 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:02:27,071 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10cee2390>
+2026-11-12 10:02:27,071 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 10:02:27,072 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 10:02:27,072 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 10:02:27,073 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:19:50,826 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 10.0.0.91
+2026-11-12 10:19:50,846 - mcp.server.lowlevel.server - DEBUG - Initializing server 'ProxmoxMCP'
+2026-11-12 10:19:50,846 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-11-12 10:19:50,846 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-11-12 10:19:50,846 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-11-12 10:19:50,846 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-11-12 10:19:50,846 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-11-12 10:19:50,846 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-11-12 10:19:50,846 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-11-12 10:19:50,864 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for targets: default)
+2026-11-12 10:19:50,878 - proxmox-mcp - INFO - MCP tool exposure mode=all, registered=50, available=50, catalog=50
+2026-11-12 10:19:50,878 - proxmox-mcp - DEBUG - Registered MCP tools: cancel_job, clone_vm, create_backup, create_container, create_snapshot, create_vm, delete_backup, delete_container, delete_iso, delete_snapshot, delete_vm, download_iso, execute_container_command, execute_vm_command, get_cluster_log, get_cluster_status, get_container_config, get_container_ip, get_containers, get_guest_firewall_log, get_job, get_node_firewall_log, get_node_status, get_node_syslog, get_nodes, get_storage, get_task_log, get_vm_config, get_vms, list_backups, list_isos, list_jobs, list_snapshots, list_targets, list_templates, poll_job, reset_vm, restart_container, restore_backup, retry_job, rollback_snapshot, set_container_description, set_vm_description, shutdown_vm, start_container, start_vm, stop_container, stop_vm, update_container_resources, update_container_ssh_keys
+2026-11-12 10:19:50,878 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-11-12 10:19:50,880 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-11-12 10:19:50,882 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2026-11-12 10:19:50,882 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108f720d0>
+2026-11-12 10:19:50,883 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-11-12 10:19:50,883 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2026-11-12 10:19:50,884 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:19:50,885 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108f71f90>
+2026-11-12 10:19:50,886 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-11-12 10:19:50,886 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListPromptsRequest
+2026-11-12 10:19:50,886 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:19:50,898 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108f78c30>
+2026-11-12 10:19:50,898 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 10:19:50,898 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 10:19:50,898 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 10:19:50,898 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:19:50,898 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108f79350>
+2026-11-12 10:19:50,899 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 10:19:50,899 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 10:19:50,899 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 10:19:50,899 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:19:50,916 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108db6c30>
+2026-11-12 10:19:50,916 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 10:19:50,916 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 10:19:50,916 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 10:19:50,916 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:19:50,916 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108f53130>
+2026-11-12 10:19:50,916 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 10:19:50,916 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 10:19:50,916 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 10:19:50,916 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:19:52,327 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108f53240>
+2026-11-12 10:19:52,327 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 10:19:52,327 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 10:19:52,327 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 10:19:52,328 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:19:52,328 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108f89450>
+2026-11-12 10:19:52,328 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 10:19:52,328 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 10:19:52,328 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 10:19:52,328 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:19:52,672 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108f88f50>
+2026-11-12 10:19:52,673 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 10:19:52,673 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 10:19:52,673 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 10:19:52,673 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:19:52,673 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108f86030>
+2026-11-12 10:19:52,673 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 10:19:52,673 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 10:19:52,673 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 10:19:52,673 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:36:16,343 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108f86210>
+2026-11-12 10:36:16,343 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 10:36:16,343 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 10:36:16,343 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 10:36:16,343 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:36:16,344 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108fbd8d0>
+2026-11-12 10:36:16,344 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 10:36:16,344 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 10:36:16,344 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 10:36:16,344 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:53:19,058 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108fbde10>
+2026-11-12 10:53:19,059 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 10:53:19,059 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 10:53:19,059 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 10:53:19,059 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 10:53:19,060 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108f56270>
+2026-11-12 10:53:19,060 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 10:53:19,060 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 10:53:19,060 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 10:53:19,061 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:03:28,281 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108b32450>
+2026-11-12 11:03:28,282 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 11:03:28,282 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 11:03:28,282 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 11:03:28,282 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:03:28,282 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108b32390>
+2026-11-12 11:03:28,282 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 11:03:28,282 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 11:03:28,282 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 11:03:28,283 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:18:55,165 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108b4f330>
+2026-11-12 11:18:55,165 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 11:18:55,165 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 11:18:55,165 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 11:18:55,166 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:18:55,166 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108b4f5f0>
+2026-11-12 11:18:55,166 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 11:18:55,166 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 11:18:55,166 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 11:18:55,167 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:35:27,349 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108fb9770>
+2026-11-12 11:35:27,349 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 11:35:27,349 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 11:35:27,349 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 11:35:27,349 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:35:27,350 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108fb99f0>
+2026-11-12 11:35:27,350 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 11:35:27,350 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 11:35:27,350 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 11:35:27,350 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:51:52,702 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 10.0.0.91
+2026-11-12 11:51:52,721 - mcp.server.lowlevel.server - DEBUG - Initializing server 'ProxmoxMCP'
+2026-11-12 11:51:52,721 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-11-12 11:51:52,721 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-11-12 11:51:52,721 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-11-12 11:51:52,721 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-11-12 11:51:52,721 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-11-12 11:51:52,721 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-11-12 11:51:52,721 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-11-12 11:51:52,753 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for targets: default)
+2026-11-12 11:51:52,766 - proxmox-mcp - INFO - MCP tool exposure mode=all, registered=50, available=50, catalog=50
+2026-11-12 11:51:52,766 - proxmox-mcp - DEBUG - Registered MCP tools: cancel_job, clone_vm, create_backup, create_container, create_snapshot, create_vm, delete_backup, delete_container, delete_iso, delete_snapshot, delete_vm, download_iso, execute_container_command, execute_vm_command, get_cluster_log, get_cluster_status, get_container_config, get_container_ip, get_containers, get_guest_firewall_log, get_job, get_node_firewall_log, get_node_status, get_node_syslog, get_nodes, get_storage, get_task_log, get_vm_config, get_vms, list_backups, list_isos, list_jobs, list_snapshots, list_targets, list_templates, poll_job, reset_vm, restart_container, restore_backup, retry_job, rollback_snapshot, set_container_description, set_vm_description, shutdown_vm, start_container, start_vm, stop_container, stop_vm, update_container_resources, update_container_ssh_keys
+2026-11-12 11:51:52,766 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-11-12 11:51:52,768 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-11-12 11:51:52,770 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2026-11-12 11:51:52,770 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108ae20d0>
+2026-11-12 11:51:52,770 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-11-12 11:51:52,770 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2026-11-12 11:51:52,771 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:51:52,773 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108ae1f90>
+2026-11-12 11:51:52,773 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-11-12 11:51:52,773 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListPromptsRequest
+2026-11-12 11:51:52,773 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:51:52,791 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108aecc30>
+2026-11-12 11:51:52,791 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 11:51:52,791 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 11:51:52,791 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 11:51:52,791 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:51:52,791 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108aed350>
+2026-11-12 11:51:52,791 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 11:51:52,791 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 11:51:52,791 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 11:51:52,792 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:51:52,914 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10892ac30>
+2026-11-12 11:51:52,914 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 11:51:52,914 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 11:51:52,914 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 11:51:52,914 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:51:52,914 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108ac7130>
+2026-11-12 11:51:52,914 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 11:51:52,914 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 11:51:52,914 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 11:51:52,914 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:51:54,408 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108ac7240>
+2026-11-12 11:51:54,408 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 11:51:54,408 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 11:51:54,408 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 11:51:54,408 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:51:54,408 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108afd450>
+2026-11-12 11:51:54,408 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 11:51:54,408 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 11:51:54,408 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 11:51:54,408 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:51:54,713 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108afcf50>
+2026-11-12 11:51:54,714 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 11:51:54,714 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 11:51:54,714 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 11:51:54,714 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 11:51:54,714 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108afa030>
+2026-11-12 11:51:54,714 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 11:51:54,714 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 11:51:54,714 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 11:51:54,715 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 12:04:29,239 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108afa210>
+2026-11-12 12:04:29,239 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 12:04:29,239 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 12:04:29,239 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 12:04:29,239 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 12:04:29,239 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108b318d0>
+2026-11-12 12:04:29,240 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 12:04:29,240 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 12:04:29,240 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 12:04:29,240 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 12:19:37,077 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108b31a90>
+2026-11-12 12:19:37,077 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 12:19:37,077 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 12:19:37,077 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 12:19:37,077 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 12:19:37,078 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108aca270>
+2026-11-12 12:19:37,078 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 12:19:37,078 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 12:19:37,078 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 12:19:37,078 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 12:36:12,276 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1087ca450>
+2026-11-12 12:36:12,276 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 12:36:12,276 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 12:36:12,276 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 12:36:12,276 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 12:36:12,277 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1087ca390>
+2026-11-12 12:36:12,277 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 12:36:12,277 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 12:36:12,277 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 12:36:12,277 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 12:53:59,089 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1087e7330>
+2026-11-12 12:53:59,090 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 12:53:59,090 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 12:53:59,090 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 12:53:59,090 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 12:53:59,092 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x1087e76a0>
+2026-11-12 12:53:59,092 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 12:53:59,092 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 12:53:59,092 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 12:53:59,093 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:00:25,253 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108b2d770>
+2026-11-12 13:00:25,253 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 13:00:25,253 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 13:00:25,254 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 13:00:25,254 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:00:25,254 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108b2d9f0>
+2026-11-12 13:00:25,254 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 13:00:25,254 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 13:00:25,254 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 13:00:25,254 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:05:30,814 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 10.0.0.91
+2026-11-12 13:05:30,833 - mcp.server.lowlevel.server - DEBUG - Initializing server 'ProxmoxMCP'
+2026-11-12 13:05:30,834 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-11-12 13:05:30,834 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-11-12 13:05:30,834 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-11-12 13:05:30,834 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-11-12 13:05:30,834 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-11-12 13:05:30,834 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-11-12 13:05:30,834 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-11-12 13:05:30,849 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for targets: default)
+2026-11-12 13:05:30,861 - proxmox-mcp - INFO - MCP tool exposure mode=all, registered=50, available=50, catalog=50
+2026-11-12 13:05:30,861 - proxmox-mcp - DEBUG - Registered MCP tools: cancel_job, clone_vm, create_backup, create_container, create_snapshot, create_vm, delete_backup, delete_container, delete_iso, delete_snapshot, delete_vm, download_iso, execute_container_command, execute_vm_command, get_cluster_log, get_cluster_status, get_container_config, get_container_ip, get_containers, get_guest_firewall_log, get_job, get_node_firewall_log, get_node_status, get_node_syslog, get_nodes, get_storage, get_task_log, get_vm_config, get_vms, list_backups, list_isos, list_jobs, list_snapshots, list_targets, list_templates, poll_job, reset_vm, restart_container, restore_backup, retry_job, rollback_snapshot, set_container_description, set_vm_description, shutdown_vm, start_container, start_vm, stop_container, stop_vm, update_container_resources, update_container_ssh_keys
+2026-11-12 13:05:30,861 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-11-12 13:05:30,863 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-11-12 13:05:30,864 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2026-11-12 13:05:30,864 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b00e0d0>
+2026-11-12 13:05:30,865 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-11-12 13:05:30,865 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2026-11-12 13:05:30,866 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:05:30,867 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b00df90>
+2026-11-12 13:05:30,867 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-11-12 13:05:30,867 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListPromptsRequest
+2026-11-12 13:05:30,867 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:05:30,879 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b018c30>
+2026-11-12 13:05:30,880 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 13:05:30,880 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 13:05:30,880 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 13:05:30,880 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:05:30,880 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b019350>
+2026-11-12 13:05:30,880 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 13:05:30,880 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 13:05:30,880 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 13:05:30,880 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:05:30,934 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ae56c30>
+2026-11-12 13:05:30,934 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 13:05:30,934 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 13:05:30,934 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 13:05:30,934 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:05:30,934 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aff3130>
+2026-11-12 13:05:30,934 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 13:05:30,934 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 13:05:30,934 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 13:05:30,935 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:05:31,387 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aff3240>
+2026-11-12 13:05:31,387 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 13:05:31,387 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 13:05:31,387 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 13:05:31,388 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:05:31,388 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b029450>
+2026-11-12 13:05:31,388 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 13:05:31,388 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 13:05:31,388 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 13:05:31,388 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:05:32,461 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b028f50>
+2026-11-12 13:05:32,461 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 13:05:32,461 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 13:05:32,461 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 13:05:32,462 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:05:32,462 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b026030>
+2026-11-12 13:05:32,462 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 13:05:32,462 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 13:05:32,462 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 13:05:32,462 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:23:20,336 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b026210>
+2026-11-12 13:23:20,336 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 13:23:20,336 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 13:23:20,336 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 13:23:20,336 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:23:20,336 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b05d8d0>
+2026-11-12 13:23:20,337 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 13:23:20,337 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 13:23:20,337 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 13:23:20,337 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:38:31,081 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b05de10>
+2026-11-12 13:38:31,081 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 13:38:31,081 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 13:38:31,081 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 13:38:31,082 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:38:31,082 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10aff6270>
+2026-11-12 13:38:31,082 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 13:38:31,082 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 13:38:31,082 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 13:38:31,083 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:52:25,977 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10abd2450>
+2026-11-12 13:52:25,978 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 13:52:25,978 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 13:52:25,978 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 13:52:25,978 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:52:25,978 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10abd28d0>
+2026-11-12 13:52:25,978 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 13:52:25,978 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 13:52:25,978 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 13:52:25,979 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:57:26,754 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10abef330>
+2026-11-12 13:57:26,755 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 13:57:26,755 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 13:57:26,755 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 13:57:26,755 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 13:57:26,756 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10abef6a0>
+2026-11-12 13:57:26,756 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 13:57:26,756 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 13:57:26,756 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 13:57:26,757 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:05:24,278 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b059770>
+2026-11-12 14:05:24,278 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 14:05:24,278 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 14:05:24,278 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 14:05:24,279 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:05:24,279 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b0599f0>
+2026-11-12 14:05:24,279 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 14:05:24,279 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 14:05:24,279 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 14:05:24,280 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:15:01,439 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b059770>
+2026-11-12 14:15:01,439 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 14:15:01,439 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 14:15:01,439 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 14:15:01,439 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:15:01,439 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b059a90>
+2026-11-12 14:15:01,440 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 14:15:01,440 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 14:15:01,440 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 14:15:01,440 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:31:09,050 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 10.0.0.91
+2026-11-12 14:31:09,072 - mcp.server.lowlevel.server - DEBUG - Initializing server 'ProxmoxMCP'
+2026-11-12 14:31:09,072 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-11-12 14:31:09,073 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-11-12 14:31:09,073 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-11-12 14:31:09,073 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-11-12 14:31:09,073 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-11-12 14:31:09,073 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-11-12 14:31:09,073 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-11-12 14:31:09,088 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for targets: default)
+2026-11-12 14:31:09,100 - proxmox-mcp - INFO - MCP tool exposure mode=all, registered=50, available=50, catalog=50
+2026-11-12 14:31:09,100 - proxmox-mcp - DEBUG - Registered MCP tools: cancel_job, clone_vm, create_backup, create_container, create_snapshot, create_vm, delete_backup, delete_container, delete_iso, delete_snapshot, delete_vm, download_iso, execute_container_command, execute_vm_command, get_cluster_log, get_cluster_status, get_container_config, get_container_ip, get_containers, get_guest_firewall_log, get_job, get_node_firewall_log, get_node_status, get_node_syslog, get_nodes, get_storage, get_task_log, get_vm_config, get_vms, list_backups, list_isos, list_jobs, list_snapshots, list_targets, list_templates, poll_job, reset_vm, restart_container, restore_backup, retry_job, rollback_snapshot, set_container_description, set_vm_description, shutdown_vm, start_container, start_vm, stop_container, stop_vm, update_container_resources, update_container_ssh_keys
+2026-11-12 14:31:09,100 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-11-12 14:31:09,101 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-11-12 14:31:09,103 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2026-11-12 14:31:09,104 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b14e0d0>
+2026-11-12 14:31:09,104 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-11-12 14:31:09,104 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2026-11-12 14:31:09,105 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:31:09,106 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b14df90>
+2026-11-12 14:31:09,106 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-11-12 14:31:09,106 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListPromptsRequest
+2026-11-12 14:31:09,106 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:31:09,119 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b158c30>
+2026-11-12 14:31:09,119 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 14:31:09,119 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 14:31:09,119 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 14:31:09,119 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:31:09,119 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b159350>
+2026-11-12 14:31:09,119 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 14:31:09,119 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 14:31:09,119 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 14:31:09,119 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:31:10,369 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10af96c30>
+2026-11-12 14:31:10,369 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 14:31:10,369 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 14:31:10,369 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 14:31:10,369 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:31:10,369 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b133130>
+2026-11-12 14:31:10,369 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 14:31:10,369 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 14:31:10,369 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 14:31:10,370 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:31:10,505 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b133240>
+2026-11-12 14:31:10,505 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 14:31:10,505 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 14:31:10,505 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 14:31:10,505 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:31:10,506 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b169450>
+2026-11-12 14:31:10,506 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 14:31:10,506 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 14:31:10,506 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 14:31:10,506 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:48:48,116 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b168f50>
+2026-11-12 14:48:48,229 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 14:48:48,232 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 14:48:48,233 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 14:48:48,236 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:48:48,237 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b166030>
+2026-11-12 14:48:48,241 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 14:48:48,241 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 14:48:48,241 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 14:48:48,242 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:55:24,330 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b166210>
+2026-11-12 14:55:24,330 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 14:55:24,330 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 14:55:24,330 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 14:55:24,330 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 14:55:24,331 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b19d8d0>
+2026-11-12 14:55:24,331 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 14:55:24,331 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 14:55:24,331 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 14:55:24,331 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:12:51,434 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b19de10>
+2026-11-12 15:12:51,434 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 15:12:51,435 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 15:12:51,435 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 15:12:51,435 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:12:51,435 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10b136270>
+2026-11-12 15:12:51,435 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 15:12:51,435 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 15:12:51,435 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 15:12:51,436 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:29:29,119 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ad12450>
+2026-11-12 15:29:29,119 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 15:29:29,119 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 15:29:29,119 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 15:29:29,119 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:29:29,120 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ad12390>
+2026-11-12 15:29:29,120 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 15:29:29,120 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 15:29:29,120 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 15:29:29,121 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:46:10,323 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ad2f330>
+2026-11-12 15:46:10,324 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 15:46:10,324 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 15:46:10,324 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 15:46:10,324 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:46:10,324 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x10ad2f6a0>
+2026-11-12 15:46:10,325 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 15:46:10,325 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 15:46:10,325 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 15:46:10,325 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:56:25,819 - proxmox-mcp.proxmox - INFO - Connecting to Proxmox host: 10.0.0.91
+2026-11-12 15:56:25,838 - mcp.server.lowlevel.server - DEBUG - Initializing server 'ProxmoxMCP'
+2026-11-12 15:56:25,838 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2026-11-12 15:56:25,838 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2026-11-12 15:56:25,838 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2026-11-12 15:56:25,838 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2026-11-12 15:56:25,838 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2026-11-12 15:56:25,838 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2026-11-12 15:56:25,838 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2026-11-12 15:56:25,853 - proxmox-mcp - INFO - Container command execution enabled (SSH configured for targets: default)
+2026-11-12 15:56:25,865 - proxmox-mcp - INFO - MCP tool exposure mode=all, registered=50, available=50, catalog=50
+2026-11-12 15:56:25,868 - proxmox-mcp - DEBUG - Registered MCP tools: cancel_job, clone_vm, create_backup, create_container, create_snapshot, create_vm, delete_backup, delete_container, delete_iso, delete_snapshot, delete_vm, download_iso, execute_container_command, execute_vm_command, get_cluster_log, get_cluster_status, get_container_config, get_container_ip, get_containers, get_guest_firewall_log, get_job, get_node_firewall_log, get_node_status, get_node_syslog, get_nodes, get_storage, get_task_log, get_vm_config, get_vms, list_backups, list_isos, list_jobs, list_snapshots, list_targets, list_templates, poll_job, reset_vm, restart_container, restore_backup, retry_job, rollback_snapshot, set_container_description, set_vm_description, shutdown_vm, start_container, start_vm, stop_container, stop_vm, update_container_resources, update_container_ssh_keys
+2026-11-12 15:56:25,868 - proxmox-mcp - INFO - Starting Proxmox MCP Server with transport: STDIO
+2026-11-12 15:56:25,869 - asyncio - DEBUG - Using selector: KqueueSelector
+2026-11-12 15:56:25,871 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2026-11-12 15:56:25,874 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e0e0d0>
+2026-11-12 15:56:25,874 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2026-11-12 15:56:25,874 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2026-11-12 15:56:25,875 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:56:25,876 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e0df90>
+2026-11-12 15:56:25,876 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2026-11-12 15:56:25,876 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListPromptsRequest
+2026-11-12 15:56:25,876 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:56:25,889 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e14c30>
+2026-11-12 15:56:25,889 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 15:56:25,889 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 15:56:25,889 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 15:56:25,889 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:56:25,889 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e15350>
+2026-11-12 15:56:25,889 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 15:56:25,889 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 15:56:25,889 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 15:56:25,889 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:56:25,943 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108c52c30>
+2026-11-12 15:56:25,943 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 15:56:25,943 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 15:56:25,943 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 15:56:25,943 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:56:25,943 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108def130>
+2026-11-12 15:56:25,943 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 15:56:25,943 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 15:56:25,943 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 15:56:25,943 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:56:27,497 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108def240>
+2026-11-12 15:56:27,497 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 15:56:27,497 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 15:56:27,497 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 15:56:27,497 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:56:27,497 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e25450>
+2026-11-12 15:56:27,498 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 15:56:27,498 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 15:56:27,498 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 15:56:27,498 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:56:30,370 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e24f50>
+2026-11-12 15:56:30,370 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 15:56:30,370 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 15:56:30,370 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 15:56:30,370 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 15:56:30,370 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e22030>
+2026-11-12 15:56:30,371 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 15:56:30,371 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 15:56:30,371 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 15:56:30,371 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 16:12:32,129 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e22210>
+2026-11-12 16:12:32,129 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 16:12:32,129 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 16:12:32,129 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 16:12:32,129 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 16:12:32,130 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e598d0>
+2026-11-12 16:12:32,130 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 16:12:32,130 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 16:12:32,130 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 16:12:32,131 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 16:30:29,332 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e59a90>
+2026-11-12 16:30:29,332 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 16:30:29,332 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 16:30:29,332 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 16:30:29,332 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 16:30:29,333 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108df2270>
+2026-11-12 16:30:29,333 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 16:30:29,333 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 16:30:29,333 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 16:30:29,333 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 16:48:12,159 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108af2450>
+2026-11-12 16:48:12,159 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 16:48:12,159 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 16:48:12,159 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 16:48:12,159 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 16:48:12,161 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108af2390>
+2026-11-12 16:48:12,161 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 16:48:12,162 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 16:48:12,162 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 16:48:12,163 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 16:56:06,263 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108b0f330>
+2026-11-12 16:56:06,263 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 16:56:06,263 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 16:56:06,263 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 16:56:06,264 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 16:56:06,264 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108b0f750>
+2026-11-12 16:56:06,264 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 16:56:06,264 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 16:56:06,264 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 16:56:06,265 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 17:08:24,258 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e55770>
+2026-11-12 17:08:24,259 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 17:08:24,259 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 17:08:24,259 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 17:08:24,273 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 17:08:24,291 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e559f0>
+2026-11-12 17:08:24,291 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 17:08:24,293 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 17:08:24,293 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 17:08:24,294 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 17:12:04,287 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e55770>
+2026-11-12 17:12:04,288 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 17:12:04,288 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 17:12:04,289 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 17:12:04,289 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 17:12:04,291 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e55a90>
+2026-11-12 17:12:04,291 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 17:12:04,291 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 17:12:04,292 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 17:12:04,293 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 17:29:19,253 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e556d0>
+2026-11-12 17:29:19,253 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 17:29:19,253 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 17:29:19,253 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 17:29:19,253 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 17:29:19,254 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e553b0>
+2026-11-12 17:29:19,254 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 17:29:19,254 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 17:29:19,254 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 17:29:19,255 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 17:41:58,049 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e54730>
+2026-11-12 17:41:58,049 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 17:41:58,049 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 17:41:58,049 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 17:41:58,049 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 17:41:58,050 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e55630>
+2026-11-12 17:41:58,051 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 17:41:58,051 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 17:41:58,051 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 17:41:58,052 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 17:54:51,327 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e54730>
+2026-11-12 17:54:51,328 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 17:54:51,329 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 17:54:51,329 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 17:54:51,330 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 17:54:51,341 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e55770>
+2026-11-12 17:54:51,350 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 17:54:51,355 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 17:54:51,355 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 17:54:51,366 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 18:04:43,915 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e553b0>
+2026-11-12 18:04:43,916 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 18:04:43,919 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 18:04:43,920 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 18:04:43,920 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 18:04:44,035 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e55bd0>
+2026-11-12 18:04:44,107 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 18:04:44,107 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 18:04:44,107 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 18:04:44,108 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 18:20:01,467 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e54730>
+2026-11-12 18:20:01,468 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 18:20:01,468 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 18:20:01,468 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 18:20:01,469 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 18:20:01,470 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e558b0>
+2026-11-12 18:20:01,470 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 18:20:01,470 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 18:20:01,470 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 18:20:01,470 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 18:24:08,488 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e55590>
+2026-11-12 18:24:08,488 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 18:24:08,488 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 18:24:08,488 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 18:24:08,488 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 18:24:08,489 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e55bd0>
+2026-11-12 18:24:08,489 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 18:24:08,489 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 18:24:08,489 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 18:24:08,490 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 20:40:52,568 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e55590>
+2026-11-12 20:40:52,569 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 20:40:52,569 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 20:40:52,569 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 20:40:52,573 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 20:40:52,577 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e55b30>
+2026-11-12 20:40:52,577 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 20:40:52,577 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 20:40:52,577 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 20:40:52,579 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 20:53:48,725 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e55590>
+2026-11-12 20:53:48,726 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2026-11-12 20:53:48,726 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourcesRequest
+2026-11-12 20:53:48,726 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing resources
+2026-11-12 20:53:48,728 - mcp.server.lowlevel.server - DEBUG - Response sent
+2026-11-12 20:53:48,728 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x108e55a90>
+2026-11-12 20:53:48,729 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourceTemplatesRequest
+2026-11-12 20:53:48,729 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListResourceTemplatesRequest
+2026-11-12 20:53:48,729 - mcp.server.fastmcp.resources.resource_manager - DEBUG - Listing templates
+2026-11-12 20:53:48,736 - mcp.server.lowlevel.server - DEBUG - Response sent

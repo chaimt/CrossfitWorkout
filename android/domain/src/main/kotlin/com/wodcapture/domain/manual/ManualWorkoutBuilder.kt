@@ -26,6 +26,7 @@ import com.wodcapture.domain.model.Measure
 import com.wodcapture.domain.model.MeasureKind
 import com.wodcapture.domain.model.NotForTime
 import com.wodcapture.domain.model.Part
+import com.wodcapture.domain.model.PartKind
 import com.wodcapture.domain.model.RepTarget
 import com.wodcapture.domain.model.ScoreType
 import com.wodcapture.domain.model.Scoring
@@ -114,11 +115,12 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
     ) {
         fun build(): Part {
             val format = format()
+            val warmup = form.kind == PartKind.WARMUP && format is NotForTime
             val part = Part(
                 id = form.id,
                 label = form.label.trim().ifBlank { fallbackLabel },
                 kind = form.kind,
-                title = form.name.trim().ifBlank { null },
+                title = if (warmup) null else form.name.trim().ifBlank { null },
                 format = format,
                 body = body(),
                 scoring = scoring(),

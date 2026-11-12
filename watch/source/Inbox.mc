@@ -254,4 +254,30 @@ module Inbox {
         }
         return null;
     }
+
+    //! Future: plans dated after `today`, earliest date first (same date
+    //! keeps newest-received-first order). Dates are `YYYY-MM-DD`, so a
+    //! lexicographic compare is a date compare.
+    function futureRows(kv as Kv, today as String) as Array {
+        var ix = index(kv);
+        var out = [];
+        for (var i = 0; i < ix.size(); i++) {
+            var r = ix[i] as Array;
+            var d = r[IX_DATE] as String?;
+            if (d != null && d.compareTo(today) > 0) {
+                out.add(r);
+            }
+        }
+        for (var i = 1; i < out.size(); i++) {
+            var key = out[i] as Array;
+            var kd = key[IX_DATE] as String;
+            var j = i - 1;
+            while (j >= 0 && ((out[j] as Array)[IX_DATE] as String).compareTo(kd) > 0) {
+                out[j + 1] = out[j];
+                j--;
+            }
+            out[j + 1] = key;
+        }
+        return out;
+    }
 }

@@ -1,7 +1,7 @@
 //
 // HomeViews.mc
 //
-// Home (Today / Workouts / History / Settings / Sync, REQ-WN01), the inbox
+// Home (Today / Future / History / Settings / Sync, REQ-WN01), the future
 // list, the workout preview with its part list, Run all and Delete
 // (REQ-WN02/WN04), and the part screen with Start and the pre-start timer
 // edits (REQ-WN03, WOD Timer's setup-menu + ValuePicker pattern).
@@ -16,18 +16,18 @@ class HomeMenu extends WatchUi.Menu2 {
         Menu2.initialize({:title => "WOD Coach"});
         var app = CoachApp.instance();
         if (app.recovered != null) {
-            addItem(new WatchUi.MenuItem("Recovered", "Interrupted - saved", :recovered, null));
+            addItem(new WatchUi.MenuItem("Recovered", "Interrupted - saved", :recovered, {:icon => Rez.Drawables.MenuRecovered}));
         }
-        addItem(new WatchUi.MenuItem("Today", _today(), :today, null));
-        addItem(new WatchUi.MenuItem("Workouts", _inbox(), :workouts, null));
-        addItem(new WatchUi.MenuItem("History", _history(), :history, null));
-        addItem(new WatchUi.MenuItem("Settings", null, :settings, null));
-        addItem(new WatchUi.MenuItem("Sync now", _sync(), :sync, null));
+        addItem(new WatchUi.MenuItem("Today", _today(), :today, {:icon => Rez.Drawables.MenuToday}));
+        addItem(new WatchUi.MenuItem("Future", _future(), :future, {:icon => Rez.Drawables.MenuFuture}));
+        addItem(new WatchUi.MenuItem("History", _history(), :history, {:icon => Rez.Drawables.MenuHistory}));
+        addItem(new WatchUi.MenuItem("Settings", null, :settings, {:icon => Rez.Drawables.MenuSettings}));
+        addItem(new WatchUi.MenuItem("Sync now", _sync(), :sync, {:icon => Rez.Drawables.MenuSync}));
     }
 
     function refresh() as Void {
         _setSub(:today, _today());
-        _setSub(:workouts, _inbox());
+        _setSub(:future, _future());
         _setSub(:history, _history());
         _setSub(:sync, _sync());
         WatchUi.requestUpdate();
@@ -48,9 +48,9 @@ class HomeMenu extends WatchUi.Menu2 {
         return row == null ? "No workout" : row[IX_TITLE] as String;
     }
 
-    function _inbox() as String {
-        var n = Inbox.index(CoachApp.instance().kv).size();
-        return n == 0 ? "Send one from the phone" : n.format("%d") + (n == 1 ? " plan" : " plans");
+    function _future() as String {
+        var n = Inbox.futureRows(CoachApp.instance().kv, Fmt.today()).size();
+        return n == 0 ? "None scheduled" : n.format("%d") + " upcoming";
     }
 
     function _history() as String {
@@ -91,9 +91,9 @@ class HomeDelegate extends WatchUi.Menu2InputDelegate {
             if (row != null) {
                 PlanMenu.open(row[IX_ID] as String);
             }
-        } else if (id == :workouts) {
-            var m = new WorkoutsMenu();
-            WatchUi.pushView(m, new WorkoutsDelegate(), WatchUi.SLIDE_LEFT);
+        } else if (id == :future) {
+            var f = new FutureMenu();
+            WatchUi.pushView(f, new FutureDelegate(), WatchUi.SLIDE_LEFT);
         } else if (id == :history) {
             var h = new HistoryMenu();
             WatchUi.pushView(h, new HistoryDelegate(), WatchUi.SLIDE_LEFT);
@@ -161,26 +161,7 @@ class RecoveredDelegate extends WatchUi.Menu2InputDelegate {
     }
 }
 
-//! Inbox, newest received first (REQ-WN01).
-class WorkoutsMenu extends WatchUi.Menu2 {
-
-    function initialize() {
-        Menu2.initialize({:title => "Workouts"});
-        var ix = Inbox.index(CoachApp.instance().kv);
-        for (var i = 0; i < ix.size(); i++) {
-            var r = ix[i] as Array;
-            var n = r[IX_PARTS] as Number;
-            addItem(new WatchUi.MenuItem(r[IX_TITLE] as String,
-                (r[IX_DATE] as String) + " - " + n.format("%d") + (n == 1 ? " part" : " parts"),
-                r[IX_ID] as String, null));
-        }
-        if (ix.size() == 0) {
-            addItem(new WatchUi.MenuItem("No workouts", "Send one from the phone", :none, null));
-        }
-    }
-}
-
-class WorkoutsDelegate extends WatchUi.Menu2InputDelegate {
+class FutureDelegate extends WatchUi.Menu2InputDelegate {
 
     function initialize() {
         Menu2InputDelegate.initialize();
@@ -190,6 +171,25 @@ class WorkoutsDelegate extends WatchUi.Menu2InputDelegate {
         var id = item.getId();
         if (id instanceof String) {
             PlanMenu.open(id);
+        }
+    }
+}
+
+//! Future plans, earliest date first (REQ-WN01). Opens the same preview.
+class FutureMenu extends WatchUi.Menu2 {
+
+    function initialize() {
+        Menu2.initialize({:title => "Future"});
+        var rows = Inbox.futureRows(CoachApp.instance().kv, Fmt.today());
+        for (var i = 0; i < rows.size(); i++) {
+            var r = rows[i] as Array;
+            var n = r[IX_PARTS] as Number;
+            addItem(new WatchUi.MenuItem(r[IX_TITLE] as String,
+                (r[IX_DATE] as String) + " - " + n.format("%d") + (n == 1 ? " part" : " parts"),
+                r[IX_ID] as String, null));
+        }
+        if (rows.size() == 0) {
+            addItem(new WatchUi.MenuItem("No future workouts", "Send one from the phone", :none, null));
         }
     }
 }

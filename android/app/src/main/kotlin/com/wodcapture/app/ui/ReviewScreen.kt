@@ -267,7 +267,7 @@ private fun PartEditor(
         Row(verticalAlignment = Alignment.CenterVertically) {
             LabelBadge(part.label, section)
             Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                Text(part.title ?: Summaries.format(part.format), style = MaterialTheme.typography.titleMedium)
+                Text(if (section == WorkoutSection.WARMUP || section == WorkoutSection.WEIGHTS) Summaries.format(part.format) else part.title ?: Summaries.format(part.format), style = MaterialTheme.typography.titleMedium)
                 Hint(pretty(part.kind.name))
             }
             IconButton(onClick = onRemove) { Icon(Icons.Filled.Delete, contentDescription = "Remove part ${part.label}") }
@@ -275,7 +275,7 @@ private fun PartEditor(
         Grid {
             val cell = Modifier
             Field("Label", part.label, cell) { onChange(part.copy(label = it)) }
-            Field("Name", part.title.orEmpty(), cell) { onChange(part.copy(title = it.ifBlank { null })) }
+            if (section != WorkoutSection.WARMUP && section != WorkoutSection.WEIGHTS) Field("Name", part.title.orEmpty(), cell) { onChange(part.copy(title = it.ifBlank { null })) }
             Choice("Kind", part.kind, PartKind.entries, { pretty(it.name) }, cell) { onChange(part.copy(kind = it)) }
             Choice("Format", Editing.formatType(part.format), Editing.formatTypes, { formatNames[it] ?: it }, cell) { t ->
                 onChange(part.copy(format = Editing.newFormat(t), scoring = part.scoring.copy(type = Editing.defaultScore(t))))

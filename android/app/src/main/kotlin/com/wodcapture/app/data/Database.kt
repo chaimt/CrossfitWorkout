@@ -204,6 +204,7 @@ interface WodDao {
 
     @Upsert fun upsertPlan(p: PlanEntity)
     @Query("SELECT * FROM plans WHERE workoutId = :workoutId AND targetKey = :targetKey") fun plan(workoutId: String, targetKey: String): PlanEntity?
+    @Query("SELECT * FROM plans WHERE targetKey = :targetKey") fun plansForTarget(targetKey: String): List<PlanEntity>
 
     @Upsert fun upsertChunk(c: ChunkTransferEntity)
     @Query("SELECT * FROM chunk_transfers WHERE targetKey = :targetKey") fun chunk(targetKey: String): ChunkTransferEntity?

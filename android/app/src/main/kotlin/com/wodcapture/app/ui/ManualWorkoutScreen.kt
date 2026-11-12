@@ -195,7 +195,7 @@ private fun PartCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             LabelBadge(label, section)
             Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                Text(part.name.ifBlank { part.format.label }, style = MaterialTheme.typography.titleMedium)
+                Text(if (section == WorkoutSection.WARMUP || section == WorkoutSection.WEIGHTS) part.format.label else part.name.ifBlank { part.format.label }, style = MaterialTheme.typography.titleMedium)
                 Hint(kindName(part.kind))
             }
             IconButton(onClick = onRemove) { Icon(Icons.Filled.Delete, contentDescription = "Remove part $label") }
@@ -203,11 +203,13 @@ private fun PartCard(
         if (ManualFormat.of(section).size > 1) FormatChips(section, part.format) { f -> onChange { ManualForms.withFormat(it, f, ids) } }
         // Weights parts are always strength and need no label or name (owner request 2026-11-05):
         // the lift says what it is and the builder letters the part.
-        // Warm-up parts are always a for-quality list of kind Warm-up, so they need no type picker.
+        // Warm-up parts are always a for-quality list of kind Warm-up, so they need no name or type picker.
         if (section != WorkoutSection.WEIGHTS) Grid {
             Field("Label", part.label, Modifier.weight(1f), placeholder = label.ifBlank { "auto" }) { v -> onChange { it.copy(label = v) } }
-            Field("Name (optional)", part.name, Modifier.weight(1f), placeholder = "e.g. Fran") { v -> onChange { it.copy(name = v) } }
-            if (section != WorkoutSection.WARMUP) Choice("Type", part.kind, kindsFor(section), ::kindName, Modifier.weight(1f)) { k -> onChange { it.copy(kind = k) } }
+            if (section != WorkoutSection.WARMUP) {
+                Field("Name (optional)", part.name, Modifier.weight(1f), placeholder = "e.g. Fran") { v -> onChange { it.copy(name = v) } }
+                Choice("Type", part.kind, kindsFor(section), ::kindName, Modifier.weight(1f)) { k -> onChange { it.copy(kind = k) } }
+            }
         }
         FormatFields(part, onChange)
         when (part.format) {
@@ -245,14 +247,11 @@ private fun kindName(k: PartKind): String = when (k) {
 @Composable
 private fun FormatFields(part: ManualPartForm, onChange: PartEdit) {
     when (part.format) {
-        ManualFormat.STRENGTH -> Unit
+        ManualFormat.STRENGTH, ManualFormat.FOR_QUALITY -> Unit
         ManualFormat.CUSTOM -> CustomFields(part, onChange)
         else -> Grid {
             val cell = Modifier
             when (part.format) {
-                ManualFormat.FOR_QUALITY -> {
-                    IntField("Rounds (usually 2–3)", part.rounds, cell) { v -> onChange { it.copy(rounds = v) } }
-                }
                 ManualFormat.FOR_TIME -> {
                     Field("Rep scheme", part.repSchemeText, cell, placeholder = "21-15-9") { v -> onChange { ManualForms.withRepScheme(it, v) } }
                     IntField("Rounds", part.rounds, cell) { v -> onChange { it.copy(rounds = v) } }
@@ -278,8 +277,7 @@ private fun FormatFields(part: ManualPartForm, onChange: PartEdit) {
                     Field("Window", part.durationText, cell, placeholder = "m:ss") { v -> onChange { it.copy(durationText = v) } }
                     IntField("Attempts (no window)", part.attempts, cell) { v -> onChange { it.copy(attempts = v) } }
                 }
-                ManualFormat.FOR_QUALITY -> Unit
-                ManualFormat.STRENGTH, ManualFormat.CUSTOM -> Unit
+                ManualFormat.STRENGTH, ManualFormat.FOR_QUALITY, ManualFormat.CUSTOM -> Unit
             }
         }
     }
@@ -317,6 +315,9 @@ private fun RowBox(content: @Composable () -> Unit) {
 private fun MovementRows(catalog: MovementCatalog, part: ManualPartForm, unit: MassUnit, ids: IdSource, onChange: PartEdit) {
     fun editRow(id: String, f: (ManualMovementForm) -> ManualMovementForm) =
         onChange { p -> p.copy(movements = p.movements.map { if (it.id == id) f(it) else it }) }
+    if (part.format == ManualFormat.FOR_QUALITY) {
+        IntField("Rounds (usually 2\u20133)", part.rounds, Modifier.fillMaxWidth()) { v -> onChange { it.copy(rounds = v) } }
+    }
     Text(if (part.format == ManualFormat.CUSTOM) "Movements (optional)" else "Movements", style = MaterialTheme.typography.titleSmall)
     val warmup = part.format == ManualFormat.FOR_QUALITY
     part.movements.forEach { row ->

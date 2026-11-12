@@ -94,7 +94,7 @@ in this build.
 | WP03 | I | pure modules + tests; fractional geometry; layout baked in onLayout |
 | WP04 | I/H | ≤4 KiB plan, ≤10 plans, ≤6 parts, ≤30 sets, ≤200 events (lowered so a result fits one message); 128 KiB budget; real capacity H |
 | WP05 | i | runs stored plans offline, history, outbox queued |
-| WN01 | i/partial | Today/Workouts/History/Settings/Sync; plan tz shown on the preview, but the watch cannot compare IANA zones (no API) |
+| WN01 | i/partial | Today/Workouts/Future/History/Settings/Sync; plan tz shown on the preview, but the watch cannot compare IANA zones (no API) |
 | WN02 | i | preview, part list, Start, Run all, transition screen |
 | WN03 | I | Edits.mc (time, cap, EMOM interval/rounds, Tabata work/rest/rounds) reported in `edt` |
 | WN04 | I | delete with confirmation, tombstoned; auto-expiry is v1 |

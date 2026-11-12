@@ -184,7 +184,27 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun refreshDevices() = c.ciq.refreshDevices()
     fun openOnWatch() { c.currentTarget()?.let { t -> c.ciq.openApp(t) { message.value = "Open app: $it" } } }
 
-    fun archive(id: String) = viewModelScope.launch(Dispatchers.IO) { c.workouts.archive(id) }
+    /** Delete = archive the library entry and queue `plan.del` so sync removes it from the watch too. */
+    fun archive(id: String) = viewModelScope.launch(Dispatchers.IO) {
+        val target = c.currentTarget()
+        val prior = target?.let { dao.plan(id, it.key) }
+        c.workouts.archive(id)
+        if (target != null && prior != null) {
+            c.sync.execute { c.engine.deletePlan(target, prior.planId, prior.revision + 1) }
+        }
+    }
+
+    /** Remove every sent plan from the watch (queues one `plan.del` per known plan lineage). */
+    fun clearWatch() = viewModelScope.launch(Dispatchers.IO) {
+        val target = c.currentTarget() ?: run { message.value = "No watch selected (Device screen)"; return@launch }
+        val plans = dao.plansForTarget(target.key)
+        if (plans.isEmpty()) { message.value = "Nothing on watch to remove"; return@launch }
+        c.sync.execute {
+            c.engine.requestSync(target)
+            plans.forEach { c.engine.deletePlan(target, it.planId, it.revision + 1) }
+        }
+        message.value = "Removing ${plans.size} workout${if (plans.size == 1) "" else "s"} from watch"
+    }
     fun duplicate(id: String, onDone: (String) -> Unit) = viewModelScope.launch {
         val e = withContext(Dispatchers.IO) { c.workouts.duplicate(id, nowSec()) }
         e?.let { onDone(it.id) }
@@ -263,7 +283,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun testKey() = viewModelScope.launch(Dispatchers.IO) {
         val key = c.secrets.apiKey() ?: run { message.value = "No API key stored"; return@launch }
-        val r = CloudLlmParser(CloudParserConfig(apiKey = key, model = settings.value.model), c.catalog, OkHttpTransport(30)).testKey()
+        val r = CloudLlmParser(CloudParserConfig(apiKey = key, model = settings.value.model, effort = settings.value.effort), c.catalog, OkHttpTransport(30)).testKey()
         message.value = when (r) {
             KeyTestResult.Ok -> "Key works"
             KeyTestResult.InvalidKey -> "Key rejected (401)"
