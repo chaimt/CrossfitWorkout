@@ -32,6 +32,7 @@ import com.wodcapture.domain.model.MeasureKind
 import com.wodcapture.domain.model.NotForTime
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.WorkoutSection
+import com.wodcapture.domain.model.Warmups
 import com.wodcapture.domain.model.PercentOfBodyweight
 import com.wodcapture.domain.model.PercentOfMax
 import com.wodcapture.domain.model.Rest
@@ -132,7 +133,7 @@ private class PartCompiler(
 
     fun compile(): WatchPart? {
         part = try {
-            LevelApplier.apply(original, levelOverride)
+            Warmups.prepare(LevelApplier.apply(original, levelOverride))
         } catch (e: DanglingOverrideException) {
             return fail("dangling_override", e.message ?: "Dangling override", e.targetId)
         } catch (e: IllegalArgumentException) {
@@ -698,7 +699,7 @@ private class PartCompiler(
             is StrengthSets -> nameFallback ?: "Strength"
             is BuildToMax -> BodyTree.items(part.body).firstOrNull()?.let { "${displayName(it)} ${f.repsPerSet}RM" } ?: "Build to max"
             is DeathBy -> "Death by"
-            NotForTime -> "For quality"
+            NotForTime -> if (part.kind == com.wodcapture.domain.model.PartKind.WARMUP) "${Warmups.rounds(part)} rounds" else "For quality"
             is CustomSegments -> "Custom"
         }
         val candidates = buildList {

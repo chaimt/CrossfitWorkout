@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
-# Copy bin/wodcoach.prg (WOD Coach) onto a Garmin watch connected over USB (MTP).
+# Copy WOD Coach onto a USB watch, or remove its sideloaded app file with --remove.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 
+mode="${1:-}"
+if [ -n "$mode" ] && [ "$mode" != "--remove" ]; then
+  echo "Usage: $0 [--remove]" >&2
+  exit 2
+fi
 prg="bin/wodcoach.prg"
-if [ ! -f "$prg" ]; then
+if [ "$mode" != "--remove" ] && [ ! -f "$prg" ]; then
   echo "bin/wodcoach.prg is missing. Build the app first." >&2
   exit 1
 fi
@@ -55,4 +60,7 @@ fi
 helper="${TMPDIR:-/tmp}/mtp-send-prg"
 cc -Wall -Wextra -o "$helper" "$root/scripts/mtp-send-prg.c" \
   -I"$mtp_prefix/include" -L"$mtp_prefix/lib" -lmtp
+if [ "$mode" = "--remove" ]; then
+  exec "$helper" --remove "wodcoach.prg"
+fi
 exec "$helper" "$prg" "wodcoach.prg"

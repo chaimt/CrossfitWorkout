@@ -8,4 +8,9 @@
     <bitmap id="MenuSettings" filename="menu_settings.svg" />
     <bitmap id="MenuSync" filename="menu_sync.svg" />
     <bitmap id="MenuRecovered" filename="menu_recovered.svg" />
+    <bitmap id="MenuPlay" filename="menu_play.svg" />
+    <bitmap id="MenuWarmup" filename="menu_warmup.svg" />
+    <bitmap id="MenuTimer" filename="menu_timer.svg" />
+    <bitmap id="MenuDelete" filename="menu_delete.svg" />
+    <bitmap id="MenuManual" filename="menu_manual.svg" />
 </drawables>

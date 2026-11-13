@@ -8,6 +8,7 @@
 //
 import Toybox.Lang;
 import Toybox.Test;
+import Toybox.Time;
 
 (:test)
 function testCheckpointGenerationsSurviveTornWrite(logger as Test.Logger) as Boolean {
@@ -191,8 +192,9 @@ function testOutboxAckOnlyDeliveryAndRetryBudget(logger as Test.Logger) as Boole
 (:test)
 function testHistoryNeverPrunesUnsent(logger as Test.Logger) as Boolean {
     var kv = new MemKv();
+    var now = Time.now().value() - 100;
     for (var i = 0; i < 52; i++) {
-        History.add(kv, "r" + i.format("%d"), History.KIND_RESULT, "T", "A", 1000000 + i, "1:00", "completed", {"id" => i});
+        History.add(kv, "r" + i.format("%d"), History.KIND_RESULT, "T", "A", now + i, "1:00", "completed", {"id" => i});
     }
     // Nothing delivered yet: all 52 kept (recent rows never pruned, cap never touches unsent).
     Test.assertEqual(52, History.rows(kv).size());
@@ -201,13 +203,13 @@ function testHistoryNeverPrunesUnsent(logger as Test.Logger) as Boolean {
     History.markDelivered(kv, "r1");
     History.markDelivered(kv, "r2");
     History.markDelivered(kv, "r3");
-    History.add(kv, "r99", History.KIND_RESULT, "T", "A", 1000000 + 99, "1:00", "completed", {"id" => 99});
+    History.add(kv, "r99", History.KIND_RESULT, "T", "A", now + 99, "1:00", "completed", {"id" => 99});
     Test.assertEqual(50, History.rows(kv).size());
     Test.assert(History.find(kv, "r0") < 0);
     Test.assert(History.find(kv, "r2") < 0);
     Test.assert(History.find(kv, "r3") >= 0);
     // Idempotent add (recovery may run twice).
-    History.add(kv, "r99", History.KIND_RESULT, "T", "A", 1000000 + 99, "1:00", "completed", {"id" => 99});
+    History.add(kv, "r99", History.KIND_RESULT, "T", "A", now + 99, "1:00", "completed", {"id" => 99});
     Test.assertEqual(50, History.rows(kv).size());
     return true;
 }
@@ -215,15 +217,16 @@ function testHistoryNeverPrunesUnsent(logger as Test.Logger) as Boolean {
 (:test)
 function testHistoryDropsDeliveredRowsOlderThanTwoWeeks(logger as Test.Logger) as Boolean {
     var kv = new MemKv();
-    var now = 2000000;
-    var old = now - History.RETENTION_SEC - 100;
+    var now = Time.now().value();
+    // Initially inside retention; advance only the explicit pruning clock.
+    var old = now - History.RETENTION_SEC + 100;
     History.add(kv, "old-sent", History.KIND_RESULT, "T", "A", old, "1:00", "completed", {"id" => "old-sent"});
     History.markDelivered(kv, "old-sent");
     History.add(kv, "old-pending", History.KIND_RESULT, "T", "A", old, "1:00", "completed", {"id" => "old-pending"});
     History.add(kv, "fresh-sent", History.KIND_RESULT, "T", "A", now, "1:00", "completed", {"id" => "fresh-sent"});
     History.markDelivered(kv, "fresh-sent");
     Test.assertEqual(3, History.rows(kv).size());
-    History.prune(kv, now);
+    History.prune(kv, now + 200);
     // Delivered row older than two weeks is gone; pending old row and
     // fresh delivered row stay; payload of the dropped row is gone too.
     Test.assertEqual(2, History.rows(kv).size());
@@ -282,5 +285,30 @@ function testFutureRowsListsPlansAfterTodayEarliestFirst(logger as Test.Logger) 
     Fx.eqs("Later WOD", (rows[1] as Array)[IX_TITLE] as String);
     // Today still resolves to today's plan only.
     Fx.eqs("Today WOD", (Inbox.todayRow(kv, "2026-11-12") as Array)[IX_TITLE] as String);
+    return true;
+}
+
+(:test)
+function testReconnectRestartsWaitingUploadsWithRateLimit(logger as Test.Logger) as Boolean {
+    var kv = new MemKv();
+    var link = new LinkState(kv);
+    Outbox.enqueue(kv, "result.put", "r1", 1, "m1", 1000);
+    Test.assert(link.update(true, 1000));
+    for (var i = 0; i < 4; i++) {
+        Outbox.transmitFailed(kv, "m1", 1000);
+    }
+    Test.assert(Outbox.next(kv, 1300) == null);
+    // A continuous connection is not a new lifecycle event.
+    Test.assert(!link.update(true, 1300));
+    Test.assert(Outbox.next(kv, 1300) == null);
+    link.update(false, 1300);
+    Test.assert(link.update(true, 1301));
+    Test.assert(Outbox.next(kv, 1301) != null);
+    for (var j = 0; j < 4; j++) {
+        Outbox.transmitFailed(kv, "m1", 1301);
+    }
+    link.update(false, 1302);
+    link.update(true, 1303);
+    Test.assert(Outbox.next(kv, 1303) == null);
     return true;
 }

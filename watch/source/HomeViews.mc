@@ -8,6 +8,7 @@
 // BACK on Home exits the app.
 //
 import Toybox.Lang;
+import Toybox.Graphics;
 import Toybox.WatchUi;
 
 class HomeMenu extends WatchUi.Menu2 {
@@ -16,13 +17,13 @@ class HomeMenu extends WatchUi.Menu2 {
         Menu2.initialize({:title => "WOD Coach"});
         var app = CoachApp.instance();
         if (app.recovered != null) {
-            addItem(new WatchUi.MenuItem("Recovered", "Interrupted - saved", :recovered, {:icon => Rez.Drawables.MenuRecovered}));
+            addItem(new WatchUi.IconMenuItem("Recovered", "Interrupted - saved", :recovered, new HomeMenuIcon(Rez.Drawables.MenuRecovered), null));
         }
-        addItem(new WatchUi.MenuItem("Today", _today(), :today, {:icon => Rez.Drawables.MenuToday}));
-        addItem(new WatchUi.MenuItem("Future", _future(), :future, {:icon => Rez.Drawables.MenuFuture}));
-        addItem(new WatchUi.MenuItem("History", _history(), :history, {:icon => Rez.Drawables.MenuHistory}));
-        addItem(new WatchUi.MenuItem("Settings", null, :settings, {:icon => Rez.Drawables.MenuSettings}));
-        addItem(new WatchUi.MenuItem("Sync now", _sync(), :sync, {:icon => Rez.Drawables.MenuSync}));
+        addItem(new WatchUi.IconMenuItem("Today", _today(), :today, new HomeMenuIcon(Rez.Drawables.MenuToday), null));
+        addItem(new WatchUi.IconMenuItem("Future", _future(), :future, new HomeMenuIcon(Rez.Drawables.MenuFuture), null));
+        addItem(new WatchUi.IconMenuItem("History", _history(), :history, new HomeMenuIcon(Rez.Drawables.MenuHistory), null));
+        addItem(new WatchUi.IconMenuItem("Settings", null, :settings, new HomeMenuIcon(Rez.Drawables.MenuSettings), null));
+        addItem(new WatchUi.IconMenuItem("Sync now", _sync(), :sync, new HomeMenuIcon(Rez.Drawables.MenuSync), null));
     }
 
     function refresh() as Void {
@@ -229,13 +230,25 @@ class PlanMenu extends WatchUi.Menu2 {
         var title = U.str(p, "ti");
         Menu2.initialize({:title => title == null ? "Workout" : title});
         var parts = p["p"] as Array;
-        addItem(new WatchUi.MenuItem("Run all", parts.size().format("%d") + " parts - "
-            + U.str(p, "date") + " " + U.str(p, "tz"), :all, null));
+        addItem(new WatchUi.IconMenuItem("Run all", parts.size().format("%d") + " parts - "
+            + U.str(p, "date") + " " + U.str(p, "tz"), :all, new HomeMenuIcon(Rez.Drawables.MenuPlay), null));
         for (var i = 0; i < parts.size(); i++) {
             var part = parts[i] as Dictionary;
-            addItem(new WatchUi.MenuItem(U.str(part, "l") + " - " + U.str(part, "n"), _modeLabel(part), i, null));
+            addItem(new WatchUi.IconMenuItem(U.str(part, "l") + " - " + U.str(part, "n"), _modeLabel(part), i, new HomeMenuIcon(iconFor(part)), null));
         }
-        addItem(new WatchUi.MenuItem("Delete plan", null, :delete, null));
+        addItem(new WatchUi.IconMenuItem("Delete plan", null, :delete, new HomeMenuIcon(Rez.Drawables.MenuDelete), null));
+    }
+
+    //! Modes and scoring are already on the wire; no label/text parsing is needed.
+    static function iconFor(part as Dictionary) as ResourceId {
+        if (PlanCodec.isStrength(U.str(part, "mode"))) {
+            return Rez.Drawables.MenuWorkouts;
+        }
+        if (U.eq(U.str(part, "mode"), "manual")) {
+            return U.eq(U.str(U.dict(part, "sc"), "ty"), "none")
+                ? Rez.Drawables.MenuWarmup : Rez.Drawables.MenuManual;
+        }
+        return Rez.Drawables.MenuTimer;
     }
 
     static function _modeLabel(part as Dictionary) as String {
@@ -301,10 +314,10 @@ class PartMenu extends WatchUi.Menu2 {
         index = i;
         part = (planMenu.plan["p"] as Array)[i] as Dictionary;
         Menu2.initialize({:title => U.str(part, "l") + " - " + U.str(part, "n")});
-        addItem(new WatchUi.MenuItem("Start", "START to begin", :start, null));
+        addItem(new WatchUi.IconMenuItem("Start", "START to begin", :start, new HomeMenuIcon(Rez.Drawables.MenuPlay), null));
         if (U.flag(part, "fb", false)) {
             // REQ-DM18 label for reviewed fallbacks.
-            addItem(new WatchUi.MenuItem("Manual timer", "no automatic movement/interrupt/rest cues", :none, null));
+            addItem(new WatchUi.IconMenuItem("Manual timer", "no automatic movement/interrupt/rest cues", :none, new HomeMenuIcon(PlanMenu.iconFor(part)), null));
         }
         fields = Edits.fields(part);
         var e = planMenu.edits.get(i);
@@ -313,7 +326,7 @@ class PartMenu extends WatchUi.Menu2 {
             if (e instanceof Dictionary && e.hasKey(spec.key)) {
                 spec.value = e[spec.key] as Number;
             }
-            addItem(new WatchUi.MenuItem(spec.label, spec.format(spec.value), f, null));
+            addItem(new WatchUi.IconMenuItem(spec.label, spec.format(spec.value), f, new HomeMenuIcon(Rez.Drawables.MenuSettings), null));
         }
         var ln = U.arr(part, "ln");
         if (ln != null) {
@@ -373,5 +386,20 @@ class PartDelegate extends WatchUi.Menu2InputDelegate {
         if (_field >= 0) {
             _menu.setField(_field, value);
         }
+    }
+}
+
+//! Native icon rows provide a bounded drawing area for this bitmap.
+class HomeMenuIcon extends WatchUi.Drawable {
+    private var _bitmap as Graphics.BitmapType;
+
+    function initialize(resource as ResourceId) {
+        Drawable.initialize({});
+        _bitmap = WatchUi.loadResource(resource) as Graphics.BitmapType;
+    }
+
+    function draw(dc as Graphics.Dc) as Void {
+        dc.drawBitmap((dc.getWidth() - _bitmap.getWidth()) / 2,
+            (dc.getHeight() - _bitmap.getHeight()) / 2, _bitmap);
     }
 }

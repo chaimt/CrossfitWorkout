@@ -13,8 +13,8 @@ android {
         applicationId = "com.wodcapture.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 14
-        versionName = "0.8.6"
+        versionCode = 23
+        versionName = "0.8.15"
     }
 
     buildTypes {

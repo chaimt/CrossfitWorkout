@@ -34,7 +34,7 @@ class ManualSectionsTest {
         assertEquals(listOf(ManualFormat.STRENGTH), ManualFormat.of(WorkoutSection.WEIGHTS))
         // Warm-up is a for-quality list, not metcon timers; metcon and the trailing
         // section share the timed formats.
-        assertEquals(listOf(ManualFormat.FOR_QUALITY), ManualFormat.of(WorkoutSection.WARMUP))
+        assertEquals(listOf(ManualFormat.FOR_TIME, ManualFormat.FOR_QUALITY), ManualFormat.of(WorkoutSection.WARMUP))
         val timed = ManualFormat.entries.filter { it != ManualFormat.STRENGTH && it != ManualFormat.FOR_QUALITY }
         assertEquals(timed, ManualFormat.of(WorkoutSection.METCON))
         assertEquals(timed, ManualFormat.of(WorkoutSection.OTHER))
@@ -86,7 +86,7 @@ class ManualSectionsTest {
     }
 
     @Test
-    fun forQualityIsTheOnlyWarmupFormat() {
+    fun warmupOffersTimeAndRoundsAndRetainsItsKind() {
         // Add warm-up produces a for-quality list under Warm-up, never a metcon timer.
         val added = ManualForms.addPart(blank(), WorkoutSection.WARMUP, ManualFormat.FOR_QUALITY, ids)
         val warmup = ManualForms.partsIn(added, WorkoutSection.WARMUP).single()
@@ -153,6 +153,17 @@ class ManualSectionsTest {
             listOf("warmup", "skill", "strength", "metcon", "other", "accessory", "cooldown"),
             WorkoutSection.runOrdered(shuffled).map { it.id },
         )
+    }
+
+    @Test
+    fun warmupWithLiftingSetsStillRunsBeforeTheWeightsSession() {
+        val weights = Part(id = "weights", kind = PartKind.STRENGTH, format = StrengthSets())
+        val warmup = weights.copy(id = "warmup", kind = PartKind.WARMUP)
+        assertEquals(WorkoutSection.WARMUP, WorkoutSection.of(warmup))
+        assertEquals(listOf("warmup", "weights"), WorkoutSection.runOrdered(listOf(weights, warmup)).map { it.id })
+        assertTrue(warmup.effectiveRunOnWatch)
+        assertFalse(warmup.copy(runOnWatch = false).effectiveRunOnWatch)
+        assertFalse(Part(id = "cooldown", kind = PartKind.COOLDOWN, format = Amrap(300)).effectiveRunOnWatch)
     }
 
     @Test

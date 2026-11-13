@@ -86,9 +86,9 @@ data class Part(
     /** Explicitly reviewed manual-timer fallback (REQ-DM18). */
     val fallback: Fallback? = null,
 ) {
-    /** Effective run-on-watch flag: warm-up and cool-down are off unless explicitly enabled. */
+    /** Effective run-on-watch flag: include warm-up by default; cool-down stays opt-in. */
     val effectiveRunOnWatch: Boolean
-        get() = runOnWatch ?: (kind != PartKind.WARMUP && kind != PartKind.COOLDOWN)
+        get() = runOnWatch ?: (kind != PartKind.COOLDOWN)
 }
 
 /** Non-executable context the parser preserves (partner rules, chipper, tiebreaks). */

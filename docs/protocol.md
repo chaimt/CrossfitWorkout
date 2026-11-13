@@ -119,7 +119,12 @@ Payload: `{ "xid": "<transfer uuid>", "ix": 0, "n": 3, "len": 9012, "sha": "<hex
 | `ti` | title, ≤ 28 chars |
 | `date`/`tz` | scheduled local date + IANA zone (REQ-WN01) |
 | `u` | athlete display unit for weights (`"kg"`/`"lb"`) — default for pickers only; every load carries its own unit |
-| `p` | 1–6 parts, in class run order (warm-up/skill → weights → metcon → other, cool-down last; the phone sorts at compile, REQ-DM14), only parts with `runOnWatch = true` |
+| `p` | 1–6 parts, in class run order (warm-up/skill → weights → metcon → other, cool-down last; the phone sorts at compile, REQ-DM14), only parts whose effective `runOnWatch` is true (warm-up defaults on, cool-down defaults off, explicit overrides win) |
+
+On Android **Sync now**, existing today/future plans are recompiled from the saved workout and
+profile before the inventory exchange. Changed content keeps its UUID and advances the revision;
+past plan content is not recompiled. Explicit removals are not resurrected. This is phone-side
+orchestration, not an additional wire message; see [design.md](design.md) for date and level rules.
 
 ### 4.1 Part
 

@@ -38,6 +38,7 @@ import com.wodcapture.domain.model.StrengthSets
 import com.wodcapture.domain.model.Tabata
 import com.wodcapture.domain.model.Workout
 import com.wodcapture.domain.model.WorkoutSection
+import com.wodcapture.domain.model.Warmups
 import com.wodcapture.domain.plan.WatchLimits
 import com.wodcapture.domain.review.TimeText
 import com.wodcapture.domain.validation.Severity
@@ -115,7 +116,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
     ) {
         fun build(): Part {
             val format = format()
-            val warmup = form.kind == PartKind.WARMUP && format is NotForTime
+            val warmup = form.kind == PartKind.WARMUP
             val part = Part(
                 id = form.id,
                 label = form.label.trim().ifBlank { fallbackLabel },
@@ -126,13 +127,18 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
                 scoring = scoring(),
                 fallback = fallback(),
             )
-            return if (format is Emom) part.copy(format = format.copy(stations = BodyTree.items(part.body).map { Station(it.id) })) else part
+            return Warmups.prepare(if (format is Emom) part.copy(format = format.copy(stations = BodyTree.items(part.body).map { Station(it.id) })) else part)
         }
 
         // ---------------------------------------------------------------- format
 
+        private val warmupDuration: Int? by lazy {
+            val text = form.capText.ifBlank { form.durationText }.ifBlank { "10:00" }
+            time(text, "Duration", "durationText")
+        }
+
         private fun format(): Format = when (form.format) {
-            ManualFormat.FOR_TIME -> ForTime(capSec = time(form.capText, "Cap", "capText"))
+            ManualFormat.FOR_TIME -> ForTime(capSec = if (form.kind == PartKind.WARMUP) warmupDuration else time(form.capText, "Cap", "capText"))
             ManualFormat.AMRAP -> Amrap(durationSec = time(form.durationText, "AMRAP duration", "durationText"))
             ManualFormat.EMOM -> Emom(
                 intervalSec = time(form.intervalText, "Interval", "intervalText") ?: ONE_MINUTE,
@@ -181,7 +187,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
          * for-quality warm-ups list their movements repeated [rounds] times (no scoring). */
         private fun forTimeBody(): List<BodyNode> {
             val items = form.movements.map(::item)
-            if (form.format == ManualFormat.FOR_QUALITY) {
+            if (form.kind == PartKind.WARMUP || form.format == ManualFormat.FOR_QUALITY) {
                 val rounds = form.rounds ?: 1
                 return if (rounds != 1) listOf(Group(ids.newId(), GroupKind.ROUNDS, repeat = rounds, children = items)) else items
             }
@@ -300,7 +306,7 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
          * when every item is rep-countable. Tabata with mixed measures is typed in by hand because
          * there is no counting rule to sum them (REQ-DM23).
          */
-        private fun scoring(): Scoring = when (form.format) {
+        private fun scoring(): Scoring = if (form.kind == PartKind.WARMUP) Scoring(ScoreType.NONE) else when (form.format) {
             ManualFormat.FOR_TIME -> Scoring(ScoreType.TIME)
             ManualFormat.FOR_QUALITY -> Scoring(ScoreType.NONE)
             ManualFormat.AMRAP -> Scoring(ScoreType.ROUNDS_REPS)
@@ -317,6 +323,11 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
         }.toSet().size > 1
 
         private fun fallback(): Fallback? {
+            if (form.kind == PartKind.WARMUP && form.format in listOf(ManualFormat.FOR_TIME, ManualFormat.FOR_QUALITY)) {
+                return if (form.format == ManualFormat.FOR_TIME)
+                    Fallback(accepted = true, timer = FallbackTimer.COUNT_DOWN, durationSec = warmupDuration, reason = WARMUP_REASON)
+                else Fallback(accepted = true, capSec = warmupDuration, reason = WARMUP_REASON)
+            }
             if (form.format != ManualFormat.CUSTOM && form.format != ManualFormat.FOR_QUALITY) return null
             if (form.format == ManualFormat.FOR_QUALITY) {
                 // For-quality lists never run a dedicated watch mode; the list shows under a

@@ -28,10 +28,12 @@ class PhoneLink {
     private var _busy as Boolean = false;
     private var _timer as Timer.Timer? = null;
     var lastError as String? = null;
+    private var _connection as LinkState;
     var onInbox as Method? = null;
 
     function initialize(kv as Kv) {
         _kv = kv;
+        _connection = new LinkState(kv);
     }
 
     function start() as Void {
@@ -74,7 +76,11 @@ class PhoneLink {
     //! REQ-SY13: disconnection suspends sending; queued messages wait for the
     //! next pump tick after the phone reconnects instead of failing transmits.
     function _linkUp() as Boolean {
-        if (System.getDeviceSettings().phoneConnected) {
+        var connected = System.getDeviceSettings().phoneConnected;
+        if (_connection.update(connected, _nowSec())) {
+            _control.add(Proto.hello(_kv, _nowSec(), Budget.free(_kv)));
+        }
+        if (connected) {
             return true;
         }
         lastError = "Phone not connected";
@@ -192,5 +198,24 @@ class TxListener extends Communications.ConnectionListener {
 
     function onError() as Void {
         _link.onSent(_mid, false);
+    }
+}
+
+//! Connection transitions are tracked separately so retry restart is testable.
+class LinkState {
+    private var _kv as Kv;
+    private var _connected as Boolean = false;
+
+    function initialize(kv as Kv) {
+        _kv = kv;
+    }
+
+    function update(connected as Boolean, nowSec as Number) as Boolean {
+        var reconnected = connected && !_connected;
+        _connected = connected;
+        if (reconnected) {
+            Outbox.startDrain(_kv, nowSec, false);
+        }
+        return reconnected;
     }
 }

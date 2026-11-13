@@ -15,7 +15,7 @@ import Toybox.Lang;
 module Proto {
 
     const VERSION = 1;
-    const APP_VERSION = "0.1.0";
+    const APP_VERSION = "0.1.2";
     const DEVICE = "fr965";
     const CAPABILITIES = ["for_time", "amrap", "emom", "tabata", "intervals", "max_effort",
         "strength_sets", "build_to_max", "manual"] as Array<String>;
@@ -78,7 +78,7 @@ module Proto {
         if (body == null) {
             return null;
         }
-        var g = Inbox.generation(kv);
+        var g = entry.size() > OB_GENERATION ? entry[OB_GENERATION] as Number : Outbox.maxGeneration(kv);
         return envelope(entry[OB_TYPE] as String, entry[OB_MID] as String, entry[OB_TS] as Number,
             g < 1 ? 1 : g, oid, entry[OB_REV] as Number, body);
     }
@@ -126,13 +126,12 @@ module Proto {
         if (t.equals("plan.put")) {
             _planPut(kv, msg, mid, oid, rev, g, nowSec, free, res);
         } else if (t.equals("plan.del")) {
-            Inbox.acceptGeneration(kv, g);
-            var r = Inbox.del(kv, oid, rev);
+            var r = Inbox.acceptGeneration(kv, g) ? Inbox.del(kv, oid, rev) : ["error", "capacity"];
             _reply(res, "plan.ack", mid, oid, rev, r, g, nowSec);
             res["inbox"] = U.eq(r[0] as String, "ok");
         } else if (t.equals("profile.put")) {
-            Inbox.acceptGeneration(kv, g);
-            var r = rev == null ? ["error", "invalid"] : Settings.applyProfile(rev, msg.get("p"));
+            var r = !Inbox.acceptGeneration(kv, g) ? ["error", "capacity"]
+                : (rev == null ? ["error", "invalid"] : Settings.applyProfile(rev, msg.get("p")));
             _reply(res, "profile.ack", mid, oid, rev, r, g, nowSec);
         } else if (t.equals("result.ack") || t.equals("session.ack")) {
             var p = U.dict(msg, "p");
@@ -161,8 +160,8 @@ module Proto {
         if (WireSize.size(msg) > WireSize.MAX_MESSAGE) {
             r = ["error", "size"];
         } else {
-            Inbox.acceptGeneration(kv, g);
-            r = Inbox.put(kv, oid, rev, msg.get("p"), nowSec, free);
+            r = Inbox.acceptGeneration(kv, g)
+                ? Inbox.put(kv, oid, rev, msg.get("p"), nowSec, free) : ["error", "capacity"];
         }
         _reply(res, "plan.ack", mid, oid, rev, r, g, nowSec);
         res["inbox"] = U.eq(r[0] as String, "ok");

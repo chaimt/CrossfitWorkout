@@ -77,6 +77,7 @@ import com.wodcapture.domain.model.StrengthSets
 import com.wodcapture.domain.model.Tabata
 import com.wodcapture.domain.model.Workout
 import com.wodcapture.domain.model.WorkoutSection
+import com.wodcapture.domain.model.Warmups
 import com.wodcapture.domain.parser.JobState
 import com.wodcapture.domain.plan.CompileResult
 import com.wodcapture.domain.review.LoadText
@@ -101,7 +102,7 @@ fun ReviewScreen(vm: AppViewModel, id: String, back: () -> Unit, logResult: (Str
 
 @Composable
 private fun ReviewContent(vm: AppViewModel, e: WorkoutEntity, back: () -> Unit, logResult: (String) -> Unit) {
-    var draft by remember(e.id, e.revision) { mutableStateOf(DomainJson.decodeWorkout(e.workoutJson)) }
+    var draft by remember(e.id, e.revision) { mutableStateOf(Warmups.prepare(DomainJson.decodeWorkout(e.workoutJson))) }
     var levels by remember(e.id) { mutableStateOf(mapOf<String, String>()) }
     val settings by vm.settings.collectAsState()
     val job by vm.observeJob(e.id).collectAsState(initial = null)
@@ -267,24 +268,36 @@ private fun PartEditor(
         Row(verticalAlignment = Alignment.CenterVertically) {
             LabelBadge(part.label, section)
             Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                Text(if (section == WorkoutSection.WARMUP || section == WorkoutSection.WEIGHTS) Summaries.format(part.format) else part.title ?: Summaries.format(part.format), style = MaterialTheme.typography.titleMedium)
+                Text(if (part.kind == PartKind.WARMUP && part.format is NotForTime) "Rounds" else if (section == WorkoutSection.WARMUP || section == WorkoutSection.WEIGHTS) Summaries.format(part.format) else part.title ?: Summaries.format(part.format), style = MaterialTheme.typography.titleMedium)
                 Hint(pretty(part.kind.name))
             }
             IconButton(onClick = onRemove) { Icon(Icons.Filled.Delete, contentDescription = "Remove part ${part.label}") }
         }
+        val warmup = part.kind == PartKind.WARMUP
         Grid {
             val cell = Modifier
             Field("Label", part.label, cell) { onChange(part.copy(label = it)) }
             if (section != WorkoutSection.WARMUP && section != WorkoutSection.WEIGHTS) Field("Name", part.title.orEmpty(), cell) { onChange(part.copy(title = it.ifBlank { null })) }
             Choice("Kind", part.kind, PartKind.entries, { pretty(it.name) }, cell) { onChange(part.copy(kind = it)) }
-            Choice("Format", Editing.formatType(part.format), Editing.formatTypes, { formatNames[it] ?: it }, cell) { t ->
-                onChange(part.copy(format = Editing.newFormat(t), scoring = part.scoring.copy(type = Editing.defaultScore(t))))
+            Choice("Format", Editing.formatType(part.format), if (warmup) listOf("for_time", "not_for_time") else Editing.formatTypes,
+                { if (warmup && it == "not_for_time") "Rounds" else formatNames[it] ?: it }, cell) { t ->
+                val format = if (warmup && t == "for_time") ForTime(capSec = Warmups.timeCap(part)) else Editing.newFormat(t)
+                onChange(part.copy(format = format, scoring = part.scoring.copy(type = Editing.defaultScore(t))))
             }
-            Choice("Score", part.scoring.type, ScoreType.entries, { pretty(it.name) }, cell) { onChange(part.copy(scoring = part.scoring.copy(type = it))) }
+            if (!warmup) Choice("Score", part.scoring.type, ScoreType.entries, { pretty(it.name) }, cell) { onChange(part.copy(scoring = part.scoring.copy(type = it))) }
         }
-        FormatEditor(part) { onChange(part.copy(format = it)) }
+        if (warmup) {
+            Grid {
+                IntField("Rounds", Warmups.rounds(part), Modifier) { rounds -> onChange(Warmups.withRounds(part, rounds ?: 1, vm::newId)) }
+                TimeField("Time cap", Warmups.timeCap(part), Modifier) { cap ->
+                    val value = cap ?: Warmups.DEFAULT_CAP_SEC
+                    onChange(if (part.format is ForTime) part.copy(format = (part.format as ForTime).copy(capSec = value))
+                        else part.copy(fallback = part.fallback?.copy(capSec = value)))
+                }
+            }
+        } else FormatEditor(part) { onChange(part.copy(format = it)) }
         Toggle("Run on watch", part.effectiveRunOnWatch) { onChange(part.copy(runOnWatch = it)) }
-        Toggle("Manual score", part.scoring.manual) { onChange(part.copy(scoring = part.scoring.copy(manual = it))) }
+        if (!warmup) Toggle("Manual score", part.scoring.manual) { onChange(part.copy(scoring = part.scoring.copy(manual = it))) }
         Text(if (section == WorkoutSection.WEIGHTS) "Lifts" else "Movements", style = MaterialTheme.typography.titleSmall)
         BodyEditor(vm, part, part.body, low, depth = 0, onChange)
         TextButton(onClick = { onChange(Editing.addItem(part, null, Item(vm.newId(), name = "New movement", measure = Measure(MeasureKind.REPS, 10.0)))) }) {
@@ -304,7 +317,7 @@ private fun PartEditor(
                 OutlinedButton(onClick = { onChange(acceptFallback(part, FallbackTimer.COUNT_DOWN)) }) { Text("Countdown + manual score") }
             }
         }
-        if (part.fallback?.accepted == true) Hint("Manual timer: no automatic movement/interrupt/rest cues")
+        if (part.fallback?.accepted == true) Hint(if (warmup) "Warm-up timer · no score" else "Manual timer: no automatic movement/interrupt/rest cues")
     }
 }
 

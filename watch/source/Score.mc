@@ -41,6 +41,10 @@ module Score {
         var ty = ruleType(part);
         var manual = U.flag(sc, "man", false);
         var rv = _rv(part);
+        // Unscored warm-ups remain unscored even when their cap expires.
+        if (ty.equals("none")) {
+            return _draft("none", false, rv);
+        }
         if (status.equals("capped")) {
             // REQ-WM02/DM24: capped progress uses the declared counting rule,
             // else a typed manual score.

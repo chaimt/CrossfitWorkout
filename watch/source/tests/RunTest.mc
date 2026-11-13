@@ -299,3 +299,16 @@ function testScoreDraftsMissingIsNotZero(logger as Test.Logger) as Boolean {
     Test.assert(Score.timeAllowed(480, 480));
     return true;
 }
+
+(:test)
+function testCappedUnscoredWarmupNeverRequestsManualScore(logger as Test.Logger) as Boolean {
+    var part = Fx.franPart();
+    part["sc"] = {"ty" => "none", "rv" => 1, "man" => true};
+    var run = new MetconRun(part, new Program(part["seg"] as Array));
+    var score = Score.measured(part, run, "capped", 480000);
+    var wire = Score.toWire(score);
+    Fx.eqs("none", wire["ty"] as String);
+    Test.assert(!wire.hasKey("pd"));
+    Test.assert(!wire.hasKey("txt"));
+    return true;
+}

@@ -14,9 +14,10 @@ enum class WorkoutSection(val label: String) {
     ;
 
     companion object {
-        /** Lifting formats are weights whatever the kind says; otherwise the kind decides. */
-        fun of(part: Part): WorkoutSection = when (part.format) {
-            is StrengthSets, is BuildToMax -> WEIGHTS
+        /** Warm-up/skill stays first; other lifting formats are grouped as weights. */
+        fun of(part: Part): WorkoutSection = when {
+            part.kind == PartKind.WARMUP || part.kind == PartKind.SKILL -> WARMUP
+            part.format is StrengthSets || part.format is BuildToMax -> WEIGHTS
             else -> of(part.kind)
         }
 
@@ -32,15 +33,11 @@ enum class WorkoutSection(val label: String) {
          * accessory/other, with cool-down last. Stable-sort parts by this before sending;
          * the watch just runs plan order.
          */
-        fun runRank(part: Part): Int = when {
-            part.format is StrengthSets || part.format is BuildToMax -> 1
-            else -> when (part.kind) {
-                PartKind.WARMUP, PartKind.SKILL -> 0
-                PartKind.STRENGTH -> 1
-                PartKind.METCON -> 2
-                PartKind.ACCESSORY, PartKind.OTHER -> 3
-                PartKind.COOLDOWN -> 4
-            }
+        fun runRank(part: Part): Int = when (of(part)) {
+            WARMUP -> 0
+            WEIGHTS -> 1
+            METCON -> 2
+            OTHER -> if (part.kind == PartKind.COOLDOWN) 4 else 3
         }
 
         /** Parts in class run order, keeping the existing relative order inside each rank. */

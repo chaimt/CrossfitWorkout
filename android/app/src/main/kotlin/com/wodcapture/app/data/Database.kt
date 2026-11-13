@@ -105,7 +105,14 @@ data class PlanEntity(
     val revision: Int,
     val workoutRevision: Int,
     val planJson: String,
-)
+) {
+    /** Empty payload records a deletion high-water mark without changing the Room schema. */
+    fun reconciled(latest: com.wodcapture.domain.protocol.OutboxEntry?): PlanEntity =
+        if (latest != null && latest.revision >= revision && latest.type == com.wodcapture.domain.protocol.MessageType.PLAN_DEL)
+            copy(revision = latest.revision, planJson = "") else this
+
+    fun deletion(): PlanEntity = if (planJson.isEmpty()) this else copy(revision = revision + 1, planJson = "")
+}
 
 /** Staged result chunks (REQ-SY15). */
 @Entity(tableName = "chunk_transfers")

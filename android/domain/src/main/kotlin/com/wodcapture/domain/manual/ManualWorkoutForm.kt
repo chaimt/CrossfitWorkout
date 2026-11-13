@@ -45,7 +45,7 @@ data class ManualWorkoutForm(
  */
 enum class ManualFormat(val label: String, val section: WorkoutSection) {
     STRENGTH("Strength sets", WorkoutSection.WEIGHTS),
-    FOR_QUALITY("For quality", WorkoutSection.METCON),
+    FOR_QUALITY("Rounds", WorkoutSection.METCON),
     FOR_TIME("For time", WorkoutSection.METCON),
     AMRAP("AMRAP", WorkoutSection.METCON),
     EMOM("EMOM / E#MOM", WorkoutSection.METCON),
@@ -57,12 +57,12 @@ enum class ManualFormat(val label: String, val section: WorkoutSection) {
 
     companion object {
         /**
-         * The formats offered when adding a part to [section]: one lift for weights, one
-         * for-quality list for warm-up, every timed format for metcon and the trailing section.
+         * The formats offered when adding a part to [section]: one lift for weights, two
+         * unscored choices for warm-up, each with rounds and cap, every timed format for metcon and the trailing section.
          */
         fun of(section: WorkoutSection): List<ManualFormat> = when (section) {
             WorkoutSection.WEIGHTS -> listOf(STRENGTH)
-            WorkoutSection.WARMUP -> listOf(FOR_QUALITY)
+            WorkoutSection.WARMUP -> listOf(FOR_TIME, FOR_QUALITY)
             WorkoutSection.METCON, WorkoutSection.OTHER ->
                 entries.filter { it != STRENGTH && it != FOR_QUALITY }
         }
@@ -78,7 +78,7 @@ val MANUAL_SECTIONS: List<WorkoutSection> =
 
 /**
  * Part kinds offered in each form section. A weights part is always strength and a warm-up part
- * is always a for-quality warm-up (owner request 2026-11-05, 2026-11-09: no accessory or skill
+ * is always an unscored warm-up (owner request 2026-11-05, 2026-11-09: no accessory or skill
  * choice); parsed skill parts still group under Warm-up via [WorkoutSection.of].
  */
 fun kindsFor(section: WorkoutSection): List<PartKind> = when (section) {
@@ -349,12 +349,14 @@ object ManualForms {
             listOf(newMovement(ids))
         } else part.movements
         val weights = format == ManualFormat.STRENGTH
-        val warmup = kind == PartKind.WARMUP && format == ManualFormat.FOR_QUALITY
+        val warmup = kind == PartKind.WARMUP
         return part.copy(
             format = format,
             kind = kind,
             label = if (weights) "" else part.label,
             name = if (weights || warmup) "" else part.name,
+            rounds = if (warmup) part.rounds ?: 1 else part.rounds,
+            capText = if (warmup) part.capText.ifBlank { "10:00" } else part.capText,
             lift = lift,
             sets = sets,
             movements = movements,
@@ -362,7 +364,7 @@ object ManualForms {
     }
 
     /** Whether movement rows of [part] take their reps from a part rep scheme. */
-    fun usesScheme(part: ManualPartForm): Boolean = part.format == ManualFormat.FOR_TIME && part.repSchemeText.isNotBlank()
+    fun usesScheme(part: ManualPartForm): Boolean = part.kind != PartKind.WARMUP && part.format == ManualFormat.FOR_TIME && part.repSchemeText.isNotBlank()
 
     /**
      * Sets the For-time rep scheme text. Rows without their own rep count follow the scheme while

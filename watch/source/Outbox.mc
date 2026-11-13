@@ -16,7 +16,7 @@
 // The payload is not stored here: it is the immutable History object with
 // the same oid, rebuilt into the envelope at send time.
 //
-// Storage: "ob" = [[mid, type, oid, rev, ts, state, tries, nextAt, sentAt]].
+// Storage: "ob" = [[mid, type, oid, rev, ts, state, tries, nextAt, sentAt, generation]].
 // Time is epoch seconds supplied by the caller. Pure apart from Kv; tested
 // in OutboxTest.mc.
 //
@@ -32,7 +32,8 @@ enum {
     OB_STATE = 5,
     OB_TRIES = 6,
     OB_NEXT = 7,
-    OB_SENT = 8
+    OB_SENT = 8,
+    OB_GENERATION = 9
 }
 
 // Entry states.
@@ -69,8 +70,30 @@ module Outbox {
                 return true;
             }
         }
-        ob.add([mid, type, oid, rev, nowSec, OS_PENDING, 0, nowSec, 0]);
+        ob.add([mid, type, oid, rev, nowSec, OS_PENDING, 0, nowSec, 0, maxGeneration(kv)]);
         return _save(kv, ob);
+    }
+
+    function maxGeneration(kv as Kv) as Number {
+        var g = Inbox.generation(kv);
+        return g < 1 ? 1 : g;
+    }
+
+    //! Upgrade legacy nine-column rows before adopting a newer pairing.
+    //! A refused migration must prevent generation adoption.
+    function freezeGenerations(kv as Kv) as Boolean {
+        var ob = entries(kv);
+        var next = [];
+        var changed = false;
+        for (var i = 0; i < ob.size(); i++) {
+            var e = (ob[i] as Array).slice(0, null);
+            if (e.size() <= OB_GENERATION) {
+                e.add(maxGeneration(kv));
+                changed = true;
+            }
+            next.add(e);
+        }
+        return !changed || _save(kv, next);
     }
 
     //! Next entry to transmit at `nowSec`, or null. Delivery is in queue

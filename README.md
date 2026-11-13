@@ -8,6 +8,7 @@ results back to the phone. Specification: [`REQUIREMENTS.md`](REQUIREMENTS.md).
 | `android/` | **WOD Capture** — Android app (Kotlin, Compose): capture → Claude parse → review → load resolution → compile → send; history. See `android/README.md`. |
 | `watch/` | **WOD Coach** — Connect IQ watch app (Monkey C, fr965): inbox, timers, set logging, FIT recording, results outbox. See `watch/README.md`. |
 | `shared/` | Contracts: wire schemas, movement catalog, benchmarks, parser + wire fixtures. See `shared/README.md`. |
+| `docs/design.md` | Plan run order, scheduled Sync refresh, and Android/Garmin menu design. |
 | `docs/protocol.md` | Normative phone ↔ watch wire contract (protocol v1). |
 | `tools/` | Contract checks (Poetry): schema validation, fixture generator, catalog checks. |
 

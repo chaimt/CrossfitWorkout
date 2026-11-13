@@ -20,6 +20,8 @@ import com.wodcapture.domain.model.MassUnit
 import com.wodcapture.domain.model.MaxEffort
 import com.wodcapture.domain.model.MeasureKind
 import com.wodcapture.domain.model.NotForTime
+import com.wodcapture.domain.model.PartKind
+import com.wodcapture.domain.model.Warmups
 import com.wodcapture.domain.model.Part
 import com.wodcapture.domain.model.PercentOfMax
 import com.wodcapture.domain.model.Rest
@@ -79,7 +81,8 @@ object WorkoutValidator {
         return ValidationReport(issues)
     }
 
-    fun validatePart(p: Part): List<ValidationIssue> {
+    fun validatePart(raw: Part): List<ValidationIssue> {
+        val p = Warmups.prepare(raw)
         val out = mutableListOf<ValidationIssue>()
         fun b(code: String, msg: String, node: String? = null, path: String? = null) =
             out.add(block(code, msg, p.id, node, path))
@@ -88,6 +91,9 @@ object WorkoutValidator {
 
         if (BodyTree.depth(p.body) > MAX_DEPTH) b("depth_exceeded", "Body nesting deeper than $MAX_DEPTH")
         validateFormat(p, ::b, ::warn)
+        if (p.kind == PartKind.WARMUP && (p.format is ForTime || p.format is NotForTime) && Warmups.timeCap(p) <= 0) {
+            b("nonpositive_duration", "Warm-up time cap must be positive", path = "fallback.capSec")
+        }
         validateNodes(p, p.body, ::b, ::warn)
         validateOverrides(p, ::b)
         validateExpansion(p, ::b)

@@ -11,6 +11,7 @@ import com.wodcapture.domain.protocol.WatchTarget
 import com.wodcapture.domain.protocol.WatchTransport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -31,6 +32,9 @@ data class WatchDevice(
     val status: String,
     val apps: Map<String, AppInstall> = emptyMap(),
     val appVersions: Map<String, Int> = emptyMap(),
+    /** Human-readable version sent by WOD Coach in hello, scoped to this device + app UUID. */
+    val reportedAppVersions: Map<String, String> = emptyMap(),
+    val appErrors: Map<String, String> = emptyMap(),
 )
 
 /**
@@ -93,7 +97,12 @@ class ConnectIqAdapter(
                 runCatching {
                     ciq.registerForDeviceEvents(d) { dev, status ->
                         update(dev.deviceIdentifier.toString()) { it.copy(status = status.name) }
-                        if (status.name == "CONNECTED") apps.forEach { onConnected(target(dev, it)) }
+                        if (status.name == "CONNECTED") executor.execute {
+                            apps.forEach { uuid ->
+                                queryAppInfo(dev, uuid)
+                                onConnected(target(dev, uuid))
+                            }
+                        }
                     }
                 }
                 apps.forEach { uuid ->
@@ -113,19 +122,30 @@ class ConnectIqAdapter(
     private fun queryAppInfo(d: IQDevice, uuid: String) = runCatching {
         ciq.getApplicationInfo(uuid, d, object : ConnectIQ.IQApplicationInfoListener {
             override fun onApplicationInfoReceived(app: IQApp) {
-                update(d.deviceIdentifier.toString()) { it.copy(apps = it.apps + (uuid to AppInstall.INSTALLED), appVersions = it.appVersions + (uuid to app.version())) }
+                update(d.deviceIdentifier.toString()) { it.copy(apps = it.apps + (uuid to AppInstall.INSTALLED), appVersions = it.appVersions + (uuid to app.version()), appErrors = it.appErrors - uuid) }
             }
 
             override fun onApplicationNotInstalled(applicationId: String) {
                 // Sideloaded builds may not be detectable: show "unknown — try sending" in the UI.
-                update(d.deviceIdentifier.toString()) { it.copy(apps = it.apps + (uuid to AppInstall.NOT_INSTALLED)) }
+                update(d.deviceIdentifier.toString()) { it.copy(apps = it.apps + (uuid to AppInstall.NOT_INSTALLED), appVersions = it.appVersions - uuid, reportedAppVersions = it.reportedAppVersions - uuid, appErrors = it.appErrors - uuid) }
             }
         })
+    }.onFailure { error ->
+        Log.w(TAG, "getApplicationInfo failed for $uuid: ${error.javaClass.simpleName}")
+        update(d.deviceIdentifier.toString()) {
+            it.copy(appErrors = it.appErrors + (uuid to error.javaClass.simpleName))
+        }
+    }
+
+    /** hello confirms the running app version even when SDK install detection is unavailable. */
+    fun recordAppVersion(target: WatchTarget, version: String) {
+        if (version.isBlank()) return
+        update(target.deviceId) { it.withReportedAppVersion(target.appUuid, version) }
     }
 
     private fun safeStatus(d: IQDevice): String = runCatching { ciq.getDeviceStatus(d).name }.getOrDefault("UNKNOWN")
 
-    private fun target(d: IQDevice, appId: String) = WatchTarget(d.deviceIdentifier.toString(), appId, generation())
+    private fun target(d: IQDevice, appId: String) = sdkWatchTarget(d.deviceIdentifier.toString(), appId, generation())
 
     override fun send(target: WatchTarget, message: Map<String, Any>, onStatus: (SendStatus) -> Unit) {
         executor.execute {
@@ -154,11 +174,13 @@ class ConnectIqAdapter(
     }
 
     private fun upsert(d: WatchDevice) {
-        _devices.value = _devices.value.filter { it.id != d.id } + d
+        _devices.update { devices ->
+            devices.filter { it.id != d.id } + mergeDiscoveredDevice(devices.firstOrNull { it.id == d.id }, d)
+        }
     }
 
     private fun update(id: String, f: (WatchDevice) -> WatchDevice) {
-        _devices.value = _devices.value.map { if (it.id == id) f(it) else it }
+        _devices.update { devices -> devices.map { if (it.id == id) f(it) else it } }
     }
 
     companion object {
@@ -177,3 +199,22 @@ class ConnectIqAdapter(
         }
     }
 }
+
+/** Garmin SDK callbacks use uppercase IDs; persisted targets use lowercase compact UUIDs. */
+internal fun sdkWatchTarget(deviceId: String, appId: String, generation: Int): WatchTarget =
+    WatchTarget(deviceId, appId.replace("-", "").lowercase(), generation)
+
+/** Discovery refreshes connection fields without discarding asynchronous application info. */
+internal fun mergeDiscoveredDevice(previous: WatchDevice?, discovered: WatchDevice): WatchDevice =
+    previous?.copy(name = discovered.name, status = discovered.status) ?: discovered
+
+internal fun WatchDevice.withReportedAppVersion(appUuid: String, version: String): WatchDevice = copy(
+    apps = apps + (appUuid to AppInstall.INSTALLED),
+    reportedAppVersions = reportedAppVersions + (appUuid to version),
+    appErrors = appErrors - appUuid,
+)
+
+internal fun WatchDevice.appVersionText(appUuid: String): String =
+    reportedAppVersions[appUuid]?.let { "Version $it" }
+        ?: appVersions[appUuid]?.takeIf { it > 0 }?.let { "Garmin version code: $it" }
+        ?: "Version unavailable — open WOD Coach and sync."

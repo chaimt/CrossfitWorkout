@@ -203,7 +203,7 @@ private fun PartCard(
         if (ManualFormat.of(section).size > 1) FormatChips(section, part.format) { f -> onChange { ManualForms.withFormat(it, f, ids) } }
         // Weights parts are always strength and need no label or name (owner request 2026-11-05):
         // the lift says what it is and the builder letters the part.
-        // Warm-up parts are always a for-quality list of kind Warm-up, so they need no name or type picker.
+        // Warm-ups have time/rounds formats, a round count and cap; no name or type picker.
         if (section != WorkoutSection.WEIGHTS) Grid {
             Field("Label", part.label, Modifier.weight(1f), placeholder = label.ifBlank { "auto" }) { v -> onChange { it.copy(label = v) } }
             if (section != WorkoutSection.WARMUP) {
@@ -246,6 +246,13 @@ private fun kindName(k: PartKind): String = when (k) {
 /** Parameters of the chosen format; times are m:ss / h:mm:ss text (REQ-AE02). */
 @Composable
 private fun FormatFields(part: ManualPartForm, onChange: PartEdit) {
+    if (part.kind == PartKind.WARMUP) {
+        Grid {
+            IntField("Rounds", part.rounds ?: 1, Modifier) { v -> onChange { it.copy(rounds = v) } }
+            Field("Time cap", part.capText.ifBlank { "10:00" }, Modifier, placeholder = "m:ss") { v -> onChange { it.copy(capText = v) } }
+        }
+        return
+    }
     when (part.format) {
         ManualFormat.STRENGTH, ManualFormat.FOR_QUALITY -> Unit
         ManualFormat.CUSTOM -> CustomFields(part, onChange)
@@ -253,9 +260,13 @@ private fun FormatFields(part: ManualPartForm, onChange: PartEdit) {
             val cell = Modifier
             when (part.format) {
                 ManualFormat.FOR_TIME -> {
-                    Field("Rep scheme", part.repSchemeText, cell, placeholder = "21-15-9") { v -> onChange { ManualForms.withRepScheme(it, v) } }
-                    IntField("Rounds", part.rounds, cell) { v -> onChange { it.copy(rounds = v) } }
-                    Field("Time cap (optional)", part.capText, cell, placeholder = "m:ss") { v -> onChange { it.copy(capText = v) } }
+                    if (part.kind == PartKind.WARMUP) {
+                        Field("Duration", part.durationText.ifBlank { part.capText }, cell, placeholder = "5:00") { v -> onChange { it.copy(durationText = v) } }
+                    } else {
+                        Field("Rep scheme", part.repSchemeText, cell, placeholder = "21-15-9") { v -> onChange { ManualForms.withRepScheme(it, v) } }
+                        IntField("Rounds", part.rounds, cell) { v -> onChange { it.copy(rounds = v) } }
+                        Field("Time cap (optional)", part.capText, cell, placeholder = "m:ss") { v -> onChange { it.copy(capText = v) } }
+                    }
                 }
                 ManualFormat.AMRAP -> Field("Duration", part.durationText, cell, placeholder = "20:00") { v -> onChange { it.copy(durationText = v) } }
                 ManualFormat.EMOM -> {
@@ -315,11 +326,8 @@ private fun RowBox(content: @Composable () -> Unit) {
 private fun MovementRows(catalog: MovementCatalog, part: ManualPartForm, unit: MassUnit, ids: IdSource, onChange: PartEdit) {
     fun editRow(id: String, f: (ManualMovementForm) -> ManualMovementForm) =
         onChange { p -> p.copy(movements = p.movements.map { if (it.id == id) f(it) else it }) }
-    if (part.format == ManualFormat.FOR_QUALITY) {
-        IntField("Rounds (usually 2\u20133)", part.rounds, Modifier.fillMaxWidth()) { v -> onChange { it.copy(rounds = v) } }
-    }
     Text(if (part.format == ManualFormat.CUSTOM) "Movements (optional)" else "Movements", style = MaterialTheme.typography.titleSmall)
-    val warmup = part.format == ManualFormat.FOR_QUALITY
+    val warmup = part.kind == PartKind.WARMUP
     part.movements.forEach { row ->
         MovementRow(
             catalog, row, unit, schemePart = ManualForms.usesScheme(part), warmup = warmup,

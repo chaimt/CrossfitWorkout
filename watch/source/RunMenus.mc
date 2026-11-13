@@ -144,7 +144,9 @@ class ResultMenu extends WatchUi.Menu2 {
         var o = s.outcome as PartOutcome;
         Menu2.initialize({:title => U.str(s.part, "l") + " result"});
         addItem(new WatchUi.MenuItem("Save", _statusLabel(o.status), :save, null));
-        addItem(new WatchUi.MenuItem("Score", Score.text(o.score), :score, null));
+        if (!U.eq(U.str(o.score, "ty"), "none")) {
+            addItem(new WatchUi.MenuItem("Score", Score.text(o.score), :score, null));
+        }
         var lvs = U.arr(s.part, "lvs");
         if (o.level != null || lvs != null) {
             addItem(new WatchUi.MenuItem("Level", o.level == null ? "-" : o.level as String, :level, null));
@@ -159,7 +161,7 @@ class ResultMenu extends WatchUi.Menu2 {
         }
         addItem(new WatchUi.MenuItem("Time", Fmt.clock(Fmt.countUpSeconds(o.wkMs)) + " work, "
             + Fmt.clock(Fmt.countUpSeconds(o.actMs)) + " active", :none, null));
-        addItem(new WatchUi.MenuItem("Discard score", "Press twice", :discard, null));
+        addItem(new WatchUi.MenuItem(U.eq(U.str(o.score, "ty"), "none") ? "Discard result" : "Discard score", "Press twice", :discard, null));
     }
 
     static function _statusLabel(st as String) as String {

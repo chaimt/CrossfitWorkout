@@ -30,6 +30,9 @@ import com.wodcapture.domain.parser.OkHttpTransport
 import com.wodcapture.domain.plan.CompileOptions
 import com.wodcapture.domain.plan.CompileResult
 import com.wodcapture.domain.plan.PlanIdentity
+import com.wodcapture.domain.plan.PlanRefresher
+import com.wodcapture.domain.plan.PlanRefreshResult
+import com.wodcapture.domain.protocol.MessageType
 import com.wodcapture.domain.plan.WatchPlan
 import com.wodcapture.domain.plan.WireJson
 import com.wodcapture.domain.protocol.ProfilePayload
@@ -152,20 +155,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val saved = if (DomainJson.encodeWorkout(edited) != entity.workoutJson) c.workouts.saveRevision(entity, edited, nowSec()) else entity
         val workout = DomainJson.decodeWorkout(saved.workoutJson)
         val target = c.currentTarget() ?: run { message.value = "No watch selected (Device screen)"; return@launch }
-        val prior = dao.plan(workout.id, target.key)
-        val planId = prior?.planId ?: c.ids.newId()
-        val first = c.compiler.compile(workout, settings.value.profile, PlanIdentity(planId, prior?.revision ?: 1), options(levels))
-        if (first !is CompileResult.Success) { message.value = "Cannot send: " + (first as CompileResult.Failure).errors.joinToString { it.message }; return@launch }
-        val firstJson = WireJson.encodeToString(WatchPlan.serializer(), first.plan)
-        val unchanged = prior != null && prior.planJson == firstJson
-        val plan = if (unchanged || prior == null) first.plan else first.plan.copy(rev = prior.revision + 1)
-        val json = WireJson.encodeToString(WatchPlan.serializer(), plan)
-        dao.upsertPlan(PlanEntity(workout.id, target.key, planId, plan.rev, workout.revision, json))
         c.sync.execute {
+            val stored = dao.plan(workout.id, target.key)
+            val latest = stored?.let { c.engine.outbox.stateOf(target, it.planId) }
+            val prior = stored?.reconciled(latest)
+            val planId = prior?.planId ?: c.ids.newId()
+            val first = c.compiler.compile(workout, settings.value.profile, PlanIdentity(planId, prior?.revision ?: 1), options(levels))
+            if (first !is CompileResult.Success) { message.value = "Cannot send: " + (first as CompileResult.Failure).errors.joinToString { it.message }; return@execute }
+            val firstJson = WireJson.encodeToString(WatchPlan.serializer(), first.plan)
+            val unchanged = prior != null && prior.planJson == firstJson
+            val plan = if (unchanged || prior == null) first.plan else first.plan.copy(rev = prior.revision + 1)
+            val json = WireJson.encodeToString(WatchPlan.serializer(), plan)
+            dao.upsertPlan(PlanEntity(workout.id, target.key, planId, plan.rev, workout.revision, json))
             if (unchanged) c.engine.requestSync(target) else c.engine.sendPlan(target, plan)
+            c.ciq.openApp(target) { status -> if (status == "PROMPT_SHOWN_ON_DEVICE") message.value = "Confirm on your watch to open WOD Coach" }
+            message.value = "Queued for the watch (${first.encodedBytes} bytes)"
         }
-        c.ciq.openApp(target) { status -> if (status == "PROMPT_SHOWN_ON_DEVICE") message.value = "Confirm on your watch to open WOD Coach" }
-        message.value = "Queued for the watch (${first.encodedBytes} bytes)"
     }
 
     /** Profile defaults to the watch (REQ-AG02, protocol §6). */
@@ -177,8 +182,44 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun requestSync() {
-        val t = c.currentTarget() ?: return
-        c.sync.execute { c.engine.requestSync(t) }
+        c.sync.execute {
+            c.clearNotices()
+            val target = c.currentTarget() ?: run { c.notice("Sync not started: no watch selected"); return@execute }
+            c.notice("Sync started")
+            val refresher = PlanRefresher(c.compiler)
+            dao.plansForTarget(target.key).forEach { stored ->
+                runCatching {
+                    val latest = c.engine.outbox.stateOf(target, stored.planId)
+                    val prior = stored.reconciled(latest)
+                    // Removal is deliberate: Sync must not restore a cleared/archived plan.
+                    if (prior.planJson.isBlank()) return@runCatching
+                    val entity = dao.workout(prior.workoutId) ?: return@runCatching
+                    if (entity.archived || entity.status !in setOf("saved", "ready")) return@runCatching
+                    // Use a newer durable queued payload if a prior send was interrupted
+                    // between enqueueing and saving its lineage row.
+                    val previous = if (latest?.type == MessageType.PLAN_PUT && latest.revision > prior.revision) {
+                        WireJson.decodeFromJsonElement(WatchPlan.serializer(), latest.body.getValue("p"))
+                    } else WireJson.decodeFromString(WatchPlan.serializer(), prior.planJson)
+                    val workout = DomainJson.decodeWorkout(entity.workoutJson)
+                    val today = LocalDate.now(ZoneId.of(previous.tz))
+                    when (val result = refresher.refresh(previous, workout, settings.value.profile, today)) {
+                        is PlanRefreshResult.Updated -> {
+                            c.engine.sendPlan(target, result.plan)
+                            dao.upsertPlan(prior.copy(revision = result.plan.rev, workoutRevision = workout.revision,
+                                planJson = WireJson.encodeToString(WatchPlan.serializer(), result.plan)))
+                        }
+                        is PlanRefreshResult.Rejected -> c.notice("Cannot update ${entity.title}: " + result.errors.joinToString { it.message })
+                        PlanRefreshResult.Unchanged -> {
+                            // Repair an interrupted Send that saved the lineage before enqueueing.
+                            if (latest == null || latest.revision < previous.rev) c.engine.sendPlan(target, previous)
+                            else c.notice("Plan unchanged: ${previous.ti} (rev ${previous.rev})")
+                        }
+                        PlanRefreshResult.Historical -> c.notice("Skipped past plan: ${previous.ti} (${previous.date})")
+                    }
+                }.onFailure { c.notice("Cannot update ${stored.planId.take(8)}: ${it.message ?: "invalid saved plan"}") }
+            }
+            c.engine.requestSync(target)
+        }
     }
 
     fun refreshDevices() = c.ciq.refreshDevices()
@@ -190,7 +231,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val prior = target?.let { dao.plan(id, it.key) }
         c.workouts.archive(id)
         if (target != null && prior != null) {
-            c.sync.execute { c.engine.deletePlan(target, prior.planId, prior.revision + 1) }
+            c.sync.execute {
+                val deletion = (dao.plan(id, target.key) ?: prior).deletion()
+                val existing = c.engine.outbox.stateOf(target, deletion.planId)
+                if (existing?.type != com.wodcapture.domain.protocol.MessageType.PLAN_DEL || existing.revision != deletion.revision) {
+                    c.engine.deletePlan(target, deletion.planId, deletion.revision)
+                }
+                dao.upsertPlan(deletion)
+            }
         }
     }
 
@@ -201,7 +249,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (plans.isEmpty()) { message.value = "Nothing on watch to remove"; return@launch }
         c.sync.execute {
             c.engine.requestSync(target)
-            plans.forEach { c.engine.deletePlan(target, it.planId, it.revision + 1) }
+            plans.forEach {
+                val deletion = (dao.plan(it.workoutId, target.key) ?: it).deletion()
+                val existing = c.engine.outbox.stateOf(target, deletion.planId)
+                if (existing?.type != com.wodcapture.domain.protocol.MessageType.PLAN_DEL || existing.revision != deletion.revision) {
+                    c.engine.deletePlan(target, deletion.planId, deletion.revision)
+                }
+                dao.upsertPlan(deletion)
+            }
         }
         message.value = "Removing ${plans.size} workout${if (plans.size == 1) "" else "s"} from watch"
     }

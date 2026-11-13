@@ -53,6 +53,24 @@ class PlanCompilerTest {
     }
 
     @Test
+    fun watchPlanIncludesWarmupThenWeightsThenMetconRegardlessOfInputOrder() {
+        val base = sharedFixtureWorkout()
+        val warmup = Part(
+            id = "30000000-0000-4000-8000-000000000003", label = "W",
+            kind = com.wodcapture.domain.model.PartKind.WARMUP,
+            format = ForTime(capSec = 120),
+            body = listOf(Item(id = "50000000-0000-4000-8000-000000000003", name = "Air squat",
+                measure = com.wodcapture.domain.model.Measure(com.wodcapture.domain.model.MeasureKind.REPS, 10.0))),
+        )
+        val shuffled = base.copy(parts = listOf(base.parts[1], base.parts[0], warmup))
+        val identity = PlanIdentity("10000000-0000-4000-8000-000000000001", 1)
+        val plan = success(compiler.compile(shuffled, TestSupport.profile, identity)).plan
+        assertEquals(listOf(warmup.id, base.parts[0].id, base.parts[1].id), plan.p.map { it.id })
+        val excluded = shuffled.copy(parts = shuffled.parts.map { if (it.id == warmup.id) it.copy(runOnWatch = false) else it })
+        assertEquals(base.parts.map { it.id }, success(compiler.compile(excluded, TestSupport.profile, identity)).plan.p.map { it.id })
+    }
+
+    @Test
     fun lbAthleteSeesBoardValuesWithoutConversion() {
         val lbProfile = TestSupport.profile.copy(displayUnit = MassUnit.LB)
         val r = success(compiler.compile(Fixtures.h1.review(Fixtures.h1.expected), lbProfile, Fixtures.h1.identity))
@@ -94,8 +112,8 @@ class PlanCompilerTest {
     }
 
     @Test
-    fun warmupsDoNotRunOnTheWatchByDefault() {
-        val warm = Fixtures.h10.expected.parts[0].copy(id = "f9700000-0000-4000-8000-000000000001", kind = com.wodcapture.domain.model.PartKind.WARMUP)
+    fun explicitlyDisabledWarmupsAreNotSentToTheWatch() {
+        val warm = Fixtures.h10.expected.parts[0].copy(id = "f9700000-0000-4000-8000-000000000001", kind = com.wodcapture.domain.model.PartKind.WARMUP, runOnWatch = false)
         val w = Fixtures.h10.expected.copy(parts = listOf(warm) + Fixtures.h10.expected.parts)
         val r = success(compiler.compile(w, TestSupport.profile, Fixtures.h10.identity))
         assertEquals(1, r.plan.p.size)

@@ -20,13 +20,14 @@ import com.wodcapture.domain.model.StrengthSets
 import com.wodcapture.domain.model.Tabata
 import com.wodcapture.domain.model.Workout
 import com.wodcapture.domain.model.WorkoutSection
+import com.wodcapture.domain.model.Warmups
 
 /**
  * Pure edit operations used by the review editor (REQ-AE02). They preserve untouched fields and
  * node IDs; new nodes get new IDs (REQ-DM15).
  */
 object Editing {
-    fun updatePart(w: Workout, partId: String, f: (Part) -> Part) = w.copy(parts = w.parts.map { if (it.id == partId) f(it) else it })
+    fun updatePart(w: Workout, partId: String, f: (Part) -> Part) = w.copy(parts = w.parts.map { if (it.id == partId) Warmups.prepare(f(it)) else it })
 
     /**
      * Adds [part] at the end of its run rank (warm-up/skill first, weights, metcon, trailing

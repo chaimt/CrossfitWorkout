@@ -46,6 +46,18 @@ tasks:
       - task: build
       - bash scripts/deploy-watch.sh
 
+  remove-watch:
+    desc: Remove the sideloaded WOD Coach app file from the USB watch (already absent is OK)
+    cmds:
+      - bash scripts/deploy-watch.sh --remove
+
+  reinstall-watch:
+    desc: Build WOD Coach, remove its existing app file, then install it on the USB watch
+    cmds:
+      - task: build
+      - task: remove-watch
+      - bash scripts/deploy-watch.sh
+
   package:
     desc: Build the store .iq package (production UUID) -> watch/bin/wodcoach.iq
     cmds:

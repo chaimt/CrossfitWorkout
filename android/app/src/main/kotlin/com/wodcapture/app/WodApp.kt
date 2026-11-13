@@ -6,6 +6,8 @@ import androidx.room.Room
 import com.wodcapture.app.ciq.ConnectIqAdapter
 import com.wodcapture.app.data.AppSettings
 import com.wodcapture.app.data.OutboxStore
+import com.wodcapture.app.data.planSyncNotices
+import com.wodcapture.app.data.syncLogTime
 import com.wodcapture.app.data.RoomChunkStore
 import com.wodcapture.app.data.RoomResultRepository
 import com.wodcapture.app.data.RoomSessionRepository
@@ -24,6 +26,7 @@ import com.wodcapture.domain.protocol.ResultIngest
 import com.wodcapture.domain.protocol.SessionIngest
 import com.wodcapture.domain.protocol.SyncEngine
 import com.wodcapture.domain.protocol.SyncListener
+import com.wodcapture.domain.protocol.Hello
 import com.wodcapture.domain.protocol.WatchTarget
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -102,7 +105,12 @@ class AppContainer(context: Context) {
                 listener = object : SyncListener {
                     override fun onOutboxChanged(outbox: List<OutboxEntry>) {
                         outboxStore.save(outbox)
+                        planSyncNotices(_outbox.value, outbox).forEach(::notice)
                         _outbox.value = outbox
+                    }
+
+                    override fun onHello(target: WatchTarget, hello: Hello) {
+                        ciq.recordAppVersion(target, hello.app)
                     }
 
                     override fun onProtocolError(target: WatchTarget, reason: String, detail: String) {
@@ -133,8 +141,14 @@ class AppContainer(context: Context) {
         generation = s.generation
     }
 
+    fun clearNotices() {
+        _messages.value = emptyList()
+    }
+
     fun notice(text: String) {
-        _messages.value = (listOf(text) + _messages.value).take(20)
+        val timestamp = syncLogTime(System.currentTimeMillis())
+        val lines = text.lineSequence().map { "$timestamp · $it" }.toList()
+        _messages.value = (lines + _messages.value).take(20)
     }
 
     /**

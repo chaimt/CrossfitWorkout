@@ -67,7 +67,9 @@ module Inbox {
             return false;
         }
         if (g > cur) {
-            kv.put("gen", g);
+            if (!Outbox.freezeGenerations(kv) || !kv.put("gen", g)) {
+                return false;
+            }
         }
         return true;
     }

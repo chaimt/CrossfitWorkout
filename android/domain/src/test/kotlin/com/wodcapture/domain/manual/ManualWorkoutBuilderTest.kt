@@ -226,9 +226,6 @@ class ManualWorkoutBuilderTest {
             val applied = ManualTemplates.apply(form(), t, ids)
             assertEquals(t.name, applied.title)
             // A weights quick start needs the athlete's goal weight, as a session needs its lift.
-            // A warm-up quick start defaults off the watch; check its compile with the fallback
-            // accepted (the builder's default) by compiling with a WARMUP-tolerant compile,
-            // i.e. kind-flip only for the budget check.
             val f = applied.copy(parts = applied.parts.map { p ->
                 when {
                     p.format == ManualFormat.STRENGTH -> ManualForms.withGoal(p, 100.0, 1.0)
@@ -238,9 +235,8 @@ class ManualWorkoutBuilderTest {
             val built = builder.build(f)
             assertTrue(built.report.issues.none { it.severity == Severity.BLOCKING }, "${t.name}: ${built.report.blocking}")
             if (t.section == WorkoutSection.WARMUP) {
-                // Warm-ups default off the watch (REQ-AE06): validation is the guarantee.
-                // A 15-drill for-quality list exceeds the 12-line watch budget by design —
-                // the athlete shortens it if they ever switch it on for the watch.
+                // Long warm-up templates still need shortening to fit the watch's display budget.
+                // Verify their accepted fallback and default inclusion separately.
                 val part = built.workout.parts.single()
                 assertTrue(part.fallback?.accepted == true, t.name)
                 return@dynamicTest

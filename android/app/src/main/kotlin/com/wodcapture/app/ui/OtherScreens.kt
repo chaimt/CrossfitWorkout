@@ -25,10 +25,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.wodcapture.app.ciq.SdkState
+import com.wodcapture.app.ciq.appVersionText
+import com.wodcapture.app.data.syncLogTime
 import com.wodcapture.domain.DomainJson
 import com.wodcapture.domain.load.MassMath
 import com.wodcapture.domain.model.Mass
@@ -114,7 +117,7 @@ private fun ManualResultDialog(vm: AppViewModel, workoutId: String, close: () ->
     // Keyed on the loaded revision too: right after "Save & log result" the library may emit later.
     var partId by remember(workoutId, workout?.revision) { mutableStateOf(workout?.parts?.firstOrNull()?.id) }
     val part = workout?.parts?.firstOrNull { it.id == partId }
-    val kind = part?.let { entryKind(it.scoring.type) } ?: "text"
+    val kind = part?.let { if (it.kind == com.wodcapture.domain.model.PartKind.WARMUP || it.scoring.type == ScoreType.NONE) "none" else entryKind(it.scoring.type) } ?: "text"
     AlertDialog(
         onDismissRequest = close,
         title = { Text(workout?.title?.ifBlank { null } ?: "Manual result") },
@@ -124,6 +127,7 @@ private fun ManualResultDialog(vm: AppViewModel, workoutId: String, close: () ->
                     Choice("Part", partId, w.parts.map { it.id }, { id -> w.parts.indexOfFirst { it.id == id }.takeIf { it >= 0 }?.let { i -> partName(w.parts[i], i) } ?: "-" }) { partId = it }
                 }
                 when (kind) {
+                    "none" -> Unit
                     "time" -> Field("Time (m:ss)", a) { a = it }
                     "rounds_reps" -> Row { Field("Rounds", a, Modifier.width(120.dp), numeric = true) { a = it }; Field("Reps", b, Modifier.width(120.dp), numeric = true) { b = it } }
                     "reps" -> Field("Reps", a, numeric = true) { a = it }
@@ -135,6 +139,7 @@ private fun ManualResultDialog(vm: AppViewModel, workoutId: String, close: () ->
         confirmButton = {
             TextButton(onClick = {
                 val score: Score? = when (kind) {
+                    "none" -> null
                     "time" -> TimeText.parse(a)?.let { Score.Time(it) }
                     "rounds_reps" -> a.toIntOrNull()?.let { Score.RoundsReps(it, b.toIntOrNull() ?: 0) }
                     "reps" -> a.toIntOrNull()?.let { Score.Reps(it) }
@@ -173,6 +178,7 @@ private fun entryKind(type: ScoreType): String = when (type) {
 /** Watch connection (REQ-AW01–AW05): devices, install state per UUID, delivery states, Sync. */
 @Composable
 fun DeviceScreen(vm: AppViewModel, back: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
     val sdk by vm.sdkState.collectAsState()
     val devices by vm.devices.collectAsState()
     val outbox by vm.outbox.collectAsState()
@@ -192,19 +198,27 @@ fun DeviceScreen(vm: AppViewModel, back: () -> Unit) {
             Button(onClick = vm::requestSync) { Text("Sync now") }
             OutlinedButton(onClick = vm::refreshDevices) { Text("Refresh devices") }
             OutlinedButton(onClick = vm::openOnWatch) { Text("Open WOD Coach") }
+            OutlinedButton(onClick = {
+                uriHandler.openUri("https://apps.garmin.com/apps/576534e4-ee88-47d4-ac7a-63e5dd9d15ed")
+            }) { Text("Install Garmin app") }
             OutlinedButton(onClick = vm::sendProfile) { Text("Send defaults") }
-            OutlinedButton(onClick = { confirmClear = true }) { Text("Remove all from watch") }
+            OutlinedButton(onClick = { confirmClear = true }) { Text("Remove workouts from watch") }
         }
         if (confirmClear) {
             AlertDialog(
                 onDismissRequest = { confirmClear = false },
-                title = { Text("Remove all workouts from watch?") },
-                text = { Text("Queues a delete for every sent workout; the next sync clears the watch inbox. Workouts, results and history on the phone are kept.") },
-                confirmButton = { TextButton(onClick = { vm.clearWatch(); confirmClear = false }) { Text("Remove all") } },
+                title = { Text("Remove workouts from watch?") },
+                text = { Text("Removes the workouts available to run on the watch at the next sync. Saved results and history on the watch are kept, along with all phone workouts and results.") },
+                confirmButton = { TextButton(onClick = { vm.clearWatch(); confirmClear = false }) { Text("Remove workouts") } },
                 dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Cancel") } },
             )
         }
-        Toggle("Use beta app id", settings.useBetaApp) { b -> vm.updateSettings { it.copy(useBetaApp = b) } }
+        Toggle("Use beta watch build", settings.useBetaApp) { b -> vm.updateSettings { it.copy(useBetaApp = b) } }
+        Text(
+            if (settings.useBetaApp) "Target: beta watch build (wodcoach-beta.iq), including store installs."
+            else "Target: production watch build (wodcoach.iq). Enable beta above for wodcoach-beta.iq, including store installs.",
+            style = MaterialTheme.typography.bodySmall,
+        )
         Toggle("Simulator (TETHERED, restart app)", settings.tethered) { t -> vm.updateSettings { it.copy(tethered = t) } }
         SectionTitle("Devices")
         if (devices.isEmpty()) Text("No Garmin devices known to Garmin Connect.")
@@ -214,7 +228,13 @@ fun DeviceScreen(vm: AppViewModel, back: () -> Unit) {
                     Text("${d.name} · ${d.status}", style = MaterialTheme.typography.titleSmall)
                     listOf(Protocol.APP_UUID_PRODUCTION to "WOD Coach", Protocol.APP_UUID_BETA to "WOD Coach beta").forEach { (uuid, name) ->
                         val install = d.apps[uuid]
-                        Text("$name: ${install?.name?.lowercase() ?: "unknown"}${d.appVersions[uuid]?.let { " v$it" } ?: ""}${if (install != com.wodcapture.app.ciq.AppInstall.INSTALLED) " — sideloaded builds may not be detected; try sending" else ""}", style = MaterialTheme.typography.bodySmall)
+                        Text("$name: ${install?.name?.lowercase() ?: "unknown"}${if (install != com.wodcapture.app.ciq.AppInstall.INSTALLED) " — sideloaded builds may not be detected; try sending" else ""}", style = MaterialTheme.typography.bodySmall)
+                        if (install != com.wodcapture.app.ciq.AppInstall.NOT_INSTALLED) {
+                            Text(d.appVersionText(uuid), style = MaterialTheme.typography.bodySmall)
+                        }
+                        d.appErrors[uuid]?.let { error ->
+                            Text("$name lookup failed: $error. Refresh devices to retry.", style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                     TextButton(onClick = { vm.updateSettings { it.copy(selectedDeviceId = d.id) } }) { Text(if (settings.selectedDeviceId == d.id) "Selected" else "Use this watch") }
                 }
@@ -222,7 +242,7 @@ fun DeviceScreen(vm: AppViewModel, back: () -> Unit) {
         }
         SectionTitle("Deliveries")
         outbox.sortedByDescending { it.enqueuedAtMs }.take(30).forEach { e ->
-            Text("${e.type} ${e.objectId.take(8)} rev ${e.revision}: ${e.state.name.lowercase()}${e.reason?.let { " ($it)" } ?: ""}", style = MaterialTheme.typography.bodySmall)
+            Text("${syncLogTime(e.sentAtMs ?: e.enqueuedAtMs)} · ${if (e.target.appUuid == Protocol.APP_UUID_BETA) "Beta · " else ""}${e.type} ${e.objectId.take(8)} rev ${e.revision}: ${e.state.name.lowercase()}${e.reason?.let { " ($it)" } ?: ""}", style = MaterialTheme.typography.bodySmall)
         }
         notices.forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary) }
     }

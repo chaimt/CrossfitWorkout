@@ -212,3 +212,39 @@ function testStrengthResultAndSessionSummaryShapes(logger as Test.Logger) as Boo
     Test.assert(!s.hasKey("rso"));
     return true;
 }
+
+(:test)
+function testQueuedObjectsKeepGenerationAfterPairingReset(logger as Test.Logger) as Boolean {
+    var kv = new MemKv();
+    Inbox.acceptGeneration(kv, 1);
+    History.add(kv, "r1", History.KIND_RESULT, "T", "A", 1, "", "completed", {"id" => "r1"});
+    History.add(kv, "s1", History.KIND_SESSION, "T", "", 1, "", "completed", {"id" => "s1"});
+    Outbox.enqueue(kv, "result.put", "r1", 1, "m1", 1);
+    Outbox.enqueue(kv, "session.put", "s1", 1, "m2", 1);
+    // Simulate an installed version's nine-column queue row.
+    var ob = Outbox.entries(kv);
+    ob[1] = (ob[1] as Array).slice(0, 9);
+    kv.put("ob", ob);
+    Test.assert(Inbox.acceptGeneration(kv, 2));
+    ob = Outbox.entries(kv);
+    Test.assertEqual(1, (Proto.dataMessage(kv, ob[0] as Array) as Dictionary)["g"]);
+    Test.assertEqual(1, (Proto.dataMessage(kv, ob[1] as Array) as Dictionary)["g"]);
+    Outbox.enqueue(kv, "result.put", "r2", 1, "m3", 2);
+    Test.assertEqual(2, (Outbox.entries(kv)[2] as Array)[OB_GENERATION]);
+    return true;
+}
+
+(:test)
+function testFailedQueueMigrationDoesNotAdoptGeneration(logger as Test.Logger) as Boolean {
+    var kv = new MemKv();
+    kv.put("gen", 1);
+    kv.put("ob", [["m1", "result.put", "r1", 1, 1, OS_PENDING, 0, 1, 0]]);
+    kv.failWrites = true;
+    var msg = Fx.planPut();
+    msg["g"] = 2;
+    var ack = Fx.ackOf(Proto.handle(kv, msg, 2, 100000));
+    Fx.eqs("capacity", (ack["p"] as Dictionary)["rs"] as String);
+    Test.assertEqual(1, Inbox.generation(kv));
+    Test.assertEqual(9, (Outbox.entries(kv)[0] as Array).size());
+    return true;
+}

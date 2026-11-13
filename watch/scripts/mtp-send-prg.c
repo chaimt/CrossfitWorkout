@@ -1,4 +1,4 @@
-/* Copy one file into GARMIN/Apps on a Garmin watch that is speaking MTP. */
+/* Copy or remove one explicitly named file in GARMIN/Apps over MTP. */
 #include <libmtp.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,14 +55,19 @@ static void fail(LIBMTP_mtpdevice_t *device, const char *message) {
 
 int main(int argc, char **argv) {
     if (argc != 3) {
-        fprintf(stderr, "usage: mtp-send-prg <local.prg> <name-on-watch.prg>\n");
+        fprintf(stderr, "usage: mtp-send-prg <local.prg>|--remove <name-on-watch.prg>\n");
         return 2;
     }
 
     const char *local_path = argv[1];
     const char *remote_name = argv[2];
-    struct stat st;
-    if (stat(local_path, &st) != 0) {
+    const int remove_only = strcmp(local_path, "--remove") == 0;
+    if (strchr(remote_name, '/') != NULL || strchr(remote_name, '\\') != NULL) {
+        fprintf(stderr, "Expected an app filename, not a path.\n");
+        return 2;
+    }
+    struct stat st = {0};
+    if (!remove_only && stat(local_path, &st) != 0) {
         perror(local_path);
         return 1;
     }
@@ -151,10 +156,20 @@ int main(int argc, char **argv) {
     }
 
     for (int i = 0; i < replace_count; i++) {
-        printf("Replacing %s\n", replace_names[i]);
+        printf("%s %s\n", remove_only ? "Removing" : "Replacing", replace_names[i]);
         if (LIBMTP_Delete_Object(device, replace_ids[i]) != 0) {
             fail(device, "Could not remove the existing app file on the watch.");
         }
+    }
+
+    if (remove_only) {
+        if (replace_count == 0) {
+            printf("%s is already absent from GARMIN/Apps.\n", remote_name);
+        } else {
+            printf("Removed %s from GARMIN/Apps.\n", remote_name);
+        }
+        LIBMTP_Release_Device(device);
+        return 0;
     }
 
     LIBMTP_file_t *file = LIBMTP_new_file_t();

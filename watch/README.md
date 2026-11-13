@@ -147,3 +147,17 @@ in this build.
 5. **Event bound:** the watch lowers the 200-event bound per part so the full
    Result fits one `result.put` (no watch-side chunking in MVP).
 6. **profile.put `oid`:** the watch accepts any `oid`; suggest fixing it to `"profile"`.
+
+## Remove or reinstall over USB
+
+From the repository root:
+
+```sh
+task watch:remove-watch
+task watch:reinstall-watch
+```
+
+`remove-watch` removes only `GARMIN/Apps/wodcoach.prg`; an already absent file is a
+successful no-op. `reinstall-watch` builds first, then removes and copies the app
+in sequence. These tasks require USB file-transfer mode and libmtp, like
+`deploy-watch`. They do not erase saved watch data or promise a factory-reset install.
