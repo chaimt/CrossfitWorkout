@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -66,6 +67,7 @@ import com.wodcapture.domain.model.Group
 import com.wodcapture.domain.model.GroupKind
 import com.wodcapture.domain.model.Intervals
 import com.wodcapture.domain.model.Item
+import com.wodcapture.domain.model.Mass
 import com.wodcapture.domain.model.MaxEffort
 import com.wodcapture.domain.model.Measure
 import com.wodcapture.domain.model.MeasureKind
@@ -84,6 +86,7 @@ import com.wodcapture.domain.parser.JobState
 import com.wodcapture.domain.plan.CompileResult
 import com.wodcapture.domain.review.LoadSuggestion
 import com.wodcapture.domain.review.LoadText
+import com.wodcapture.domain.review.StrengthEdits
 import com.wodcapture.domain.review.SuggestionSource
 import com.wodcapture.domain.review.ReviewActions
 import com.wodcapture.domain.validation.WorkoutValidator
@@ -301,6 +304,7 @@ private fun PartEditor(
                 }
             }
         } else FormatEditor(part) { onChange(part.copy(format = it)) }
+        if (StrengthEdits.isStrength(part)) TopWeightField(vm, part, onChange)
         Toggle("Run on watch", part.effectiveRunOnWatch) { onChange(part.copy(runOnWatch = it)) }
         if (!warmup) Toggle("Manual score", part.scoring.manual) { onChange(part.copy(scoring = part.scoring.copy(manual = it))) }
         Text(if (section == WorkoutSection.WEIGHTS) "Lifts" else "Movements", style = MaterialTheme.typography.titleSmall)
@@ -350,6 +354,29 @@ private fun SuggestionChip(suggestion: LoadSuggestion?, onApply: (AbsoluteLoad) 
 }
 
 
+/**
+ * The strength session's top weight (REQ-AE08, owner request 2026-11-15): the 100 % every set is
+ * read against, editable before the session like any other field. Changing it re-computes the
+ * weight of every set entered as a % of it.
+ */
+@Composable
+private fun TopWeightField(vm: AppViewModel, part: Part, onChange: (Part) -> Unit) {
+    val settings by vm.settings.collectAsState()
+    val (unit, step) = vm.loadUnitAndStep(settings)
+    val top = StrengthEdits.topWeight(part)
+    val typed = StrengthEdits.displayUnit(part, unit)
+    DoubleField("Top weight (${typed.wire})", top?.value, Modifier.fillMaxWidth()) { v ->
+        onChange(StrengthEdits.withTopWeight(part, v?.let { Mass(it, typed) }, step))
+    }
+    val lift = StrengthEdits.liftOf(part)
+    val waiting = lift?.sets.orEmpty().any { s -> s.ofTop != null && StrengthEdits.weightOf(lift!!, s, typed) == null }
+    when {
+        top == null && waiting -> Hint("Enter the top weight to fill in each set's weight from its %")
+        top == null -> Hint("Set it to read every set as a % of it")
+        else -> Hint("Each set below is a % of ${MassMath.formatMass(top)}; editing either side updates the other")
+    }
+}
+
 @Composable
 private fun FormatEditor(part: Part, onChange: (com.wodcapture.domain.model.Format) -> Unit) {
     when (val f = part.format) {
@@ -380,7 +407,7 @@ private fun FormatEditor(part: Part, onChange: (com.wodcapture.domain.model.Form
             IntField("Reps per attempt", f.repsPerSet, Modifier) { onChange(f.copy(repsPerSet = it ?: 1)) }
             TimeField("Window", f.windowSec, Modifier) { onChange(f.copy(windowSec = it)) }
         }
-        is StrengthSets -> Hint("Sets × reps and rest are edited per lift below")
+        is StrengthSets -> Hint("Every set's % · weight · reps is edited per lift below")
         NotForTime -> Hint("For-quality list: movements run in order on a manual timer, no score")
         else -> Hint("Format edited as text in notes (v1)")
     }
@@ -485,6 +512,42 @@ private fun ItemEditor(vm: AppViewModel, part: Part, item: Item, suggestion: Loa
         var loadText by remember(item.id) { mutableStateOf(LoadText.format(item.load)) }
         Field("Load", loadText, cell, placeholder = "43 kg, 95 lb, 80%") { t -> loadText = t; set { it.copy(load = LoadText.parse(t)) } }
         IntField("Implements", item.count, cell) { n -> set { it.copy(count = n ?: 1) } }
+    }
+    if (strength) StrengthSetRows(vm, part, item, onChange)
+}
+
+/**
+ * One row per set of a strength session: **% · Weight · Reps** (REQ-AE08, owner request
+ * 2026-11-15), the same shape as the "New workout" builder. The % is of the session's top weight
+ * and the two are linked both ways; without a top weight only the weight can be typed. Weights
+ * are read and written in one unit for the whole session, so a parsed lb set shows converted.
+ */
+@Composable
+private fun StrengthSetRows(vm: AppViewModel, part: Part, item: Item, onChange: (Part) -> Unit) {
+    val settings by vm.settings.collectAsState()
+    val (settingsUnit, step) = vm.loadUnitAndStep(settings)
+    val unit = StrengthEdits.displayUnit(part, settingsUnit)
+    val top = StrengthEdits.topWeight(part)
+    // The set row is too narrow for "Weight (kg)", so the unit sits in the heading.
+    Text("Sets · weight in ${unit.wire}", style = MaterialTheme.typography.titleSmall)
+    item.sets.forEachIndexed { i, s ->
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Set ${i + 1}", style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(44.dp))
+            DoubleField("%", StrengthEdits.percentOf(item, s, top), Modifier.weight(0.8f)) { v ->
+                onChange(StrengthEdits.withSetPercent(part, s.id, v, step))
+            }
+            DoubleField("Weight", StrengthEdits.weightOf(item, s, unit), Modifier.weight(1f)) { v ->
+                onChange(StrengthEdits.withSetWeight(part, s.id, v, unit))
+            }
+            IntField("Reps", s.reps.value, Modifier.weight(0.8f)) { v -> onChange(StrengthEdits.withSetReps(part, s.id, v)) }
+            IconButton(onClick = { onChange(StrengthEdits.removeSet(part, item.id, s.id)) }) {
+                Icon(Icons.Filled.Delete, contentDescription = "Remove set ${i + 1}")
+            }
+        }
+    }
+    TextButton(onClick = { onChange(StrengthEdits.addSet(part, item.id, vm::newId)) }) {
+        Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 4.dp))
+        Text("Add set")
     }
 }
 

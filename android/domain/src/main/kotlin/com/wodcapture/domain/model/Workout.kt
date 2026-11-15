@@ -300,6 +300,12 @@ data class StrengthSet(
     val reps: RepTarget = RepTarget(),
     /** `null` = inherit the item's load. */
     val load: LoadSpec? = null,
+    /**
+     * [load] as a % of the session's top weight ([StrengthSets.topWeight], owner request
+     * 2026-11-15). An input aid kept in step with the weight — the weight is what the watch runs
+     * (REQ-WS07) — so a session can be re-read and re-scaled as percentages before it is done.
+     */
+    val ofTop: Double? = null,
     val restSec: Int? = null,
     val tempo: String? = null,
     val pauseSec: Int? = null,
@@ -433,6 +439,13 @@ data class MaxEffort(
 data class StrengthSets(
     /** Set node IDs in run order; empty = every item's sets in body order. */
     val setRefs: List<String> = emptyList(),
+    /**
+     * Top weight of the session: the 100 % every set's weight is read against (owner request
+     * 2026-11-15). Stored with the workout so it stays editable before the session and each set
+     * can show its % of it ([com.wodcapture.domain.review.StrengthEdits]); the set weights
+     * themselves stay absolute, so the watch still never computes a percentage (REQ-WS07).
+     */
+    val topWeight: Mass? = null,
 ) : Format
 
 @Serializable

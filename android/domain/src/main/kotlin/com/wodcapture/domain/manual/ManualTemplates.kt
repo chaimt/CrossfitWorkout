@@ -108,19 +108,19 @@ object ManualTemplates {
         ),
     )
 
-    /** 5 sets of 5 ramping 70 → 80 % of the goal weight. */
+    /** 5 sets of 5 ramping 70 → 80 % of the top weight. */
     fun strength5x5(ids: IdSource) = percentSession(ids, sets = 5, reps = 5, from = 70.0, to = 80.0)
 
-    /** Heavy strength: 5 sets of 3 ramping 80 → 85 % of the goal weight. */
+    /** Heavy strength: 5 sets of 3 ramping 80 → 85 % of the top weight. */
     fun strength5x3(ids: IdSource) = percentSession(ids, sets = 5, reps = 3, from = 80.0, to = 85.0)
 
-    /** 3 sets of 5 ramping 70 → 80 % of the goal weight. */
+    /** 3 sets of 5 ramping 70 → 80 % of the top weight. */
     fun strength3x5(ids: IdSource) = percentSession(ids, sets = 3, reps = 5, from = 70.0, to = 80.0)
 
     /**
      * A strength quick start is the same session the manual form builds (owner request
-     * 2026-11-06): no load type, a goal weight to fill in, and set rows of % · weight · reps
-     * whose % ramps evenly from [from] to [to] (to 0.5 %). Entering the goal fills every weight.
+     * 2026-11-06): no load type, a top weight to fill in, and set rows of % · weight · reps
+     * whose % ramps evenly from [from] to [to] (to 0.5 %). Entering the top weight fills every weight.
      */
     private fun percentSession(ids: IdSource, sets: Int, reps: Int, from: Double, to: Double) =
         part(ids, ManualFormat.STRENGTH).copy(
@@ -129,7 +129,7 @@ object ManualTemplates {
             lift = ManualStrengthForm(id = ids.newId(), name = "Back squat", movementId = "back_squat", implement = "barbell"),
             sets = List(sets) { i ->
                 val pct = if (sets == 1) from else from + (to - from) * i / (sets - 1)
-                ManualSetForm(id = ids.newId(), ofGoal = MassMath.roundToStep(pct, 0.5), reps = reps)
+                ManualSetForm(id = ids.newId(), ofTop = MassMath.roundToStep(pct, 0.5), reps = reps)
             },
         )
 
