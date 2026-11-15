@@ -53,6 +53,8 @@ import com.wodcapture.app.data.WorkoutEntity
 import com.wodcapture.domain.DomainJson
 import com.wodcapture.domain.levels.BASE_LEVEL
 import com.wodcapture.domain.levels.LevelApplier
+import com.wodcapture.domain.load.MassMath
+import com.wodcapture.domain.model.AbsoluteLoad
 import com.wodcapture.domain.model.Amrap
 import com.wodcapture.domain.model.BodyNode
 import com.wodcapture.domain.model.BuildToMax
@@ -80,7 +82,9 @@ import com.wodcapture.domain.model.WorkoutSection
 import com.wodcapture.domain.model.Warmups
 import com.wodcapture.domain.parser.JobState
 import com.wodcapture.domain.plan.CompileResult
+import com.wodcapture.domain.review.LoadSuggestion
 import com.wodcapture.domain.review.LoadText
+import com.wodcapture.domain.review.SuggestionSource
 import com.wodcapture.domain.review.ReviewActions
 import com.wodcapture.domain.validation.WorkoutValidator
 import kotlinx.serialization.builtins.ListSerializer
@@ -138,7 +142,7 @@ private fun ReviewContent(vm: AppViewModel, e: WorkoutEntity, back: () -> Unit, 
                 val section = WorkoutSection.of(part)
                 if (i == 0 || WorkoutSection.of(draft.parts[i - 1]) != section) SectionHeader(section)
                 PartEditor(
-                    vm, part, section, lowConfidence.keys, levels[part.id],
+                    vm, part, section, lowConfidence.keys, levels[part.id], review.loadSuggestions,
                     onLevel = { lv -> levels = levels + (part.id to lv) },
                     onChange = { updated -> draft = Editing.updatePart(draft, part.id) { updated } },
                     onRemove = { draft = draft.copy(parts = draft.parts.filter { it.id != part.id }) },
@@ -260,6 +264,7 @@ private fun PartEditor(
     section: WorkoutSection,
     low: Set<String>,
     level: String?,
+    suggestions: Map<String, LoadSuggestion>,
     onLevel: (String) -> Unit,
     onChange: (Part) -> Unit,
     onRemove: () -> Unit,
@@ -299,7 +304,7 @@ private fun PartEditor(
         Toggle("Run on watch", part.effectiveRunOnWatch) { onChange(part.copy(runOnWatch = it)) }
         if (!warmup) Toggle("Manual score", part.scoring.manual) { onChange(part.copy(scoring = part.scoring.copy(manual = it))) }
         Text(if (section == WorkoutSection.WEIGHTS) "Lifts" else "Movements", style = MaterialTheme.typography.titleSmall)
-        BodyEditor(vm, part, part.body, low, depth = 0, onChange)
+        BodyEditor(vm, part, part.body, low, depth = 0, suggestions, onChange)
         TextButton(onClick = { onChange(Editing.addItem(part, null, Item(vm.newId(), name = "New movement", measure = Measure(MeasureKind.REPS, 10.0)))) }) {
             Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 4.dp))
             Text("Add movement")
@@ -324,6 +329,24 @@ private fun PartEditor(
 private fun acceptFallback(p: Part, timer: FallbackTimer): Part {
     val w = Workout(id = "x", parts = listOf(p))
     return ReviewActions.acceptFallback(w, p.id, timer).parts[0]
+}
+
+/**
+ * Missing-load suggestion chip (REQ-AE07, owner request 2026-11-15): tap-to-apply history
+ * fill for a loadable metcon item with no load. Weight only, never auto-filled, never reps.
+ */
+@Composable
+private fun SuggestionChip(suggestion: LoadSuggestion?, onApply: (AbsoluteLoad) -> Unit) {
+    if (suggestion == null) return
+    val label = when (suggestion.source) {
+        SuggestionSource.LAST_METCON -> "Last time"
+        SuggestionSource.TOP_LIFT -> "Top lift"
+        SuggestionSource.REP_MAX -> "Rep max"
+    }
+    AssistChip(
+        onClick = { onApply(AbsoluteLoad(suggestion.mass)) },
+        label = { Text("Use $label: ${MassMath.formatMass(suggestion.mass)}") },
+    )
 }
 
 
@@ -375,12 +398,12 @@ private fun NodeBox(highlight: Boolean, depth: Int, content: @Composable () -> U
 
 /** Recursive body editor: items, groups and rests (REQ-AE02); never flattens nesting. */
 @Composable
-private fun BodyEditor(vm: AppViewModel, part: Part, nodes: List<BodyNode>, low: Set<String>, depth: Int, onChange: (Part) -> Unit) {
+private fun BodyEditor(vm: AppViewModel, part: Part, nodes: List<BodyNode>, low: Set<String>, depth: Int, suggestions: Map<String, LoadSuggestion>, onChange: (Part) -> Unit) {
     nodes.forEach { n ->
         NodeBox(highlight = n.id in low, depth = depth) {
             if (n.id in low) Hint("Low confidence: please check", color = MaterialTheme.colorScheme.onTertiaryContainer)
             when (n) {
-                is Item -> ItemEditor(vm, part, n, onChange)
+                is Item -> ItemEditor(vm, part, n, suggestions[n.id], onChange)
                 is Group -> {
                     Grid {
                         Choice("Group", n.kind, GroupKind.entries, { pretty(it.name) }, Modifier) { k -> onChange(Editing.updateNode(part, n.id) { (it as Group).copy(kind = k) }) }
@@ -390,7 +413,7 @@ private fun BodyEditor(vm: AppViewModel, part: Part, nodes: List<BodyNode>, low:
                             onChange(Editing.updateNode(part, n.id) { (it as Group).copy(repScheme = scheme) })
                         }
                     }
-                    BodyEditor(vm, part, n.children, low, depth + 1, onChange)
+                    BodyEditor(vm, part, n.children, low, depth + 1, suggestions, onChange)
                     TextButton(onClick = { onChange(Editing.addItem(part, n.id, Item(vm.newId(), name = "New movement", measure = Measure(MeasureKind.REP_SCHEME)))) }) {
                         Icon(Icons.Filled.Add, contentDescription = null, Modifier.padding(end = 4.dp))
                         Text("Add to group")
@@ -420,7 +443,7 @@ private fun NodeActions(reorder: Boolean, onUp: () -> Unit, onDown: () -> Unit, 
 }
 
 @Composable
-private fun ItemEditor(vm: AppViewModel, part: Part, item: Item, onChange: (Part) -> Unit) {
+private fun ItemEditor(vm: AppViewModel, part: Part, item: Item, suggestion: LoadSuggestion?, onChange: (Part) -> Unit) {
     fun set(f: (Item) -> Item) = onChange(Editing.updateNode(part, item.id) { f(it as Item) })
     val catalog = vm.catalog
     if (WorkoutSection.of(part) == WorkoutSection.WEIGHTS) {
@@ -449,6 +472,7 @@ private fun ItemEditor(vm: AppViewModel, part: Part, item: Item, onChange: (Part
         IntField("Reps", item.sets.firstOrNull()?.reps?.value, cell) { r -> set { Editing.reshapeSets(it, it.sets.size, r, null, vm::newId) } }
         TimeField("Rest", item.sets.firstOrNull()?.restSec, cell) { s -> set { Editing.reshapeSets(it, it.sets.size, null, s, vm::newId) } }
     }
+    SuggestionChip(suggestion) { applied -> set { it.copy(load = applied) } }
     Grid {
         val cell = Modifier
         val measure = item.measure ?: Measure(MeasureKind.REPS)

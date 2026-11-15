@@ -20,6 +20,7 @@
 // StrengthRunTest.mc.
 //
 import Toybox.Lang;
+import Toybox.Math;
 
 // Set row columns (docs/protocol.md section 5 `sets`).
 enum {
@@ -60,6 +61,10 @@ class StrengthRun {
     var restMs as Number = 0;
     var ended as Boolean = false;
     var defaultUnit as String = "kg";
+    //! Pending per-set weight tweak (owner request 2026-11-14): +/- plate
+    //! steps applied to the displayed set only, logged instead of the plan
+    //! target, then cleared when the set advances. -1.0 = none.
+    var tweak as Float = -1.0;
 
     function initialize(part as Dictionary, unit as String) {
         buildToMax = U.eq(U.str(part, "mode"), "build_to_max");
@@ -105,6 +110,42 @@ class StrengthRun {
         return w == null ? null : U.real(w, "v");
     }
 
+    //! Displayed load of the current set: a pending tweak wins over the
+    //! plan target (tweak applies to this set only).
+    function displayLoad() as Float? {
+        if (tweak >= 0.0) {
+            return tweak;
+        }
+        var set = currentSet();
+        return set == null ? null : targetLoad(set);
+    }
+
+    //! Nudges the displayed set's weight by `steps` plate increments
+    //! (1.25 kg / 2.5 lb by unit). Returns the new load, or null when the
+    //! set has no numeric load to adjust. Clamped to [0, 500 kg / 1100 lb].
+    function nudgeLoad(steps as Number) as Float? {
+        var set = currentSet();
+        if (set == null || buildToMax) {
+            return null;
+        }
+        var unit = loadUnit(set, defaultUnit);
+        var step = unit.equals("lb") ? 2.5 : 1.25;
+        var cur = displayLoad();
+        if (cur == null || cur < 0.0) {
+            return null;
+        }
+        var max = unit.equals("lb") ? 1100.0 : 500.0;
+        var next = cur + steps * step;
+        if (next < 0.0) {
+            next = 0.0;
+        } else if (next > max) {
+            next = max;
+        }
+        // Snap to the exact plate grid so repeated nudges stay exact.
+        next = (Math.round(next / step)).toFloat() * step;
+        tweak = next;
+        return next;
+    }
     static function loadUnit(set as Dictionary, dflt as String) as String {
         if (U.flag(set, "bw", false)) {
             return "";
@@ -163,13 +204,18 @@ class StrengthRun {
     }
 
     //! Logs the displayed set as prescribed (one press). `pressMs` is the
-    //! button event time, which also starts rest.
+    //! button event time, which also starts rest. A pending weight tweak
+    //! (this set only) is logged instead of the plan target.
     function logAsPrescribed(pressMs as Number) as Boolean {
         var set = currentSet();
         if (set == null || needsEntry()) {
             return false;
         }
-        return logWith(pressMs, targetReps(set), targetLoad(set) as Float, "done");
+        var load = displayLoad();
+        if (load == null) {
+            return false;
+        }
+        return logWith(pressMs, targetReps(set), load, "done");
     }
 
     //! Logs the displayed set with entered values. `pressMs` is when the
@@ -189,6 +235,7 @@ class StrengthRun {
             loadUnit(set, defaultUnit), implementCount(set), status, pressMs]);
         var rest = U.num(set, "rest");
         current += 1;
+        tweak = -1.0;
         if (rest != null && rest > 0 && !isFinished()) {
             restStartMs = pressMs;
             restMs = rest * 1000;
@@ -294,6 +341,7 @@ class StrengthRun {
         logs.add([U.str(set, "id"), current, targetReps(set), 0, -1,
             loadUnit(set, defaultUnit), implementCount(set), "skipped", ms]);
         current += 1;
+        tweak = -1.0;
         restStartMs = -1;
         return true;
     }

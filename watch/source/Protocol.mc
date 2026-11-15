@@ -15,7 +15,7 @@ import Toybox.Lang;
 module Proto {
 
     const VERSION = 1;
-    const APP_VERSION = "0.1.2";
+    const APP_VERSION = "0.1.3";
     const DEVICE = "fr965";
     const CAPABILITIES = ["for_time", "amrap", "emom", "tabata", "intervals", "max_effort",
         "strength_sets", "build_to_max", "manual"] as Array<String>;

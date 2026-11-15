@@ -36,6 +36,8 @@ import com.wodcapture.domain.protocol.MessageType
 import com.wodcapture.domain.plan.WatchPlan
 import com.wodcapture.domain.plan.WireJson
 import com.wodcapture.domain.protocol.ProfilePayload
+import com.wodcapture.domain.review.LoadSuggestion
+import com.wodcapture.domain.review.LoadSuggestions
 import com.wodcapture.domain.scoring.TopLift
 import com.wodcapture.domain.scoring.TopLifts
 import com.wodcapture.domain.validation.ValidationReport
@@ -58,8 +60,12 @@ import java.time.ZoneId
 /** Content shared into the app (REQ-AC02/AC03). */
 data class SharedContent(val uris: List<Uri> = emptyList(), val text: String? = null)
 
-/** Review-screen derivations: validation plus the exact watch preview (REQ-AE01, AE04). */
-data class ReviewState(val report: ValidationReport, val compile: CompileResult)
+/** Review-screen derivations: validation, history load suggestions, plus the exact watch preview (REQ-AE01, AE04, AE07). */
+data class ReviewState(
+    val report: ValidationReport,
+    val compile: CompileResult,
+    val loadSuggestions: Map<String, LoadSuggestion> = emptyMap(),
+)
 
 /** Single app ViewModel; screens are thin (REQ-AP02: UI → domain → data). */
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -140,7 +146,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val s = settings.value
         val report = WorkoutValidator.validate(w)
         val compile = c.compiler.compile(w, s.profile, PlanIdentity("00000000-0000-4000-8000-000000000000", 1), options(levels))
-        return ReviewState(report, compile)
+        val saved = library.value.mapNotNull { e -> runCatching { DomainJson.decodeWorkout(e.workoutJson).let { it.copy(createdAt = it.createdAt ?: e.createdAt) } }.getOrNull() }
+        val byId = saved.associateBy { it.id }
+        val keys = listOf(w.id) + byId.keys.filter { it != w.id }
+        val ordered = keys.mapNotNull { byId[it] }.let { others -> if (byId[w.id] == null) listOf(w) + others else others }
+        val topLifts = TopLifts.compute(ordered, results.value, c.catalog, s.profile.displayUnit, ZoneId.systemDefault(), s.profile.repMaxes)
+        val suggestions = LoadSuggestions.forWorkout(w, c.catalog, results.value, byId, topLifts.associateBy { it.key }, s.profile.displayUnit)
+        return ReviewState(report, compile, suggestions)
     }
 
     private fun options(levels: Map<String, String>) = CompileOptions(

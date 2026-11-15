@@ -45,17 +45,22 @@ class StrengthView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
-    //! "3 x 100 kg", "5-8 x ? kg", "max x BW".
-    static function targetText(set as Dictionary, unit as String) as String {
+    //! "3 x 100 kg", "5-8 x ? kg", "max x BW". A pending per-set weight
+    //! tweak is shown with "+" (owner request 2026-11-14).
+    static function targetText(set as Dictionary, run as StrengthRun?, unit as String) as String {
         var rx = U.str(set, "rx");
-        var load = StrengthRun.targetLoad(set);
+        var load = run == null ? StrengthRun.targetLoad(set) : run.displayLoad();
         var lt = "?";
         if (load != null) {
             lt = load < 0 ? "BW" : Fmt.loadWithUnit(load, StrengthRun.loadUnit(set, unit), StrengthRun.implementCount(set));
         } else {
             lt = "? " + StrengthRun.loadUnit(set, unit);
         }
-        return (rx == null ? "?" : rx) + " x " + lt;
+        var text = (rx == null ? "?" : rx) + " x " + lt;
+        if (run != null && run.tweak >= 0.0) {
+            text += " +";
+        }
+        return text;
     }
 
     static function rowText(row as Array) as String {
@@ -106,7 +111,7 @@ class StrengthView extends WatchUi.View {
                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
             if (set != null) {
                 dc.setColor(Theme.TEXT, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(cx, _h * 0.40, Graphics.FONT_LARGE, targetText(set, unit),
+                dc.drawText(cx, _h * 0.40, Graphics.FONT_LARGE, targetText(set, sr, unit),
                     Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
                 var nt = U.str(set, "nt");
                 if (nt != null) {
@@ -115,7 +120,8 @@ class StrengthView extends WatchUi.View {
                         Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
                 }
             }
-            var hint = sr.needsEntry() ? "START: enter reps/load" : "START / LAP: set done";
+            var hint = sr.needsEntry() ? "START: enter reps/load"
+                : (sr.displayLoad() != null ? "UP/DN: weight  START: done" : "START / LAP: set done");
             dc.setColor(Theme.OPEN, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, _h * 0.64, Graphics.FONT_XTINY, hint,
                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
@@ -149,7 +155,7 @@ class StrengthView extends WatchUi.View {
             Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         if (next != null) {
             dc.setColor(Theme.DIM, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, _h * 0.62, Graphics.FONT_XTINY, "Next " + head + ": " + targetText(next, unit),
+            dc.drawText(cx, _h * 0.62, Graphics.FONT_XTINY, "Next " + head + ": " + targetText(next, null, unit),
                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
     }
@@ -172,7 +178,7 @@ class StrengthView extends WatchUi.View {
                 color = Theme.DIM;
             } else {
                 var set = i < sr.sets.size() ? sr.sets[i] as Dictionary : sr.currentSet();
-                text += set == null ? "" : targetText(set, sr.defaultUnit);
+                text += set == null ? "" : targetText(set, i == sr.current ? sr : null, sr.defaultUnit);
                 if (i == sr.current) {
                     color = Theme.WORK;
                 }
@@ -240,12 +246,25 @@ class StrengthDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
+    //! UP/DOWN adjust the displayed set's weight by one plate step
+    //! (1.25 kg / 2.5 lb) when it has a numeric load; otherwise they flip
+    //! the timer/list page as before. Only on the set screen (page 0).
     function onNextPage() as Boolean {
-        _view.togglePage();
-        return true;
+        return _nudge(1);
     }
 
     function onPreviousPage() as Boolean {
+        return _nudge(-1);
+    }
+
+    function _nudge(dir as Number) as Boolean {
+        var sr = _s.strength;
+        if (sr != null && _view.page == 0 && !_s.isPaused() && !sr.resting() && !sr.needsEntry()) {
+            if (sr.nudgeLoad(dir) != null) {
+                WatchUi.requestUpdate();
+                return true;
+            }
+        }
         _view.togglePage();
         return true;
     }

@@ -196,6 +196,27 @@ function testOnePressSetStartsRestAtPress(logger as Test.Logger) as Boolean {
 }
 
 (:test)
+function testWeightTweakAdjustsThisSetOnly(logger as Test.Logger) as Boolean {
+    var run = Fx.squats();
+    // 100 kg target, 1.25 kg steps: +1 -> 101.25, logged instead of 100.
+    Test.assertEqual(101.25, run.nudgeLoad(1));
+    Test.assertEqual(101.25, run.displayLoad());
+    Test.assert(run.logAsPrescribed(1000));
+    Test.assertEqual(101.25, (run.logs[0] as Array)[SR_LOAD]);
+    Test.assertEqual(1, run.current);
+    // Tweak cleared on advance: next set shows the plan target again.
+    Test.assertEqual(-1.0, run.tweak);
+    Test.assertEqual(100.0, run.displayLoad());
+    // Negative steps and clamping: -200 steps lands on 0, not below.
+    Test.assertEqual(0.0, run.nudgeLoad(-200));
+    // Skip also clears the tweak, so it never leaks to a later set.
+    Test.assert(run.skipSet(2000));
+    Test.assertEqual(-1.0, run.tweak);
+    Test.assertEqual(100.0, run.displayLoad());
+    return true;
+}
+
+(:test)
 function testNoRestAfterFinalSetAndBestLoad(logger as Test.Logger) as Boolean {
     var run = Fx.squats();
     for (var i = 0; i < 4; i++) {

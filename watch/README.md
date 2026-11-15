@@ -67,7 +67,7 @@ scripts/             build / test / run-simulator / deploy-watch / package / lib
 |---|---|---|---|---|---|
 | Preview / menus | select | back | scroll | — | select |
 | Metcon running | pause + menu | **+1 round** / next movement | timer ↔ movement list | pause + menu | +1 round (touch + tap-to-log) |
-| Strength set | **log displayed set** → rest | log displayed set | set list | pause + menu | log set |
+| Strength set | **log displayed set** → rest | log displayed set | **± 1.25 kg / 2.5 lb on this set's weight** (tweaked target shows "+"; set list when the set has no numeric load) | pause + menu | log set |
 | Rest | next set now | skip rest | set list | pause + menu | next set |
 | Paused | resume | pause menu | — | menu | — |
 | Picker | accept | cancel | ± step (6 fast presses = ×10, hold DOWN accelerates) | fine/coarse step | thirds ± / middle accept, swipe ± |
