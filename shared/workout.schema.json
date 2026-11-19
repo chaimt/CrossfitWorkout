@@ -289,6 +289,7 @@
         "id": { "type": "string" },
         "reps": { "$ref": "#/$defs/RepTarget" },
         "load": { "$ref": "#/$defs/LoadSpec" },
+        "ofTop": { "type": "number", "description": "load as a % of the part's strength_sets topWeight (REQ-AE08); the weight stays authoritative." },
         "restSec": { "type": "integer", "minimum": 0 },
         "tempo": { "type": "string", "description": "4 chars, e.g. '32X1'." },
         "pauseSec": { "type": "integer" },
@@ -388,7 +389,11 @@
     },
     "StrengthSets": {
       "type": "object", "additionalProperties": false, "required": ["type"],
-      "properties": { "type": { "const": "strength_sets" }, "setRefs": { "type": "array", "items": { "type": "string" } } }
+      "properties": {
+        "type": { "const": "strength_sets" },
+        "setRefs": { "type": "array", "items": { "type": "string" } },
+        "topWeight": { "$ref": "#/$defs/Mass", "description": "the session's top weight: the 100 % each set's ofTop is read against (REQ-AE08)." }
+      }
     },
     "BuildToMax": {
       "type": "object", "additionalProperties": false, "required": ["type"],

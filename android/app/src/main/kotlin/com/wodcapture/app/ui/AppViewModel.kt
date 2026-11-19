@@ -300,8 +300,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         manualForm.value = ManualForms.blank(c.ids, LocalDate.now().toString(), ZoneId.systemDefault().id, unit, step)
     }
 
-    /** Settings → weight unit and its smallest total increment (rounding of computed weights). */
-    private fun loadUnitAndStep(s: AppSettings): Pair<MassUnit, Double> {
+    /**
+     * Settings → weight unit and its smallest total increment (rounding of computed weights).
+     * The review editor needs it too, for the strength top weight (REQ-AE08).
+     */
+    fun loadUnitAndStep(s: AppSettings = settings.value): Pair<MassUnit, Double> {
         val p = s.profile
         return p.displayUnit to if (p.displayUnit == MassUnit.LB) p.barIncrementLb else p.barIncrementKg
     }

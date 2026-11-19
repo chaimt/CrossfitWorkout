@@ -57,7 +57,7 @@ class ManualSectionsTest {
     @Test
     fun weightsAndMetconTemplatesCombine() {
         val strength = ManualTemplates.apply(blank(), template("5 × 5 · 70–80%"), ids)
-            .let { f -> f.copy(parts = f.parts.map { ManualForms.withGoal(it, 100.0, 1.0) }) }
+            .let { f -> f.copy(parts = f.parts.map { ManualForms.withTopWeight(it, 100.0, 1.0) }) }
         // The untouched default For-time part gives way to the template.
         assertEquals(listOf(ManualFormat.STRENGTH), strength.parts.map { it.format })
         val day = ManualTemplates.apply(strength, template("AMRAP 20"), ids)
@@ -302,29 +302,29 @@ class ManualSectionsTest {
     }
 
     @Test
-    fun aSetsWeightAndItsPercentOfTheGoalFollowEachOther() {
+    fun aSetsWeightAndItsPercentOfTheTopWeightFollowEachOther() {
         val set = ManualSetForm(id = "s")
         // % → weight, rounded to the Settings increment (2.5 here).
-        val byPercent = ManualForms.withSetPercent(set, 72.0, goal = 140.0, step = 2.5)
-        assertEquals(72.0 to 100.0, byPercent.ofGoal to byPercent.load)
-        // weight → % of the goal, one decimal.
-        val byWeight = ManualForms.withSetWeight(byPercent, 105.0, goal = 140.0)
-        assertEquals(105.0 to 75.0, byWeight.load to byWeight.ofGoal)
-        // No goal: a weight stands alone and a % changes nothing else.
-        assertEquals(null, ManualForms.withSetWeight(set, 80.0, goal = null).ofGoal)
-        assertEquals(null, ManualForms.withSetPercent(set, 80.0, goal = null, step = 1.0).load)
+        val byPercent = ManualForms.withSetPercent(set, 72.0, top = 140.0, step = 2.5)
+        assertEquals(72.0 to 100.0, byPercent.ofTop to byPercent.load)
+        // weight → % of the top, one decimal.
+        val byWeight = ManualForms.withSetWeight(byPercent, 105.0, top = 140.0)
+        assertEquals(105.0 to 75.0, byWeight.load to byWeight.ofTop)
+        // No top: a weight stands alone and a % changes nothing else.
+        assertEquals(null, ManualForms.withSetWeight(set, 80.0, top = null).ofTop)
+        assertEquals(null, ManualForms.withSetPercent(set, 80.0, top = null, step = 1.0).load)
     }
 
     @Test
-    fun changingTheGoalRecomputesPercentSetsAndPercentagesOfWeightSets() {
+    fun changingTheTopWeightRecomputesPercentSetsAndPercentagesOfWeightSets() {
         val part = session("back_squat", 60.0 to 5, null to 5).let { p ->
-            p.copy(sets = listOf(p.sets[0], p.sets[1].copy(ofGoal = 80.0)))
+            p.copy(sets = listOf(p.sets[0], p.sets[1].copy(ofTop = 80.0)))
         }
-        val withGoal = ManualForms.withGoal(part, 100.0, step = 1.0)
-        assertEquals(100.0, withGoal.scheme.goalWeight)
-        assertEquals(listOf(60.0, 80.0), withGoal.sets.map { it.load })
-        assertEquals(listOf(60.0, 80.0), withGoal.sets.map { it.ofGoal })
-        val raised = ManualForms.withGoal(withGoal, 120.0, step = 1.0)
+        val withTopWeight = ManualForms.withTopWeight(part, 100.0, step = 1.0)
+        assertEquals(100.0, withTopWeight.scheme.topWeight)
+        assertEquals(listOf(60.0, 80.0), withTopWeight.sets.map { it.load })
+        assertEquals(listOf(60.0, 80.0), withTopWeight.sets.map { it.ofTop })
+        val raised = ManualForms.withTopWeight(withTopWeight, 120.0, step = 1.0)
         assertEquals(listOf(72.0, 96.0), raised.sets.map { it.load })
         // The workout keeps only the weights.
         val built = builder.build(blank().copy(parts = listOf(raised)))
@@ -334,41 +334,41 @@ class ManualSectionsTest {
     }
 
     @Test
-    fun strengthQuickStartsArePercentOfGoalSessions() {
+    fun strengthQuickStartsArePercentOfTopSessions() {
         fun percents(name: String) = ManualTemplates.apply(blank(), template(name), ids).parts.single()
         val fiveByFive = percents("5 × 5 · 70–80%")
         assertEquals(StrengthScheme(), fiveByFive.scheme)
-        assertEquals(null, fiveByFive.scheme.goalWeight)
-        assertEquals(listOf(70.0, 72.5, 75.0, 77.5, 80.0), fiveByFive.sets.map { it.ofGoal })
+        assertEquals(null, fiveByFive.scheme.topWeight)
+        assertEquals(listOf(70.0, 72.5, 75.0, 77.5, 80.0), fiveByFive.sets.map { it.ofTop })
         assertEquals(List(5) { 5 }, fiveByFive.sets.map { it.reps })
         val fiveByThree = percents("5 × 3 · 80–85%")
-        assertEquals(listOf(80.0, 81.0, 82.5, 83.5, 85.0), fiveByThree.sets.map { it.ofGoal })
+        assertEquals(listOf(80.0, 81.0, 82.5, 83.5, 85.0), fiveByThree.sets.map { it.ofTop })
         assertEquals(List(5) { 3 }, fiveByThree.sets.map { it.reps })
         val threeByFive = percents("3 × 5 · 70–80%")
-        assertEquals(listOf(70.0, 75.0, 80.0), threeByFive.sets.map { it.ofGoal })
+        assertEquals(listOf(70.0, 75.0, 80.0), threeByFive.sets.map { it.ofTop })
         assertEquals(List(3) { 5 }, threeByFive.sets.map { it.reps })
-        // Entering the goal fills every weight, rounded to the Settings increment.
-        val filled = ManualForms.withGoal(fiveByThree, 140.0, 2.5)
+        // Entering the top weight fills every weight, rounded to the Settings increment.
+        val filled = ManualForms.withTopWeight(fiveByThree, 140.0, 2.5)
         assertEquals(listOf(112.5, 112.5, 115.0, 117.5, 120.0), filled.sets.map { it.load })
         assertTrue(builder.build(blank().copy(parts = listOf(filled))).canCreate)
     }
 
     @Test
-    fun setPercentsSurviveUntilAGoalIsSet() {
+    fun setPercentsSurviveUntilATopWeightIsSet() {
         val start = ManualTemplates.apply(blank(), template("3 × 5 · 70–80%"), ids).parts.single()
-        // Without a goal the sets have no weight yet, so Create is blocked with a hint.
+        // Without a top the sets have no weight yet, so Create is blocked with a hint.
         val unfilled = builder.build(blank().copy(parts = listOf(start)))
         assertFalse(unfilled.canCreate)
-        assertTrue(unfilled.report.blocking.any { "goal weight" in it.message }, unfilled.report.blocking.toString())
-        // Typing a weight before the goal keeps that set's %.
-        val typed = ManualForms.withSetWeight(start.sets.first(), 60.0, goal = null)
+        assertTrue(unfilled.report.blocking.any { "top weight" in it.message }, unfilled.report.blocking.toString())
+        // Typing a weight before the top keeps that set's %.
+        val typed = ManualForms.withSetWeight(start.sets.first(), 60.0, top = null)
         assertEquals(60.0, typed.load)
-        assertEquals(70.0, typed.ofGoal)
-        // Clearing the goal (e.g. to retype it) keeps every %.
-        val withGoal = ManualForms.withGoal(start, 100.0, step = 1.0)
-        val cleared = ManualForms.withGoal(withGoal, null, step = 1.0)
-        assertEquals(null, cleared.scheme.goalWeight)
-        assertEquals(listOf(70.0, 75.0, 80.0), cleared.sets.map { it.ofGoal })
+        assertEquals(70.0, typed.ofTop)
+        // Clearing the top (e.g. to retype it) keeps every %.
+        val withTopWeight = ManualForms.withTopWeight(start, 100.0, step = 1.0)
+        val cleared = ManualForms.withTopWeight(withTopWeight, null, step = 1.0)
+        assertEquals(null, cleared.scheme.topWeight)
+        assertEquals(listOf(70.0, 75.0, 80.0), cleared.sets.map { it.ofTop })
         assertEquals(listOf(70.0, 75.0, 80.0), cleared.sets.map { it.load })
     }
 }
