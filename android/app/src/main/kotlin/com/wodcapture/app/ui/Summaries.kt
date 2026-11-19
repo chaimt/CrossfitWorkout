@@ -1,5 +1,7 @@
 package com.wodcapture.app.ui
 
+import com.wodcapture.domain.load.MassMath
+import com.wodcapture.domain.model.AbsoluteLoad
 import com.wodcapture.domain.model.Amrap
 import com.wodcapture.domain.model.BodyTree
 import com.wodcapture.domain.model.BuildToMax
@@ -9,6 +11,7 @@ import com.wodcapture.domain.model.ForTime
 import com.wodcapture.domain.model.Format
 import com.wodcapture.domain.model.Intervals
 import com.wodcapture.domain.model.Item
+import com.wodcapture.domain.model.Mass
 import com.wodcapture.domain.model.MaxEffort
 import com.wodcapture.domain.model.NotForTime
 import com.wodcapture.domain.model.Part
@@ -16,6 +19,7 @@ import com.wodcapture.domain.model.StrengthSets
 import com.wodcapture.domain.model.Tabata
 import com.wodcapture.domain.plan.DisplayText
 import com.wodcapture.domain.review.LoadText
+import com.wodcapture.domain.review.StrengthEdits
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -48,7 +52,10 @@ object Summaries {
     fun part(p: Part): String {
         val items = BodyTree.items(p.body)
         val title = p.title?.takeIf { it.isNotBlank() }
-        if (p.format is StrengthSets) return items.joinToString(", ") { lift(it) }.ifBlank { title ?: format(p.format) }
+        if (p.format is StrengthSets) {
+            val top = (p.format as StrengthSets).topWeight
+            return items.joinToString(", ") { lift(it, top) }.ifBlank { title ?: format(p.format) }
+        }
         if (p.format is BuildToMax) return listOfNotNull(items.firstOrNull()?.name, format(p.format)).joinToString(" · ")
         val head = listOfNotNull(title, format(p.format)).joinToString(" · ")
         val names = items.take(MOVEMENTS_SHOWN).joinToString(", ") { it.displayName ?: it.name } +
@@ -56,15 +63,38 @@ object Summaries {
         return if (names.isBlank()) head else "$head · $names"
     }
 
-    private fun lift(i: Item): String {
+    private fun lift(i: Item, top: Mass? = null): String {
         val reps = i.sets.mapNotNull { it.reps.value }.distinct()
         val scheme = when {
             i.sets.isEmpty() -> ""
             reps.size == 1 -> " ${i.sets.size}×${reps.single()}"
             else -> " " + i.sets.joinToString("-") { s -> s.reps.value?.toString() ?: "?" }
         }
-        val load = LoadText.format(i.load).takeIf { it.isNotBlank() }?.let { " @ $it" } ?: ""
+        val load = (setLoads(i, top) ?: LoadText.format(i.load).takeIf { it.isNotBlank() })?.let { " @ $it" } ?: ""
         return "${i.displayName ?: i.name}$scheme$load"
+    }
+
+    /**
+     * The weights a strength session's own sets carry ("105–120 kg (70–80 %)"), so a session
+     * built set by set reads as its ramp instead of as a bare 5×5 (owner request 2026-11-15).
+     * `null` when the sets have no weights of their own, leaving the item's prescription to show.
+     */
+    private fun setLoads(i: Item, top: Mass?): String? {
+        if (i.sets.isEmpty()) return null
+        val masses = i.sets.mapNotNull { (it.load as? AbsoluteLoad)?.mass }
+        val unit = masses.firstOrNull()?.unit ?: return null
+        if (masses.size != i.sets.size || masses.any { it.unit != unit }) return null
+        val weights = masses.map { it.value }
+        val percents = i.sets.mapNotNull { StrengthEdits.percentOf(i, it, top) }
+        val pct = if (percents.size != i.sets.size) "" else " (${span(percents)} %)"
+        return "${span(weights)} ${MassMath.unitLabel(unit)}$pct"
+    }
+
+    /** "100" for one value, "70–80" for a ramp. */
+    private fun span(values: List<Double>): String {
+        val lo = values.min()
+        val hi = values.max()
+        return if (lo == hi) MassMath.format(lo) else "${MassMath.format(lo)}–${MassMath.format(hi)}"
     }
 
     /** "Thu, 5 Nov" for an ISO date; the raw text when it does not parse; "No date" when absent. */

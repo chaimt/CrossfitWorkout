@@ -155,7 +155,9 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
                 restSec = time(form.restText, "Rest", "restText") ?: 0,
                 inner = InnerMode.AMRAP,
             )
-            ManualFormat.STRENGTH -> StrengthSets()
+            // The top weight travels with the session so it stays editable before it is done
+            // (owner request 2026-11-15, REQ-AE08).
+            ManualFormat.STRENGTH -> StrengthSets(topWeight = form.scheme.topWeight?.let { Mass(it, unit) })
             ManualFormat.FOR_QUALITY -> NotForTime
             ManualFormat.MAX_EFFORT -> MaxEffort(
                 windowSec = time(form.durationText, "Window", "durationText"),
@@ -290,11 +292,11 @@ class ManualWorkoutBuilder(private val ids: IdSource) {
                 issues += blocking("missing_value", "Enter the reps of each set", form.id, s.id, "reps")
                 null
             }
-            return StrengthSet(s.id, RepTarget(reps), load = strengthLoad(s))
+            return StrengthSet(s.id, RepTarget(reps), load = strengthLoad(s), ofTop = s.ofTop)
         }
 
         private fun strengthLoad(s: ManualSetForm): LoadSpec? = s.load?.let { AbsoluteLoad(Mass(it, unit)) } ?: run {
-            val hint = if (s.ofGoal != null) " (or the goal weight, to fill it from the %)" else ""
+            val hint = if (s.ofTop != null) " (or the top weight, to fill it from the %)" else ""
             issues += blocking("missing_value", "Enter the weight of each set$hint", form.id, s.id, "load")
             null
         }

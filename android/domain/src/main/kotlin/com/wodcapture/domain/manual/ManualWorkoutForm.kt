@@ -31,7 +31,7 @@ data class ManualWorkoutForm(
      */
     val loadUnit: MassUnit = MassUnit.KG,
     /**
-     * Rounding step for weights the form computes (a % of the goal weight): Settings → smallest
+     * Rounding step for weights the form computes (a % of the top weight): Settings → smallest
      * total increment for [loadUnit].
      */
     val loadStep: Double = 1.0,
@@ -146,11 +146,11 @@ data class ManualPartForm(
  */
 data class StrengthScheme(
     /**
-     * Optional goal weight of the session, in the form's unit (owner request 2026-11-05). With it,
-     * each set's weight and its % of the goal are two views of one value: editing either updates
+     * Optional top weight of the session, in the form's unit (owner request 2026-11-05). With it,
+     * each set's weight and its % of the top are two views of one value: editing either updates
      * the other ([ManualForms.withSetWeight], [ManualForms.withSetPercent]).
      */
-    val goalWeight: Double? = null,
+    val topWeight: Double? = null,
 )
 
 /** A movement row of a metcon part (REQ-DM05). */
@@ -186,18 +186,18 @@ data class ManualStrengthForm(
     val implement: String? = null,
 )
 
-/** One set of a strength session: its weight ([load], in the form's unit), reps and % of the goal. */
+/** One set of a strength session: its weight ([load], in the form's unit), reps and % of the top weight. */
 data class ManualSetForm(
     /** Becomes the set ID. */
     val id: String,
     val load: Double? = null,
     val reps: Int? = null,
     /**
-     * [load] as a % of the session's goal weight. It is an input aid kept in step with [load] once
-     * a goal is set (before that it waits for the goal, e.g. a quick start's ramp); the workout
+     * [load] as a % of the session's top weight. It is an input aid kept in step with [load] once
+     * a top weight is set (before that it waits for one, e.g. a quick start's ramp); the workout
      * stores only the weight.
      */
-    val ofGoal: Double? = null,
+    val ofTop: Double? = null,
 )
 
 /**
@@ -275,43 +275,43 @@ object ManualForms {
     fun newLift(ids: IdSource): ManualStrengthForm = ManualStrengthForm(id = ids.newId())
 
     /**
-     * Typing a set's weight: with a goal weight, its % of the goal follows. Without a goal there
+     * Typing a set's weight: with a top weight, its % of the top follows. Without a top weight there
      * is nothing to compare against, so the % is kept.
      */
-    fun withSetWeight(set: ManualSetForm, weight: Double?, goal: Double?): ManualSetForm =
-        set.copy(load = weight, ofGoal = if (hasGoal(goal)) percentOf(weight, goal) else set.ofGoal)
+    fun withSetWeight(set: ManualSetForm, weight: Double?, top: Double?): ManualSetForm =
+        set.copy(load = weight, ofTop = if (hasTop(top)) percentOf(weight, top) else set.ofTop)
 
     /**
-     * Typing a set's % of the goal: its weight becomes goal × %, rounded to [step] (Settings →
-     * smallest increment). Without a goal there is nothing to compute, so the weight is kept.
+     * Typing a set's % of the top: its weight becomes top × %, rounded to [step] (Settings →
+     * smallest increment). Without a top weight there is nothing to compute, so the weight is kept.
      */
-    fun withSetPercent(set: ManualSetForm, percent: Double?, goal: Double?, step: Double): ManualSetForm =
-        set.copy(ofGoal = percent, load = weightOf(percent, goal, step) ?: set.load)
+    fun withSetPercent(set: ManualSetForm, percent: Double?, top: Double?, step: Double): ManualSetForm =
+        set.copy(ofTop = percent, load = weightOf(percent, top, step) ?: set.load)
 
     /**
-     * Changing the session goal: sets given as a % get their weight recomputed; sets given only
-     * as a weight get their % of the new goal. Clearing the goal keeps every set as it is, so
-     * retyping the goal does not lose the %s.
+     * Changing the session top weight: sets given as a % get their weight recomputed; sets given only
+     * as a weight get their % of the new top. Clearing it keeps every set as it is, so
+     * retyping a top weight does not lose the %s.
      */
-    fun withGoal(part: ManualPartForm, goal: Double?, step: Double): ManualPartForm = part.copy(
-        scheme = part.scheme.copy(goalWeight = goal),
-        sets = if (!hasGoal(goal)) part.sets else part.sets.map { s ->
-            val computed = weightOf(s.ofGoal, goal, step)
-            if (computed != null) s.copy(load = computed) else s.copy(ofGoal = percentOf(s.load, goal))
+    fun withTopWeight(part: ManualPartForm, top: Double?, step: Double): ManualPartForm = part.copy(
+        scheme = part.scheme.copy(topWeight = top),
+        sets = if (!hasTop(top)) part.sets else part.sets.map { s ->
+            val computed = weightOf(s.ofTop, top, step)
+            if (computed != null) s.copy(load = computed) else s.copy(ofTop = percentOf(s.load, top))
         },
     )
 
-    private fun hasGoal(goal: Double?): Boolean = goal != null && goal > 0
+    private fun hasTop(top: Double?): Boolean = top != null && top > 0
 
-    private fun weightOf(percent: Double?, goal: Double?, step: Double): Double? {
-        if (percent == null || goal == null || !hasGoal(goal)) return null
-        return MassMath.roundToStep(goal * percent / 100, step.takeIf { it > 0 } ?: 1.0)
+    private fun weightOf(percent: Double?, top: Double?, step: Double): Double? {
+        if (percent == null || top == null || !hasTop(top)) return null
+        return MassMath.roundToStep(top * percent / 100, step.takeIf { it > 0 } ?: 1.0)
     }
 
-    /** % of [goal], to one decimal; `null` when either is missing. */
-    private fun percentOf(weight: Double?, goal: Double?): Double? {
-        if (weight == null || goal == null || !hasGoal(goal)) return null
-        return Math.round(weight / goal * 1000) / 10.0
+    /** % of [top], to one decimal; `null` when either is missing. */
+    private fun percentOf(weight: Double?, top: Double?): Double? {
+        if (weight == null || top == null || !hasTop(top)) return null
+        return Math.round(weight / top * 1000) / 10.0
     }
 
     /** A new set for [part]: it repeats the last set's weight and reps, so 5 × 5 is five taps. */

@@ -20,6 +20,7 @@ import com.wodcapture.domain.plan.WatchLimits
 import com.wodcapture.domain.plan.WatchPart
 import com.wodcapture.domain.plan.WatchPlan
 import com.wodcapture.domain.plan.WireJson
+import com.wodcapture.domain.review.StrengthEdits
 import com.wodcapture.domain.validation.Severity
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
@@ -95,9 +96,33 @@ class ManualWorkoutBuilderTest {
         assertEquals("rounds_reps", p.sc.ty)
     }
 
+    /**
+     * The session a quick start builds keeps its top weight and each set's % once saved, so the
+     * review editor can still re-scale it before the session (REQ-AE08, owner request 2026-11-15).
+     */
+    @Test
+    fun aSessionKeepsItsTopWeightAndPerSetPercentsAfterCreate() {
+        val part = ManualForms.withTopWeight(ManualTemplates.strength5x5(ids), 100.0, 1.0)
+        val built = builder.build(form(part))
+        val saved = DomainJson.decodeWorkout(DomainJson.encodeWorkout(built.workout)).parts[0]
+        val format = assertIs<com.wodcapture.domain.model.StrengthSets>(saved.format)
+        assertEquals(com.wodcapture.domain.model.Mass(100.0, MassUnit.KG), format.topWeight)
+        val item = saved.body.single() as Item
+        assertEquals(listOf(70.0, 72.5, 75.0, 77.5, 80.0), item.sets.map { it.ofTop })
+        assertEquals(
+            listOf(70.0, 72.0, 75.0, 77.0, 80.0),
+            item.sets.map { (it.load as AbsoluteLoad).mass.value },
+            "the weights the watch runs are absolute, on the Settings increment (1 kg here, ties down)",
+        )
+        // Raising the top weight in review rescales every set that was entered as a %.
+        val raised = StrengthEdits.withTopWeight(saved, com.wodcapture.domain.model.Mass(140.0, MassUnit.KG), step = 2.5)
+        val rescaled = (raised.body.single() as Item).sets.map { (it.load as AbsoluteLoad).mass.value }
+        assertEquals(listOf(97.5, 102.5, 105.0, 107.5, 112.5), rescaled)
+    }
+
     @Test
     fun fiveByFiveBackSquatRestsOnAllButTheLastSet() {
-        val part = ManualTemplates.strength5x5(ids).let { s -> s.copy(sets = s.sets.map { it.copy(load = 100.0, ofGoal = null) }) }
+        val part = ManualTemplates.strength5x5(ids).let { s -> s.copy(sets = s.sets.map { it.copy(load = 100.0, ofTop = null) }) }
         val built = builder.build(form(part))
         val item = built.workout.parts[0].body.single() as Item
         assertEquals(AbsoluteLoad(com.wodcapture.domain.model.Mass(100.0, MassUnit.KG)), item.sets[0].load)
@@ -225,10 +250,10 @@ class ManualWorkoutBuilderTest {
         DynamicTest.dynamicTest(t.name) {
             val applied = ManualTemplates.apply(form(), t, ids)
             assertEquals(t.name, applied.title)
-            // A weights quick start needs the athlete's goal weight, as a session needs its lift.
+            // A weights quick start needs the athlete's top weight, as a session needs its lift.
             val f = applied.copy(parts = applied.parts.map { p ->
                 when {
-                    p.format == ManualFormat.STRENGTH -> ManualForms.withGoal(p, 100.0, 1.0)
+                    p.format == ManualFormat.STRENGTH -> ManualForms.withTopWeight(p, 100.0, 1.0)
                     else -> p
                 }
             })

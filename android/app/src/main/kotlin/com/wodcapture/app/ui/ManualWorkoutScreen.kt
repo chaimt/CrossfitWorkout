@@ -499,9 +499,9 @@ private fun MovementName(
 }
 
 /**
- * A strength session: one lift at the top, an optional goal weight, then one row per set of
+ * A strength session: one lift at the top, an optional top weight, then one row per set of
  * % · weight · reps. There is no load-type choice (owner request 2026-11-06), so a hand-built
- * session and a quick start look the same; with a goal, editing the weight or the % updates the
+ * session and a quick start look the same; with a top weight, editing the weight or the % updates the
  * other. "Add set" repeats the last set.
  */
 @Composable
@@ -513,11 +513,11 @@ private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, unit: M
     LiftField(catalog, lift?.name.orEmpty(), lift?.movementId, Modifier.fillMaxWidth()) { m ->
         onChange { p -> p.copy(lift = ManualForms.pick(p.lift ?: ManualForms.newLift(ids), m)) }
     }
-    DoubleField("Goal weight (${unit.wire})", part.scheme.goalWeight, Modifier.fillMaxWidth()) { v ->
-        onChange { ManualForms.withGoal(it, v, step) }
+    DoubleField("Top weight (${unit.wire})", part.scheme.topWeight, Modifier.fillMaxWidth()) { v ->
+        onChange { ManualForms.withTopWeight(it, v, step) }
     }
-    if (part.scheme.goalWeight == null && part.sets.any { it.ofGoal != null && it.load == null }) {
-        Hint("Enter the goal weight to fill in each set's weight from its %")
+    if (part.scheme.topWeight == null && part.sets.any { it.ofTop != null && it.load == null }) {
+        Hint("Enter the top weight to fill in each set's weight from its %")
     }
     // The set row is too narrow for "Weight (kg)", so the Settings unit sits in the heading.
     Text("Sets · weight in ${unit.wire}", style = MaterialTheme.typography.titleSmall)
@@ -534,7 +534,7 @@ private fun StrengthRows(catalog: MovementCatalog, part: ManualPartForm, unit: M
 
 /**
  * One set: its weight (in the session's load type and the Settings unit) and reps (REQ-DM06).
- * With a goal weight it also shows the % of the goal, linked both ways to the weight.
+ * With a top weight it also shows the % of it, linked both ways to the weight.
  */
 @Composable
 private fun SetRow(
@@ -545,12 +545,12 @@ private fun SetRow(
     onChange: ((ManualSetForm) -> ManualSetForm) -> Unit,
     onRemove: () -> Unit,
 ) {
-    val goal = scheme.goalWeight
+    val top = scheme.topWeight
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Text("Set $number", style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(44.dp))
-        // Every set shows % · Weight · Reps (owner request 2026-11-06), with or without a goal yet.
-        DoubleField("%", set.ofGoal, Modifier.weight(0.8f)) { v -> onChange { ManualForms.withSetPercent(it, v, goal, step) } }
-        DoubleField("Weight", set.load, Modifier.weight(1f)) { v -> onChange { ManualForms.withSetWeight(it, v, goal) } }
+        // Every set shows % · Weight · Reps (owner request 2026-11-06), with or without a top weight yet.
+        DoubleField("%", set.ofTop, Modifier.weight(0.8f)) { v -> onChange { ManualForms.withSetPercent(it, v, top, step) } }
+        DoubleField("Weight", set.load, Modifier.weight(1f)) { v -> onChange { ManualForms.withSetWeight(it, v, top) } }
         IntField("Reps", set.reps, Modifier.weight(0.8f)) { v -> onChange { it.copy(reps = v) } }
         IconButton(onClick = onRemove) { Icon(Icons.Filled.Close, contentDescription = "Remove set $number") }
     }
