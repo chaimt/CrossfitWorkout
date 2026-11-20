@@ -116,9 +116,8 @@ fun LiftPickerDialog(catalog: MovementCatalog, onDismiss: () -> Unit, onPick: (M
     }
 }
 
-/** "Barbell · PC" — the implement and the board abbreviation athletes know it by. */
+/** Board abbreviation athletes know it by (e.g. "PC") — no implement line (owner request 2026-11-19). */
 private fun liftDetail(m: Movement): String? {
-    val implement = m.implement.takeIf { it !in setOf("none", "bodyweight") }?.replace('_', ' ')?.replaceFirstChar { it.uppercase() }
     val alias = m.aliases.firstOrNull { it !in m.ambiguousAliases && it.length <= 6 }
-    return listOfNotNull(implement, alias).joinToString(" · ").ifBlank { null }
+    return alias?.ifBlank { null }
 }

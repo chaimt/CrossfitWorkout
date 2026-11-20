@@ -227,7 +227,9 @@
       "aliases": [
         "MC"
       ],
-      "ambiguousAliases": [],
+      "ambiguousAliases": [
+        "MC"
+      ],
       "category": "olympic",
       "measure": "reps",
       "loadable": "Y",
@@ -1053,6 +1055,19 @@
       "implement": "bodyweight"
     },
     {
+      "id": "spanish_squat_hold",
+      "name": "Spanish squat hold",
+      "aliases": [
+        "spanish squat",
+        "spanish squats"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "s",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
       "id": "rope_climb",
       "name": "Rope climb",
       "aliases": [
@@ -1352,7 +1367,9 @@
         "mountain climbers",
         "MC"
       ],
-      "ambiguousAliases": [],
+      "ambiguousAliases": [
+        "MC"
+      ],
       "category": "gymnastics",
       "measure": "reps",
       "loadable": "N",
@@ -1448,6 +1465,280 @@
       "measure": "reps",
       "loadable": "N",
       "implement": "pegboard"
+    },
+    {
+      "id": "back_scale",
+      "name": "Back scale",
+      "aliases": [
+        "back scales progression"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "s",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "front_scale",
+      "name": "Front scale",
+      "aliases": [
+        "front scales progression"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "s",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "forward_roll_from_support",
+      "name": "Forward roll from support",
+      "aliases": [],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "rings"
+    },
+    {
+      "id": "freestanding_handstand_push_up",
+      "name": "Freestanding handstand push-up",
+      "aliases": [
+        "freestanding HSPU"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "glide_kip",
+      "name": "Glide kip",
+      "aliases": [],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "handstand",
+      "name": "Handstand",
+      "aliases": [
+        "freestanding handstand"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "s",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "handstand_pirouette",
+      "name": "Handstand pirouette",
+      "aliases": [
+        "pirouette",
+        "pirouettes"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "hanging_l_sit",
+      "name": "Hanging L-sit",
+      "aliases": [
+        "hanging L sit"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "s",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "inverted_burpee",
+      "name": "Inverted burpee",
+      "aliases": [],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "l_pull_up",
+      "name": "L pull-up",
+      "aliases": [
+        "LPU",
+        "L pullup"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "l_sit_on_rings",
+      "name": "L-sit on rings",
+      "aliases": [
+        "L sit on rings"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "s",
+      "loadable": "N",
+      "implement": "rings"
+    },
+    {
+      "id": "l_sit_rope_climb",
+      "name": "L-sit rope climb",
+      "aliases": [
+        "L sit rope climb"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "rope"
+    },
+    {
+      "id": "l_sit_to_shoulder_stand",
+      "name": "L-sit to shoulder stand",
+      "aliases": [
+        "L sit to shoulder stand"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "modified_rope_climb",
+      "name": "Modified rope climb",
+      "aliases": [],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "rope"
+    },
+    {
+      "id": "pull_over",
+      "name": "Pull-over",
+      "aliases": [
+        "pullover",
+        "pull over"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "shoot_through",
+      "name": "Shoot-through",
+      "aliases": [
+        "shoot through"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "strict_bar_muscle_up",
+      "name": "Strict bar muscle-up",
+      "aliases": [
+        "SBMU",
+        "strict BMU"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "strict_knees_to_elbows",
+      "name": "Strict knees-to-elbows",
+      "aliases": [
+        "strict K2E",
+        "strict KTE"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "strict_toes_to_bar",
+      "name": "Strict toes-to-bar",
+      "aliases": [
+        "strict T2B",
+        "strict TTB"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "strict_toes_to_rings",
+      "name": "Strict toes-to-rings",
+      "aliases": [
+        "strict T2R"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "rings"
+    },
+    {
+      "id": "straddle_press_to_handstand",
+      "name": "Straddle press to handstand",
+      "aliases": [
+        "straddle press"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "swing_to_backward_roll_to_support",
+      "name": "Swing to backward roll to support",
+      "aliases": [
+        "backward roll to support"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "rings"
+    },
+    {
+      "id": "windshield_wiper",
+      "name": "Windshield wiper",
+      "aliases": [
+        "windshield wipers"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "N",
+      "implement": "bodyweight"
     },
     {
       "id": "run",
@@ -1757,6 +2048,19 @@
       "implement": "kettlebell"
     },
     {
+      "id": "kettlebell_press",
+      "name": "Kettlebell press",
+      "aliases": [
+        "KB press",
+        "KB strict press"
+      ],
+      "ambiguousAliases": [],
+      "category": "kettlebell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "kettlebell"
+    },
+    {
       "id": "kettlebell_front_rack_carry",
       "name": "Kettlebell front-rack carry",
       "aliases": [],
@@ -1776,8 +2080,7 @@
       "aliases": [
         "DBS",
         "DB SN",
-        "DB snatch",
-        "alt DB snatch"
+        "DB snatch"
       ],
       "ambiguousAliases": [],
       "category": "dumbbell",
@@ -2028,8 +2331,18 @@
       "id": "single_arm_dumbbell_overhead_squat",
       "name": "Single-arm dumbbell overhead squat",
       "aliases": [
-        "SA DB OHS",
-        "dumbbell overhead squat",
+        "SA DB OHS"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "dumbbell_overhead_squat",
+      "name": "Dumbbell overhead squat",
+      "aliases": [
         "DB OHS"
       ],
       "ambiguousAliases": [],
@@ -2101,6 +2414,156 @@
       "loadable": "Y",
       "implement": "dumbbell",
       "side": "each"
+    },
+    {
+      "id": "dumbbell_hang_clean_and_jerk",
+      "name": "Dumbbell hang clean and jerk",
+      "aliases": [
+        "DB HC&J",
+        "DB hang clean and jerk"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "alternating_dumbbell_hang_clean_and_jerk",
+      "name": "Alternating dumbbell hang clean and jerk",
+      "aliases": [
+        "alt DB HC&J",
+        "alternating DB hang clean and jerk"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "dumbbell_hang_clean_and_push_jerk",
+      "name": "Dumbbell hang clean and push jerk",
+      "aliases": [
+        "DB HC push jerk"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "dumbbell_hang_clean_and_push_press",
+      "name": "Dumbbell hang clean and push press",
+      "aliases": [
+        "DB HC push press"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "dumbbell_hang_snatch",
+      "name": "Dumbbell hang snatch",
+      "aliases": [
+        "DB HS",
+        "DB hang snatch"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "alternating_dumbbell_hang_snatch",
+      "name": "Alternating dumbbell hang snatch",
+      "aliases": [
+        "alt DB HS",
+        "alternating DB hang snatch"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "alternating_dumbbell_snatch",
+      "name": "Alternating dumbbell snatch",
+      "aliases": [
+        "alt DB snatch"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "alternating_dumbbell_power_snatch",
+      "name": "Alternating dumbbell power snatch",
+      "aliases": [
+        "alt DB PS"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "alternating_dumbbell_clean",
+      "name": "Alternating dumbbell clean",
+      "aliases": [
+        "alt DB clean"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "alternating_dumbbell_hang_clean",
+      "name": "Alternating dumbbell hang clean",
+      "aliases": [
+        "alt DB HC",
+        "alt DB hang clean"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "alternating_dumbbell_hang_power_clean",
+      "name": "Alternating dumbbell hang power clean",
+      "aliases": [
+        "alt DB HPC"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
+    },
+    {
+      "id": "dumbbell_lateral_raise",
+      "name": "Dumbbell lateral raise",
+      "aliases": [
+        "DB lateral raise",
+        "lateral raise"
+      ],
+      "ambiguousAliases": [],
+      "category": "dumbbell",
+      "measure": "reps",
+      "loadable": "Y",
+      "implement": "dumbbell"
     },
     {
       "id": "wall_ball_shot",

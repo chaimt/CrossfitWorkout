@@ -511,7 +511,7 @@ private fun ItemEditor(vm: AppViewModel, part: Part, item: Item, suggestion: Loa
         }
         var loadText by remember(item.id) { mutableStateOf(LoadText.format(item.load)) }
         Field("Load", loadText, cell, placeholder = "43 kg, 95 lb, 80%") { t -> loadText = t; set { it.copy(load = LoadText.parse(t)) } }
-        IntField("Implements", item.count, cell) { n -> set { it.copy(count = n ?: 1) } }
+        // No Implements field (owner request 2026-11-20): count stays 1, load is per implement.
     }
     if (strength) StrengthSetRows(vm, part, item, onChange)
 }

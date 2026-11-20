@@ -454,10 +454,8 @@ private fun MovementDetails(
     if (catalogMovement?.loadable != "N") Grid {
         val cell = Modifier
         // The unit is the app setting (Settings → Units), not chosen per movement.
+        // No Implements choice (owner request 2026-11-20): count stays 1, load is per implement.
         DoubleField("Load (${unit.wire})", row.load, cell) { v -> onChange { it.copy(load = v) } }
-        if (row.load != null) Choice("Implements", row.implementCount, listOf(1, 2), { if (it == 1) "Single" else "Double" }, cell) { n ->
-            onChange { it.copy(implementCount = n) }
-        }
     }
     val wantsHeight = catalogMovement?.height != null || catalogMovement?.target != null || row.height != null
     if (wantsHeight) Grid {

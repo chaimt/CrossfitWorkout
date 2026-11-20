@@ -20,7 +20,8 @@ ROOT = Path(__file__).resolve().parent.parent
 CATALOG_VERSION = 1
 
 # Ambiguous abbreviations (Appendix E "*", Appendix F) — resolved from context (REQ-AX15).
-AMBIGUOUS = {"SS", "HS", "SB", "SC", "PU", "SU", "BE", "CO", "DB", "R", "C", "cluster"}
+# Matched case-insensitively: alias "MC" and "mc" are both the same ambiguous token.
+AMBIGUOUS = {"ss", "hs", "sb", "sc", "pu", "su", "be", "co", "db", "r", "c", "mc", "cluster"}
 
 # (name, aliases, category, measure, loadable, implement, extra)
 # measure: reps | cal | m | ft | s | steps ; "measures" in extra lists alternatives.
@@ -113,6 +114,7 @@ M: list[tuple[str, list[str], str, str, str, str, dict[str, Any]]] = [
     ("Handstand walk", ["HSW"], "gymnastics", "ft", "N", "bodyweight", {"measures": ["ft", "m"]}),
     ("Handstand hold", ["HSH"], "gymnastics", "s", "N", "bodyweight", {}),
     ("Wall walk", ["WW"], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("Spanish squat hold", ["spanish squat", "spanish squats"], "gymnastics", "s", "N", "bodyweight", {}),
     ("Rope climb", ["RC"], "gymnastics", "reps", "N", "rope", {"notes": "15 ft"}),
     ("Legless rope climb", ["LRC"], "gymnastics", "reps", "N", "rope", {}),
     ("Pistol", ["SLS", "pistols"], "gymnastics", "reps", "optional", "bodyweight", {}),
@@ -144,6 +146,30 @@ M: list[tuple[str, list[str], str, str, str, str, dict[str, Any]]] = [
     ("Inchworm push-up", ["inchworm"], "gymnastics", "reps", "N", "bodyweight", {}),
     ("Skin the cat", [], "gymnastics", "reps", "N", "rings", {}),
     ("Pegboard", [], "gymnastics", "reps", "N", "pegboard", {}),
+    # crossfit.com/crossfit-movements gaps (owner request 2026-11-19 sweep).
+    ("Back scale", ["back scales progression"], "gymnastics", "s", "N", "bodyweight", {}),
+    ("Front scale", ["front scales progression"], "gymnastics", "s", "N", "bodyweight", {}),
+    ("Forward roll from support", [], "gymnastics", "reps", "N", "rings", {}),
+    ("Freestanding handstand push-up", ["freestanding HSPU"], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("Glide kip", [], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("Handstand", ["freestanding handstand"], "gymnastics", "s", "N", "bodyweight", {}),
+    ("Handstand pirouette", ["pirouette", "pirouettes"], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("Hanging L-sit", ["hanging L sit"], "gymnastics", "s", "N", "bodyweight", {}),
+    ("Inverted burpee", [], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("L pull-up", ["LPU", "L pullup"], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("L-sit on rings", ["L sit on rings"], "gymnastics", "s", "N", "rings", {}),
+    ("L-sit rope climb", ["L sit rope climb"], "gymnastics", "reps", "N", "rope", {}),
+    ("L-sit to shoulder stand", ["L sit to shoulder stand"], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("Modified rope climb", [], "gymnastics", "reps", "N", "rope", {}),
+    ("Pull-over", ["pullover", "pull over"], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("Shoot-through", ["shoot through"], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("Strict bar muscle-up", ["SBMU", "strict BMU"], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("Strict knees-to-elbows", ["strict K2E", "strict KTE"], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("Strict toes-to-bar", ["strict T2B", "strict TTB"], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("Strict toes-to-rings", ["strict T2R"], "gymnastics", "reps", "N", "rings", {}),
+    ("Straddle press to handstand", ["straddle press"], "gymnastics", "reps", "N", "bodyweight", {}),
+    ("Swing to backward roll to support", ["backward roll to support"], "gymnastics", "reps", "N", "rings", {}),
+    ("Windshield wiper", ["windshield wipers"], "gymnastics", "reps", "N", "bodyweight", {}),
     # E.4 Monostructural
     ("Run", ["running"], "monostructural", "m", "optional", "none", {"measures": ["m", "km", "mi"]}),
     ("Shuttle run", [], "monostructural", "m", "N", "none", {"measures": ["m", "reps"]}),
@@ -168,9 +194,10 @@ M: list[tuple[str, list[str], str, str, str, str, dict[str, Any]]] = [
     ("Turkish get-up", ["TGU"], "kettlebell", "reps", "Y", "kettlebell", {"side": "each"}),
     ("Goblet squat", ["GS"], "kettlebell", "reps", "Y", "kettlebell", {}),
     ("Kettlebell deadlift", ["KBDL"], "kettlebell", "reps", "Y", "kettlebell", {}),
+    ("Kettlebell press", ["KB press", "KB strict press"], "kettlebell", "reps", "Y", "kettlebell", {}),
     ("Kettlebell front-rack carry", [], "kettlebell", "m", "Y", "kettlebell", {"measures": ["m", "ft"]}),
     # E.6 Dumbbell
-    ("Dumbbell snatch", ["DBS", "DB SN", "DB snatch", "alt DB snatch"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Dumbbell snatch", ["DBS", "DB SN", "DB snatch"], "dumbbell", "reps", "Y", "dumbbell", {}),
     ("Dumbbell clean and jerk", ["DB C&J"], "dumbbell", "reps", "Y", "dumbbell", {}),
     ("Dumbbell hang clean-to-overhead", ["DB HC2OH", "HC2OH"], "dumbbell", "reps", "Y", "dumbbell", {}),
     ("Dumbbell power clean", ["DB PC"], "dumbbell", "reps", "Y", "dumbbell", {}),
@@ -190,13 +217,27 @@ M: list[tuple[str, list[str], str, str, str, str, dict[str, Any]]] = [
     ("Dumbbell overhead walking lunge", ["DB OHWL"], "dumbbell", "ft", "Y", "dumbbell", {"measures": ["ft", "m"]}),
     ("Dumbbell front-rack lunge", ["DB FRL"], "dumbbell", "ft", "Y", "dumbbell", {"measures": ["ft", "m"]}),
     ("Farmer's carry", ["FC", "dumbbell farmers carry", "farmers carry"], "dumbbell", "m", "Y", "dumbbell", {"measures": ["m", "ft"]}),
-    ("Single-arm dumbbell overhead squat", ["SA DB OHS", "dumbbell overhead squat", "DB OHS"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Single-arm dumbbell overhead squat", ["SA DB OHS"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Dumbbell overhead squat", ["DB OHS"], "dumbbell", "reps", "Y", "dumbbell", {}),
     # crossfit.com/crossfit-movements dumbbell lifts missing above (owner request 2026-11-05).
     ("Dumbbell clean", ["DB clean", "DB squat clean"], "dumbbell", "reps", "Y", "dumbbell", {}),
     ("Dumbbell hang clean", ["DB HC", "DB hang clean"], "dumbbell", "reps", "Y", "dumbbell", {}),
     ("Dumbbell power snatch", ["DB PS", "DB power snatch"], "dumbbell", "reps", "Y", "dumbbell", {}),
     ("Dumbbell squat snatch", ["DB squat snatch"], "dumbbell", "reps", "Y", "dumbbell", {}),
     ("Dumbbell Turkish get-up", ["DB TGU"], "dumbbell", "reps", "Y", "dumbbell", {"side": "each"}),
+    # Owner reports (2026-11-19): alternation + DB hang variants the board actually uses.
+    ("Dumbbell hang clean and jerk", ["DB HC&J", "DB hang clean and jerk"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Alternating dumbbell hang clean and jerk", ["alt DB HC&J", "alternating DB hang clean and jerk"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Dumbbell hang clean and push jerk", ["DB HC push jerk"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Dumbbell hang clean and push press", ["DB HC push press"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Dumbbell hang snatch", ["DB HS", "DB hang snatch"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Alternating dumbbell hang snatch", ["alt DB HS", "alternating DB hang snatch"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Alternating dumbbell snatch", ["alt DB snatch"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Alternating dumbbell power snatch", ["alt DB PS"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Alternating dumbbell clean", ["alt DB clean"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Alternating dumbbell hang clean", ["alt DB HC", "alt DB hang clean"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Alternating dumbbell hang power clean", ["alt DB HPC"], "dumbbell", "reps", "Y", "dumbbell", {}),
+    ("Dumbbell lateral raise", ["DB lateral raise", "lateral raise"], "dumbbell", "reps", "Y", "dumbbell", {}),
     # E.7 Other implements
     ("Wall-ball shot", ["WB", "WBS", "wall ball", "wall balls"], "other", "reps", "Y", "medicine_ball",
      {"rx": {"m": {"v": 20, "u": "lb"}, "f": {"v": 14, "u": "lb"}},
@@ -252,7 +293,7 @@ def build_movements() -> list[dict[str, Any]]:
             "id": mid,
             "name": name,
             "aliases": _dedupe(aliases),
-            "ambiguousAliases": [a for a in aliases if a in AMBIGUOUS],
+            "ambiguousAliases": [a for a in aliases if a.lower() in AMBIGUOUS],
             "category": category,
             "measure": measure,
             "loadable": loadable,
