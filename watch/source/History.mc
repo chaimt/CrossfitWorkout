@@ -46,7 +46,11 @@ module History {
     }
 
     function find(kv as Kv, id as String) as Number {
-        var hx = rows(kv);
+        return _findIn(rows(kv), id);
+    }
+
+    //! Index of `id` in rows already read (avoids a second storage read).
+    function _findIn(hx as Array, id as String) as Number {
         for (var i = 0; i < hx.size(); i++) {
             if (U.eq((hx[i] as Array)[HX_ID] as String, id)) {
                 return i;
@@ -59,7 +63,8 @@ module History {
     //! (recovery may run twice). Returns false when storage refused it.
     function add(kv as Kv, id as String, kind as String, title as String, label as String,
             t0 as Number, scoreText as String, status as String, payload as Dictionary) as Boolean {
-        if (find(kv, id) >= 0) {
+        var hx = rows(kv);
+        if (_findIn(hx, id) >= 0) {
             return true;
         }
         if (!kv.put("o_" + id, payload)) {
@@ -67,7 +72,7 @@ module History {
         }
         var row = [id, kind, title, label, t0, scoreText, false, WireSize.size(payload), status];
         var next = [row];
-        next.addAll(rows(kv));
+        next.addAll(hx);
         next = _pruned(kv, next);
         return kv.put("hx", next);
     }
@@ -113,7 +118,7 @@ module History {
 
     function markDelivered(kv as Kv, id as String) as Void {
         var hx = rows(kv);
-        var i = find(kv, id);
+        var i = _findIn(hx, id);
         if (i < 0) {
             return;
         }
@@ -123,8 +128,9 @@ module History {
     }
 
     function isDelivered(kv as Kv, id as String) as Boolean {
-        var i = find(kv, id);
-        return i >= 0 && ((rows(kv)[i] as Array)[HX_SENT] as Boolean);
+        var hx = rows(kv);
+        var i = _findIn(hx, id);
+        return i >= 0 && ((hx[i] as Array)[HX_SENT] as Boolean);
     }
 
     //! Bytes held by stored objects (storage budget).

@@ -74,6 +74,13 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
         compact()
     }
 
+    /**
+     * Incremented on every mutation, so callers can tell "nothing changed" without copying and
+     * deep-comparing the whole queue (message bodies are up to 4 KiB each).
+     */
+    var version: Long = 0
+        private set
+
     fun snapshot(): List<OutboxEntry> = items.toList()
 
     /**
@@ -97,6 +104,7 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
         same.filter { it.state in PENDING }.forEach { replace(it.copy(state = DeliveryState.SUPERSEDED)) }
         val entry = OutboxEntry(envelope.id, target, envelope.t, oid, rev, body, enqueuedAtMs = nowMs)
         items += entry
+        version++
         compact()
         return entry
     }
@@ -208,27 +216,28 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
 
     /** Removes every queue of an old pairing generation (delete-all / re-pair, REQ-DM27). */
     fun dropGeneration(below: Int) {
-        items.removeAll { it.target.generation < below }
+        if (items.removeAll { it.target.generation < below }) version++
     }
 
     private fun replace(e: OutboxEntry) {
         val i = items.indexOfFirst { it.messageId == e.messageId && it.target == e.target }
         if (i >= 0) items[i] = e else items += e
+        version++
     }
 
     /** Keep reconciliation state and pending operations, not lifetime revision history. */
     private fun compact() {
-        val keep = mutableSetOf<OutboxEntry>()
+        // Keyed by identity, not by entry: hashing whole entries would hash every message body.
+        val keep = mutableSetOf<Pair<WatchTarget, String>>()
+        fun keepIt(e: OutboxEntry?) { if (e != null) keep += e.target to e.messageId }
         items.groupBy { it.target to it.objectId }.values.forEach { revisions ->
             // Prefer the newest attempt when a failed revision was explicitly replaced.
             val newestFirst = revisions.asReversed()
-            newestFirst.maxByOrNull { it.revision }?.let(keep::add)
-            newestFirst.filter { it.state != DeliveryState.FAILED && it.state != DeliveryState.SUPERSEDED }
-                .maxByOrNull { it.revision }?.let(keep::add)
-            newestFirst.filter { it.state == DeliveryState.ON_WATCH }
-                .maxByOrNull { it.revision }?.let(keep::add)
+            keepIt(newestFirst.maxByOrNull { it.revision })
+            keepIt(newestFirst.filter { it.state != DeliveryState.FAILED && it.state != DeliveryState.SUPERSEDED }.maxByOrNull { it.revision })
+            keepIt(newestFirst.filter { it.state == DeliveryState.ON_WATCH }.maxByOrNull { it.revision })
         }
-        items.removeAll { it.state !in PENDING && it !in keep }
+        if (items.removeAll { it.state !in PENDING && (it.target to it.messageId) !in keep }) version++
     }
 
     companion object {

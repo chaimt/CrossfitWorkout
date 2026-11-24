@@ -79,11 +79,11 @@ class SyncEngine(
 
     /** Sends the next due data message for [target], if any. */
     fun pump(target: WatchTarget) {
-        val before = outbox.snapshot()
+        val before = outbox.version
         val next = outbox.next(target, clockMs())
         if (next == null) {
             // Exhausting a retry budget changes durable state without sending a message.
-            if (outbox.snapshot() != before) changed()
+            if (outbox.version != before) changed()
             return
         }
         changed()

@@ -50,6 +50,24 @@ class OutboxCapacityTest {
     }
 
     @Test
+    fun versionMovesOnlyWhenTheQueueChanges() {
+        val ob = Outbox()
+        val v0 = ob.version
+        assertEquals(null, ob.next(target, 0), "empty queue")
+        assertEquals(v0, ob.version, "an idle tick changes nothing")
+        ob.enqueue(target, env(MessageType.PLAN_PUT, "a0000000-0000-4000-8000-000000000006", 1), 0)
+        val queued = ob.version
+        assertTrue(queued > v0)
+        val sent = ob.next(target, 0)!!
+        val inFlight = ob.version
+        assertTrue(inFlight > queued, "handing a message to the SDK is a change")
+        assertEquals(null, ob.next(target, 1_000), "still waiting for the ack")
+        assertEquals(inFlight, ob.version)
+        ob.onSendStatus(sent.messageId, SendStatus.SUCCESS, 1_000)
+        assertTrue(ob.version > inFlight)
+    }
+
+    @Test
     fun pendingTargetsCoverEveryTargetWithUndeliveredWork() {
         val ob = Outbox()
         val beta = target.copy(appUuid = Protocol.APP_UUID_BETA)
