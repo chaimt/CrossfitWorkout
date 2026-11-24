@@ -685,6 +685,20 @@
       "implement": "box"
     },
     {
+      "id": "calf_raise",
+      "name": "Calf raise",
+      "aliases": [
+        "calf raises",
+        "standing calf raise",
+        "standing calf raises"
+      ],
+      "ambiguousAliases": [],
+      "category": "strength",
+      "measure": "reps",
+      "loadable": "optional",
+      "implement": "bodyweight"
+    },
+    {
       "id": "air_squat",
       "name": "Air squat",
       "aliases": [
@@ -1098,6 +1112,19 @@
       "aliases": [
         "SLS",
         "pistols"
+      ],
+      "ambiguousAliases": [],
+      "category": "gymnastics",
+      "measure": "reps",
+      "loadable": "optional",
+      "implement": "bodyweight"
+    },
+    {
+      "id": "cossack_squat",
+      "name": "Cossack squat",
+      "aliases": [
+        "cossack squats",
+        "cossack"
       ],
       "ambiguousAliases": [],
       "category": "gymnastics",

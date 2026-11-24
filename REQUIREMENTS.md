@@ -1,7 +1,7 @@
 # CrossfitWorkout — Requirements
 
 > Living spec for a two-app solution: an **Android** app that turns a photo of the day's workout (gym whiteboard, screenshot or text) into a structured workout, and a **Garmin Connect IQ watch app** that runs it, lets the athlete enter **weights, reps and times**, records a Garmin activity and sends the results back to the phone.
-> Created 2026-11-03 from research. The MVP implementation landed 2026-11-04 (`docs/protocol.md` wire contract v1, `shared/` schemas/catalog/fixtures, `android/` domain + app, `watch/` for the fr965) and the Android app ships to the owner as GitHub Releases (REQ-BT05; current build **v0.8.18**, versionCode 26). Statuses stay `[ ]` until the REQ-TS07 platform gate and the REQ-TS05 checklist (`docs/release-checklist.md`) record hardware evidence; per-requirement traceability lives in the requirement text, `android/README.md` and `watch/README.md`.
+> Created 2026-11-03 from research. The MVP implementation landed 2026-11-04 (`docs/protocol.md` wire contract v1, `shared/` schemas/catalog/fixtures, `android/` domain + app, `watch/` for the fr965) and the Android app ships to the owner as GitHub Releases (REQ-BT05; current build **v0.8.19**, versionCode 27). Statuses stay `[ ]` until the REQ-TS07 platform gate and the REQ-TS05 checklist (`docs/release-checklist.md`) record hardware evidence; per-requirement traceability lives in the requirement text, `android/README.md` and `watch/README.md`.
 > Revised after requirements review: the contracts in §§4.4–4.6, 6.12, 7.4 and 9.1 resolve the review findings. New product defaults remain **my call**, not owner-confirmed. Appendix I is research input, not verified implementation evidence; REQ-TS07 gates platform assumptions.
 > The requirement rows below describe current behaviour: every change-log entry up to 2026-11-06 has been folded into the rows it touched, so the change log is history only.
 >
@@ -902,6 +902,7 @@ Sources: <https://www.crossfit.com/crossfit-movements> (canonical names); Open 2
 | Overhead lunge | OHL | ft / m / reps | Y |
 | Bulgarian split squat | BSS | reps / side | opt |
 | Box step-up | BSU | reps | opt |
+| Calf raise | calf raises, standing calf raise | reps | opt |
 
 **E.3 Gymnastics and bodyweight**
 
@@ -938,6 +939,7 @@ Sources: <https://www.crossfit.com/crossfit-movements> (canonical names); Open 2
 | Rope climb (15 ft) | RC | reps | N |
 | Legless rope climb | LRC | reps | N |
 | Pistol | SLS | reps | opt |
+| Cossack squat | cossack squats, cossack | reps | opt |
 | L-sit | — | s | N |
 | GHD sit-up | GHDSU | reps | N |
 | AbMat sit-up | sit-up, SU* | reps | N |
@@ -1467,3 +1469,4 @@ Sources: the cached mirror of developer.garmin.com/connect-iq used by the garmin
 | 2026-11-15 | Owner request: strength sessions keep an editable top weight with per-set percentages (new REQ-AE08; REQ-AC09, REQ-DM06, REQ-WS07 updated). The session's top weight is now part of the saved workout (`StrengthSets.topWeight`) together with each set's % of it (`StrengthSet.ofTop`), and the review editor gained a **Top weight** field plus one **% · Weight · Reps** row per set with Add set/remove, so a session can be re-scaled before it is done instead of collapsing to Sets × Reps and a single Load field. Editing a weight, a % or the top weight keeps the other side in step (rounding to the Settings increment, ties downward); the form's "goal weight" is renamed "top weight" throughout (`ManualForms.withTopWeight`, `StrengthScheme.topWeight`, `ManualSetForm.ofTop`); library lines read the ramp ("Back squat 3×5 @ 70–80 kg (70–80 %)"). Watch unchanged: set weights still arrive absolute. Android 0.8.17 (25); current build v0.8.18 (26). |
 | 2026-11-19 | Owner report: Spanish squat hold, Kettlebell press, Dumbbell lateral raise and Alternating DB hang clean and jerk were "not in the catalog". Added all four plus the DB alternation/hang variants the board uses (alternating snatch, hang clean and jerk / push jerk / push press, hang snatch, clean, hang clean, hang power clean, power snatch), a standalone Dumbbell overhead squat, the DB lateral raise, and the full crossfit.com movement-list sweep (scales, handstand/pirouette/hanging L-sit/inverted burpee/L pull-up/L-sit variants, pull-over, shoot-through, strict bar MU/K2E/T2B/T2R, straddle press, rolls, windshield wipers; 180 → 218 catalog entries — plus collision fixes the sweep exposed (`alt DB snatch` kept on the new Alternating dumbbell snatch, `DB OHS` on the new Dumbbell overhead squat, `MC` marked ambiguous for muscle clean / mountain climber with an Appendix F row, REQ-AX15) — `tools/gen_catalog.py`, `shared/movements.json`, Appendix E/F rows). Lift chooser subtitles no longer show the implement ("Barbell ·" removed — the Movements entry part gone, `LiftPicker.kt` alias only). |
 | 2026-11-20 | Owner request: Single/Double Implements choice removed from the manual builder and Review editor — a dumbbell/kettlebell load is always per implement (count stays 1, REQ-DM05/REQ-DM19 updated); parsed or synced `Item.count` still travels the wire and scores (`LoadResolver`, `PlanCompiler`, watch `implementCount`) unchanged. `ManualWorkoutScreen.kt`, `ReviewScreen.kt`; REQ-AC09, REQ-AE02 updated. |
+| 2026-11-24 | Owner report: Cossack squat and Calf raise were "not in the catalog". Added both (218 → 220 entries, REQ-DM12/REQ-DM20): `Cossack squat` in Appendix E.3 as a loadable-optional bodyweight gymnastics movement counted in total alternating reps like a pistol (aliases `cossack squats`, `cossack`), and `Calf raise` in Appendix E.2 as a loadable-optional accessory (aliases `calf raises`, `standing calf raise`, `standing calf raises`). Both carry load optionally, so both appear in the manual builder's lift chooser — Cossack squat under "Weighted gymnastics", Calf raise under "Squats, presses & deadlifts" (`ManualWorkoutForm.kt` grouping, unchanged). `tools/gen_catalog.py`, `shared/movements.json`, Appendix E.2/E.3 rows. |
