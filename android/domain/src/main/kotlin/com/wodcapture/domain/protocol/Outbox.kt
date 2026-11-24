@@ -74,6 +74,13 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
         compact()
     }
 
+    /**
+     * Incremented on every mutation, so callers can tell "nothing changed" without copying and
+     * deep-comparing the whole queue (message bodies are up to 4 KiB each).
+     */
+    var version: Long = 0
+        private set
+
     fun snapshot(): List<OutboxEntry> = items.toList()
 
     /**
@@ -90,12 +97,14 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
             throw IllegalStateException("Revision $rev of $oid is older than queued/delivered revision ${it.revision}")
         }
         same.firstOrNull { it.revision == rev && it.type == envelope.t && it.state != DeliveryState.FAILED }?.let { existing ->
-            if (existing.body == body) return existing
+            // Every envelope has a fresh message id and timestamp, so identity is the payload.
+            if (existing.body["p"] == body["p"]) return existing
             throw IllegalStateException("Revision $rev of $oid already exists with different content; bump the revision")
         }
         same.filter { it.state in PENDING }.forEach { replace(it.copy(state = DeliveryState.SUPERSEDED)) }
         val entry = OutboxEntry(envelope.id, target, envelope.t, oid, rev, body, enqueuedAtMs = nowMs)
         items += entry
+        version++
         compact()
         return entry
     }
@@ -115,7 +124,8 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
             }
             return inFlight.copy(state = DeliveryState.SENDING, retries = inFlight.retries + 1, sentAtMs = nowMs).also(::replace)
         }
-        if (items.any { it.target == target && (it.state == DeliveryState.WAITING || it.state == DeliveryState.SUSPENDED) }) return null
+        // A capacity refusal must not block the deletes that would free the space (REQ-SY13).
+        if (items.any { it.target == target && it.blocksQueue() }) return null
         val queued = items.firstOrNull { it.target == target && it.state == DeliveryState.QUEUED } ?: return null
         return queued.copy(state = DeliveryState.SENDING, sentAtMs = nowMs).also(::replace)
     }
@@ -151,14 +161,27 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
             AckStatus.CONFLICT -> e.copy(state = DeliveryState.FAILED, reason = "conflict")
             else -> when (ack.rs) {
                 // Capacity is fixable on the watch (free history); retry on the next sync.
-                "capacity" -> e.copy(state = DeliveryState.WAITING, reason = "capacity")
+                CAPACITY -> e.copy(state = DeliveryState.WAITING, reason = CAPACITY)
                 else -> e.copy(state = DeliveryState.FAILED, reason = ack.rs ?: "error")
             }
         }
         replace(updated)
+        if (updated.state == DeliveryState.ON_WATCH && updated.type == MessageType.PLAN_DEL) retryCapacity(target)
         compact()
         return updated
     }
+
+    /** A delete freed a slot on the watch: plans refused for capacity get another try. */
+    private fun retryCapacity(target: WatchTarget) {
+        items.filter { it.target == target && it.state == DeliveryState.WAITING && it.reason == CAPACITY }
+            .forEach { replace(it.copy(state = DeliveryState.QUEUED, retries = 0, sentAtMs = null, reason = null)) }
+    }
+
+    /** Targets with undelivered work, so retries run for every target, not only the selected one. */
+    fun pendingTargets(): Set<WatchTarget> = items.filter { it.state in PENDING }.mapTo(mutableSetOf()) { it.target }
+
+    private fun OutboxEntry.blocksQueue(): Boolean =
+        state == DeliveryState.SUSPENDED || (state == DeliveryState.WAITING && reason != CAPACITY)
 
     /**
      * New lifecycle event (hello, device connected) or explicit Sync: waiting/suspended entries go
@@ -193,27 +216,28 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
 
     /** Removes every queue of an old pairing generation (delete-all / re-pair, REQ-DM27). */
     fun dropGeneration(below: Int) {
-        items.removeAll { it.target.generation < below }
+        if (items.removeAll { it.target.generation < below }) version++
     }
 
     private fun replace(e: OutboxEntry) {
         val i = items.indexOfFirst { it.messageId == e.messageId && it.target == e.target }
         if (i >= 0) items[i] = e else items += e
+        version++
     }
 
     /** Keep reconciliation state and pending operations, not lifetime revision history. */
     private fun compact() {
-        val keep = mutableSetOf<OutboxEntry>()
+        // Keyed by identity, not by entry: hashing whole entries would hash every message body.
+        val keep = mutableSetOf<Pair<WatchTarget, String>>()
+        fun keepIt(e: OutboxEntry?) { if (e != null) keep += e.target to e.messageId }
         items.groupBy { it.target to it.objectId }.values.forEach { revisions ->
             // Prefer the newest attempt when a failed revision was explicitly replaced.
             val newestFirst = revisions.asReversed()
-            newestFirst.maxByOrNull { it.revision }?.let(keep::add)
-            newestFirst.filter { it.state != DeliveryState.FAILED && it.state != DeliveryState.SUPERSEDED }
-                .maxByOrNull { it.revision }?.let(keep::add)
-            newestFirst.filter { it.state == DeliveryState.ON_WATCH }
-                .maxByOrNull { it.revision }?.let(keep::add)
+            keepIt(newestFirst.maxByOrNull { it.revision })
+            keepIt(newestFirst.filter { it.state != DeliveryState.FAILED && it.state != DeliveryState.SUPERSEDED }.maxByOrNull { it.revision })
+            keepIt(newestFirst.filter { it.state == DeliveryState.ON_WATCH }.maxByOrNull { it.revision })
         }
-        items.removeAll { it.state !in PENDING && it !in keep }
+        if (items.removeAll { it.state !in PENDING && (it.target to it.messageId) !in keep }) version++
     }
 
     companion object {
@@ -221,6 +245,7 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
         val RETRY_DELAYS_MS = longArrayOf(5_000, 15_000, 60_000)
         const val MAX_RETRIES_PER_DRAIN = 3
         const val AUTO_RESTART_MS = 5 * 60_000L
+        private const val CAPACITY = "capacity"
         private val PENDING = setOf(DeliveryState.QUEUED, DeliveryState.SENDING, DeliveryState.SENT, DeliveryState.WAITING, DeliveryState.SUSPENDED)
     }
 }

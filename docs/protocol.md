@@ -47,7 +47,7 @@ for all object IDs (`10000000-0000-4000-8000-000000000001` style, lower-case).
 | `t` | message type (§3). |
 | `id` | message UUID. Retries reuse the exact `id` + body; changed content = new `id` + higher `rev` (REQ-SY02). |
 | `ts` | send time, epoch seconds. |
-| `g` | pairing generation (Integer ≥ 1, phone-owned, REQ-DM27/SY11). The watch stores the latest `g` it accepted; messages with a lower `g` are acked `st:"stale"`. Results/sessions arriving with an older `g` are **not acknowledged** by the phone: they are quarantined until the athlete chooses import or discard (REQ-DM27), so the watch keeps its copy and keeps them pending. |
+| `g` | pairing generation (Integer ≥ 1, phone-owned, REQ-DM27/SY11). The watch stores the latest `g` it accepted; messages with a lower `g` are acked `st:"stale"`. Results/sessions arriving with an older `g` are never imported: the phone stores one durable quarantined copy (until the athlete chooses import or discard, REQ-DM27) and then acks `st:"stale", rs:"generation"`, so the watch's queue moves on to newer results instead of retrying the old ones ahead of them forever. |
 | `oid` | object ID the message concerns (plan / result / session ID). Omitted for `hello`, `sync.req`, `sync.ack`. |
 | `rev` | object revision (Integer ≥ 1). |
 | `p` | payload Dictionary (per type). Omitted when empty. |

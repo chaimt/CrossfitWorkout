@@ -2,6 +2,7 @@ package com.wodcapture.domain.protocol
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import java.io.ByteArrayOutputStream
 import java.util.Base64
 
 /** A staged chunked transfer (REQ-SY15). Persisted so staging survives restarts. */
@@ -89,11 +90,18 @@ class ChunkStager(
             store.remove(target.key, t.xid)
             return ChunkOutcome(chunkAck, Ack(env.id, AckStatus.ERROR, reason))
         }
-        val bytes = try {
-            (0 until t.n).fold(ByteArray(0)) { acc, i -> acc + Base64.getDecoder().decode(t.chunks.getValue(i)) }
+        // One growing buffer instead of copying the whole array for every chunk.
+        val out = ByteArrayOutputStream(t.len.coerceIn(0, MAX_DECODED))
+        val decoder = Base64.getDecoder()
+        try {
+            for (i in 0 until t.n) {
+                out.write(decoder.decode(t.chunks.getValue(i)))
+                if (out.size() > MAX_DECODED) return fail("size")
+            }
         } catch (e: IllegalArgumentException) {
             return fail("invalid")
         }
+        val bytes = out.toByteArray()
         if (bytes.size != t.len || bytes.size > MAX_DECODED) return fail("size")
         if (sha256Hex(bytes) != t.sha) return fail("hash")
         val payload = try {

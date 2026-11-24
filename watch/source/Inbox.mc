@@ -82,8 +82,9 @@ module Inbox {
         return U.dict(rec, "plan");
     }
 
-    function _row(kv as Kv, id as String) as Number {
-        var ix = index(kv);
+    // Helpers take arrays already read from storage: every Storage.getValue
+    // deserialises the whole array again, so each operation reads it once.
+    function _row(ix as Array, id as String) as Number {
         for (var i = 0; i < ix.size(); i++) {
             if (U.eq((ix[i] as Array)[IX_ID] as String, id)) {
                 return i;
@@ -92,8 +93,7 @@ module Inbox {
         return -1;
     }
 
-    function _tombRev(kv as Kv, id as String) as Number {
-        var tb = tombstones(kv);
+    function _tombRev(tb as Array, id as String) as Number {
         for (var i = 0; i < tb.size(); i++) {
             var t = tb[i] as Array;
             if (U.eq(t[0] as String, id)) {
@@ -128,12 +128,13 @@ module Inbox {
         if (!U.eq(U.str(plan, "id"), oid) || U.num(plan, "rev") != rev) {
             return ["error", "invalid"];
         }
-        if (rev <= _tombRev(kv, oid)) {
+        var tb = tombstones(kv);
+        if (rev <= _tombRev(tb, oid)) {
             return ["stale", "deleted"];
         }
         var h = WireSize.hash(plan);
-        var row = _row(kv, oid);
         var ix = index(kv);
+        var row = _row(ix, oid);
         var oldBytes = 0;
         if (row >= 0) {
             var r = ix[row] as Array;
@@ -170,7 +171,7 @@ module Inbox {
             return ["error", "capacity"];
         }
         // A newer put supersedes an older tombstone of the same plan.
-        _dropTombstone(kv, oid);
+        _dropTombstone(kv, tb, oid);
         return ["ok", null];
     }
 
@@ -179,42 +180,44 @@ module Inbox {
         if (oid == null || rev == null || rev < 1) {
             return ["error", "invalid"];
         }
-        var tomb = _tombRev(kv, oid);
+        var tb = tombstones(kv);
+        var tomb = _tombRev(tb, oid);
         if (tomb >= rev) {
             return tomb == rev ? ["already_applied", null] : ["stale", "revision"];
         }
-        var row = _row(kv, oid);
-        if (row >= 0 && ((index(kv)[row] as Array)[IX_REV] as Number) > rev) {
+        var ix = index(kv);
+        var row = _row(ix, oid);
+        if (row >= 0 && ((ix[row] as Array)[IX_REV] as Number) > rev) {
             return ["stale", "revision"];
         }
-        if (!_addTombstone(kv, oid, rev)) {
+        if (!_addTombstone(kv, tb, oid, rev)) {
             return ["error", "capacity"];
         }
-        _remove(kv, oid);
+        _remove(kv, ix, row, oid);
         return ["ok", null];
     }
 
     //! Watch-side delete (REQ-WN04): tombstoned at the stored revision so a
     //! resend of the same revision cannot bring it back; hello reports it.
     function deleteLocal(kv as Kv, id as String) as Void {
-        var row = _row(kv, id);
+        var ix = index(kv);
+        var row = _row(ix, id);
         if (row < 0) {
             return;
         }
-        _addTombstone(kv, id, (index(kv)[row] as Array)[IX_REV] as Number);
-        _remove(kv, id);
+        _addTombstone(kv, tombstones(kv), id, (ix[row] as Array)[IX_REV] as Number);
+        _remove(kv, ix, row, id);
     }
 
-    function _remove(kv as Kv, id as String) as Void {
-        var row = _row(kv, id);
+    //! Removes row `row` (or none, when < 0) of the loaded index `ix`.
+    function _remove(kv as Kv, ix as Array, row as Number, id as String) as Void {
         if (row >= 0) {
-            kv.put("ix", U.removeAt(index(kv), row));
+            kv.put("ix", U.removeAt(ix, row));
         }
         kv.del("p_" + id);
     }
 
-    function _addTombstone(kv as Kv, id as String, rev as Number) as Boolean {
-        var tb = tombstones(kv);
+    function _addTombstone(kv as Kv, tb as Array, id as String, rev as Number) as Boolean {
         var out = [[id, rev]];
         for (var i = 0; i < tb.size() && out.size() < MAX_TOMBSTONES; i++) {
             if (!U.eq((tb[i] as Array)[0] as String, id)) {
@@ -224,8 +227,7 @@ module Inbox {
         return kv.put("tb", out);
     }
 
-    function _dropTombstone(kv as Kv, id as String) as Void {
-        var tb = tombstones(kv);
+    function _dropTombstone(kv as Kv, tb as Array, id as String) as Void {
         for (var i = 0; i < tb.size(); i++) {
             if (U.eq((tb[i] as Array)[0] as String, id)) {
                 kv.put("tb", U.removeAt(tb, i));

@@ -32,6 +32,7 @@ import com.wodcapture.domain.plan.CompileResult
 import com.wodcapture.domain.plan.PlanIdentity
 import com.wodcapture.domain.plan.PlanRefresher
 import com.wodcapture.domain.plan.PlanRefreshResult
+import com.wodcapture.domain.protocol.DeliveryState
 import com.wodcapture.domain.protocol.MessageType
 import com.wodcapture.domain.plan.WatchPlan
 import com.wodcapture.domain.plan.WireJson
@@ -67,6 +68,9 @@ data class ReviewState(
     val loadSuggestions: Map<String, LoadSuggestion> = emptyMap(),
 )
 
+/** A library entry's status with its decoded workout (decoded once, shared by readers). */
+private data class DecodedWorkout(val status: String, val workout: Workout)
+
 /** Single app ViewModel; screens are thin (REQ-AP02: UI → domain → data). */
 class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val c = app.container
@@ -77,14 +81,28 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val settings: StateFlow<AppSettings> = c.settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, AppSettings())
     val results: StateFlow<List<WorkoutResult>> = dao.observeResults()
         .map { l -> l.mapNotNull { runCatching { DomainJson.lenient.decodeFromString(WorkoutResult.serializer(), it.resultJson) }.getOrNull() } }
+        // Room emits on every results write; decoding them all must not run on the main thread.
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /**
+     * Library entries decoded once per library change, off the main thread. Top lifts and every
+     * Review recomposition read this instead of re-decoding every workout's JSON.
+     */
+    private val decodedLibrary: StateFlow<List<DecodedWorkout>> = library
+        .map { l ->
+            l.mapNotNull { e ->
+                runCatching { DomainJson.decodeWorkout(e.workoutJson) }.getOrNull()
+                    ?.let { DecodedWorkout(e.status, it.copy(createdAt = it.createdAt ?: e.createdAt)) }
+            }
+        }
+        .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /** Heaviest weight per lift across the saved workouts, their results and the manual rep maxes, in the display unit (REQ-AL07). */
-    val topLifts: StateFlow<List<TopLift>> = combine(results, library, settings) { r, l, s ->
+    val topLifts: StateFlow<List<TopLift>> = combine(results, decodedLibrary, settings) { r, l, s ->
         // Drafts and unreviewed parses are not the owner's workouts yet (REQ-AE01).
-        val workouts = l.filter { it.status == "saved" }.mapNotNull { e ->
-            runCatching { DomainJson.decodeWorkout(e.workoutJson) }.getOrNull()?.let { it.copy(createdAt = it.createdAt ?: e.createdAt) }
-        }
+        val workouts = l.filter { it.status == "saved" }.map { it.workout }
         TopLifts.compute(workouts, r, c.catalog, s.profile.displayUnit, repMaxes = s.profile.repMaxes)
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val outbox = c.outboxState
@@ -146,8 +164,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val s = settings.value
         val report = WorkoutValidator.validate(w)
         val compile = c.compiler.compile(w, s.profile, PlanIdentity("00000000-0000-4000-8000-000000000000", 1), options(levels))
-        val saved = library.value.mapNotNull { e -> runCatching { DomainJson.decodeWorkout(e.workoutJson).let { it.copy(createdAt = it.createdAt ?: e.createdAt) } }.getOrNull() }
-        val byId = saved.associateBy { it.id }
+        val byId = decodedLibrary.value.associate { it.workout.id to it.workout }
         val keys = listOf(w.id) + byId.keys.filter { it != w.id }
         val ordered = keys.mapNotNull { byId[it] }.let { others -> if (byId[w.id] == null) listOf(w) + others else others }
         val topLifts = TopLifts.compute(ordered, results.value, c.catalog, s.profile.displayUnit, ZoneId.systemDefault(), s.profile.repMaxes)
@@ -175,7 +192,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val first = c.compiler.compile(workout, settings.value.profile, PlanIdentity(planId, prior?.revision ?: 1), options(levels))
             if (first !is CompileResult.Success) { message.value = "Cannot send: " + (first as CompileResult.Failure).errors.joinToString { it.message }; return@execute }
             val firstJson = WireJson.encodeToString(WatchPlan.serializer(), first.plan)
-            val unchanged = prior != null && prior.planJson == firstJson
+            // An unchanged plan whose last send failed permanently goes out again as a fresh revision;
+            // a plain Sync would leave it failed while the message claims it was queued.
+            val lastFailed = latest?.state == DeliveryState.FAILED
+            val unchanged = prior != null && prior.planJson == firstJson && !lastFailed
             val plan = if (unchanged || prior == null) first.plan else first.plan.copy(rev = prior.revision + 1)
             val json = WireJson.encodeToString(WatchPlan.serializer(), plan)
             dao.upsertPlan(PlanEntity(workout.id, target.key, planId, plan.rev, workout.revision, json))
@@ -187,10 +207,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Profile defaults to the watch (REQ-AG02, protocol §6). */
     fun sendProfile() = viewModelScope.launch(Dispatchers.IO) {
+        val target = c.currentTarget() ?: run { message.value = "No watch selected (Device screen)"; return@launch }
+        // An explicit send is a new revision, so a watch that lost its settings applies it again.
+        c.settings.update { it.copy(profileRevision = it.profileRevision + 1) }
         val s = c.settings.current()
-        val target = c.currentTarget() ?: return@launch
         val p = ProfilePayload.toJson(s.profile.watch, if (s.profile.displayUnit.wire == "lb") "lb" else "kg", s.profile.defaultRestSec)
-        c.sync.execute { runCatching { c.engine.sendProfile(target, PROFILE_ID, s.profileRevision, p) } }
+        c.sync.execute {
+            runCatching { c.engine.sendProfile(target, PROFILE_ID, s.profileRevision, p) }
+                .onSuccess { message.value = "Defaults queued for the watch" }
+                .onFailure { message.value = "Cannot send defaults: ${it.message}" }
+        }
     }
 
     fun requestSync() {

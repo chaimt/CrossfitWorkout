@@ -30,6 +30,8 @@ interface ResultRepository {
 interface SessionRepository {
     fun dedupe(sessionId: String): DedupeRecord?
     fun commit(session: Session, raw: JsonObject, record: DedupeRecord)
+    /** Sessions from an older pairing generation, kept like results (REQ-DM27). */
+    fun quarantine(raw: JsonObject, generation: Int)
 }
 
 /** What ingestion decided: the ack to send (if any) and what was committed. */
@@ -57,10 +59,10 @@ class ResultIngest(private val repo: ResultRepository, private val currentGenera
     /** Shared by `result.put` and completed `result.chunk` transfers ([ackMid] = message acked). */
     fun ingestPayload(env: Envelope, payload: JsonObject, ackMid: String): IngestOutcome {
         if (env.g < currentGeneration()) {
-            // Old pairing: keep for explicit import-or-discard, and do not ack so the watch keeps
-            // its copy (never auto-delete, REQ-DM27).
+            // Old pairing: keep a durable copy for explicit import-or-discard (REQ-DM27), then ack
+            // stale so the watch's queue moves on instead of retrying it ahead of newer results.
             repo.quarantine(payload, env.g)
-            return IngestOutcome(ack = null, quarantined = true)
+            return IngestOutcome(Ack(ackMid, AckStatus.STALE, GENERATION), quarantined = true)
         }
         val wire = try {
             WireResult.parse(payload)
@@ -72,7 +74,14 @@ class ResultIngest(private val repo: ResultRepository, private val currentGenera
         val existing = repo.dedupe(wire.id)
         return when {
             existing == null -> {
-                val result = wire.toDomain()
+                // Field combinations the schema allows can still be rejected by the domain model.
+                val result = try {
+                    wire.toDomain()
+                } catch (e: WireException) {
+                    return IngestOutcome(Ack(ackMid, AckStatus.ERROR, e.reason))
+                } catch (e: RuntimeException) {
+                    return IngestOutcome(Ack(ackMid, AckStatus.ERROR, "invalid"))
+                }
                 repo.commit(result, payload, DedupeRecord(wire.id, wire.rr, hash))
                 IngestOutcome(Ack(ackMid, AckStatus.OK), committedResult = result)
             }
@@ -89,8 +98,11 @@ class ResultIngest(private val repo: ResultRepository, private val currentGenera
 class SessionIngest(private val repo: SessionRepository, private val currentGeneration: () -> Int) {
 
     fun ingest(env: Envelope): IngestOutcome {
-        if (env.g < currentGeneration()) return IngestOutcome(ack = null, quarantined = true)
         val payload = env.p ?: return IngestOutcome(Ack(env.id, AckStatus.ERROR, "invalid"))
+        if (env.g < currentGeneration()) {
+            repo.quarantine(payload, env.g)
+            return IngestOutcome(Ack(env.id, AckStatus.STALE, GENERATION), quarantined = true)
+        }
         val wire = try {
             WireSession.parse(payload)
         } catch (e: WireException) {
@@ -100,12 +112,13 @@ class SessionIngest(private val repo: SessionRepository, private val currentGene
         val hash = contentHash(payload)
         val existing = repo.dedupe(wire.id)
         return when {
-            existing == null || existing.revision < wire.rev && !existing.tombstoned -> {
+            // Phone deletions and edits win over any watch revision, as for results (REQ-SY12).
+            existing != null && (existing.tombstoned || existing.locallyEdited) -> IngestOutcome(Ack(env.id, AckStatus.ALREADY_APPLIED))
+            existing == null || existing.revision < wire.rev -> {
                 val s = wire.toDomain()
                 repo.commit(s, payload, DedupeRecord(wire.id, wire.rev, hash))
                 IngestOutcome(Ack(env.id, AckStatus.OK), committedSession = s)
             }
-            existing.tombstoned || existing.locallyEdited -> IngestOutcome(Ack(env.id, AckStatus.ALREADY_APPLIED))
             existing.revision == wire.rev && existing.contentHash == hash -> IngestOutcome(Ack(env.id, AckStatus.ALREADY_APPLIED))
             existing.revision > wire.rev -> IngestOutcome(Ack(env.id, AckStatus.STALE, "stale"))
             else -> IngestOutcome(Ack(env.id, AckStatus.CONFLICT, "conflict"))
@@ -122,8 +135,13 @@ class SessionIngest(private val repo: SessionRepository, private val currentGene
     }
 }
 
-/** Phone-side plan inventory record used to answer `hello` (REQ-SY05, SY11). */
-data class PlanRecord(val planId: String, val revision: Int, val deleted: Boolean)
+/**
+ * Phone-side plan inventory record used to answer `hello` (REQ-SY05, SY11). [acknowledged] = the
+ * watch already acked this revision, so a tombstone it later evicted is not resent.
+ */
+data class PlanRecord(val planId: String, val revision: Int, val deleted: Boolean, val acknowledged: Boolean = false)
+
+private const val GENERATION = "generation"
 
 /** Decides which plan messages to resend after a `hello` (protocol §3.2). */
 object HelloDiff {
@@ -139,7 +157,9 @@ object HelloDiff {
             val watchDel = del[rec.planId]
             when {
                 watchDel != null && watchDel >= rec.revision -> false
-                rec.deleted -> watchRev != null || (watchDel ?: 0) < rec.revision
+                // The watch keeps a bounded tombstone list, so resending every evicted delete on
+                // each hello churns forever. Resend deletes never confirmed, or a plan it still holds.
+                rec.deleted -> watchRev != null || !rec.acknowledged
                 watchRev == null -> true
                 else -> watchRev < rec.revision
             }

@@ -114,6 +114,8 @@
           { "if": { "properties": { "ty": { "const": "rounds_reps" } } }, "then": { "required": ["r", "x"] } },
           { "if": { "properties": { "ty": { "enum": ["reps", "calories"] } } }, "then": { "required": ["n"] } },
           { "if": { "properties": { "ty": { "enum": ["load", "distance"] } } }, "then": { "required": ["v", "u"] } },
+          { "if": { "properties": { "ty": { "const": "load" } } }, "then": { "properties": { "u": { "enum": ["kg", "lb"] } } } },
+          { "if": { "properties": { "ty": { "const": "distance" } } }, "then": { "properties": { "u": { "enum": ["m", "km", "mi", "ft", "yd"] } } } },
           { "if": { "properties": { "ty": { "const": "minutes_reps" } } }, "then": { "required": ["i", "x"] } },
           { "if": { "properties": { "ty": { "const": "completion" } } }, "then": { "required": ["ok"] } },
           { "if": { "properties": { "ty": { "const": "text" } } }, "then": { "required": ["tx"] } }

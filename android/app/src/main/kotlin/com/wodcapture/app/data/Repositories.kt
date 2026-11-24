@@ -14,6 +14,7 @@ import com.wodcapture.domain.protocol.ResultRepository
 import com.wodcapture.domain.protocol.SessionRepository
 import com.wodcapture.domain.protocol.Transfer
 import com.wodcapture.domain.protocol.WatchTarget
+import com.wodcapture.domain.protocol.WireValues
 import com.wodcapture.domain.review.ReviewActions
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
@@ -118,7 +119,16 @@ class RoomResultRepository(private val db: WodDatabase) : ResultRepository {
             dao.upsertDedupe(record.toEntity("result"))
         }
     }
-    override fun quarantine(raw: JsonObject, generation: Int) = dao.insertQuarantine(QuarantineEntity(generation = generation, rawJson = raw.toString()))
+    override fun quarantine(raw: JsonObject, generation: Int) = quarantineOnce(dao, raw, generation)
+}
+
+/**
+ * Stores an old-generation payload once (REQ-DM27). Canonical JSON makes a retry with a different
+ * key order still match the stored copy.
+ */
+internal fun quarantineOnce(dao: WodDao, raw: JsonObject, generation: Int) {
+    val canonical = WireValues.canonical(raw)
+    if (dao.quarantineCount(canonical) == 0) dao.insertQuarantine(QuarantineEntity(generation = generation, rawJson = canonical))
 }
 
 class RoomSessionRepository(private val db: WodDatabase) : SessionRepository {
@@ -130,6 +140,7 @@ class RoomSessionRepository(private val db: WodDatabase) : SessionRepository {
             dao.upsertDedupe(record.toEntity("session"))
         }
     }
+    override fun quarantine(raw: JsonObject, generation: Int) = quarantineOnce(dao, raw, generation)
 }
 
 private fun DedupeEntity.toRecord() = DedupeRecord(objectId, revision, contentHash, tombstoned, locallyEdited)

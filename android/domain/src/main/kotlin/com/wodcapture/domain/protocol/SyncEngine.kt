@@ -79,11 +79,11 @@ class SyncEngine(
 
     /** Sends the next due data message for [target], if any. */
     fun pump(target: WatchTarget) {
-        val before = outbox.snapshot()
+        val before = outbox.version
         val next = outbox.next(target, clockMs())
         if (next == null) {
             // Exhausting a retry budget changes durable state without sending a message.
-            if (outbox.snapshot() != before) changed()
+            if (outbox.version != before) changed()
             return
         }
         changed()
@@ -97,8 +97,19 @@ class SyncEngine(
         }
     }
 
-    /** Entry point for every message from the watch (`registerForAppEvents`). */
+    /**
+     * Entry point for every message from the watch (`registerForAppEvents`). The executor swallows
+     * exceptions, so anything unexpected is reported instead of vanishing without an ack.
+     */
     fun onMessage(target: WatchTarget, raw: Map<*, *>) {
+        try {
+            handle(target, raw)
+        } catch (e: RuntimeException) {
+            listener.onProtocolError(target, "internal", "${e.javaClass.simpleName}: ${e.message}")
+        }
+    }
+
+    private fun handle(target: WatchTarget, raw: Map<*, *>) {
         val env = when (val d = EnvelopeCodec.decode(raw)) {
             is Decoded.Ok -> d.value
             is Decoded.Err -> {
@@ -153,7 +164,7 @@ class SyncEngine(
         val records = outbox.latestPerObject(target)
             .filter { it.type == MessageType.PLAN_PUT || it.type == MessageType.PLAN_DEL }
             .filter { it.state != DeliveryState.FAILED && it.state != DeliveryState.STALE }
-            .map { PlanRecord(it.objectId, it.revision, it.type == MessageType.PLAN_DEL) }
+            .map { PlanRecord(it.objectId, it.revision, it.type == MessageType.PLAN_DEL, acknowledged = it.state == DeliveryState.ON_WATCH) }
         HelloDiff.toResend(records, hello).forEach { outbox.requeue(target, it.planId, it.revision) }
         outbox.restart(target, clockMs(), explicit = false)
         changed()

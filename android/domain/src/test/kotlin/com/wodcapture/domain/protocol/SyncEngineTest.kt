@@ -278,14 +278,74 @@ class SyncEngineTest {
     }
 
     @Test
-    fun oldGenerationResultsAreQuarantinedNotAcked() {
+    fun oldGenerationResultsAndSessionsAreQuarantinedThenAckedStale() {
         val gen2 = target.copy(generation = 2)
         val ingest = ResultIngest(results) { 2 }
-        val engine2 = SyncEngine(transport, Outbox(), ingest, SessionIngest(InMemorySessions()) { 2 }, ChunkStager(InMemoryChunkStore(), ingest) { null }, ids, { now })
-        val before = transport.sent.size
+        val sessions = InMemorySessions()
+        val engine2 = SyncEngine(transport, Outbox(), ingest, SessionIngest(sessions) { 2 }, ChunkStager(InMemoryChunkStore(), ingest) { null }, ids, { now })
         engine2.onMessage(gen2, resultEnvelope("result.put.capped.json", g = 1))
-        assertEquals(before, transport.sent.size, "no ack: the watch keeps its copy until import-or-discard")
         assertEquals(1, results.quarantined.size)
+        assertTrue(results.results.isEmpty(), "never auto-imported (REQ-DM27)")
+        // Acked stale after the durable copy, so the watch's queue is not blocked by it forever.
+        val ack = transport.sent.last()["p"] as Map<*, *>
+        assertEquals(AckStatus.STALE, ack["st"])
+        assertEquals("generation", ack["rs"])
+        engine2.onMessage(gen2, resultEnvelope("session.put.json", g = 1))
+        assertEquals(1, sessions.quarantined.size)
+        assertTrue(sessions.sessions.isEmpty())
+        assertEquals(AckStatus.STALE, (transport.sent.last()["p"] as Map<*, *>)["st"])
+    }
+
+    @Test
+    fun aDistanceScoreInKilogramsIsRejectedWithAnErrorAck() {
+        val env = resultEnvelope("result.put.capped.json")
+        @Suppress("UNCHECKED_CAST")
+        val p = (env["p"] as Map<String, Any>).toMutableMap()
+        p["sc"] = mapOf("ty" to "distance", "v" to 100, "u" to "kg", "rv" to 1)
+        engine.onMessage(target, env + ("p" to p))
+        assertEquals("error", (transport.sent.last()["p"] as Map<*, *>)["st"])
+        assertTrue(results.results.isEmpty())
+    }
+
+    @Test
+    fun unexpectedExceptionsAreReportedInsteadOfSwallowed() {
+        val errors = mutableListOf<String>()
+        val broken = object : ResultRepository by results {
+            override fun commit(result: com.wodcapture.domain.model.WorkoutResult, raw: JsonObject, record: DedupeRecord) =
+                throw IllegalStateException("disk full")
+        }
+        val ingest = ResultIngest(broken) { 1 }
+        val e = SyncEngine(
+            transport, Outbox(), ingest, SessionIngest(InMemorySessions()) { 1 }, ChunkStager(InMemoryChunkStore(), ingest) { null }, ids, { now },
+            listener = object : SyncListener {
+                override fun onProtocolError(target: WatchTarget, reason: String, detail: String) { errors += "$reason: $detail" }
+            },
+        )
+        e.onMessage(target, resultEnvelope("result.put.capped.json"))
+        assertEquals(listOf("internal: IllegalStateException: disk full"), errors)
+    }
+
+    @Test
+    fun aLocallyEditedSessionIsNotReplacedByANewerWatchRevision() {
+        val sessions = InMemorySessions()
+        val ingest = SessionIngest(sessions) { 1 }
+        val json = Json.parseToJsonElement(File(TestSupport.sharedDir, "fixtures/wire/valid/session.put.json").readText()).jsonObject
+        val env = (EnvelopeCodec.fromJson(json) as Decoded.Ok).value
+        val oid = env.oid!!
+        assertEquals(AckStatus.OK, ingest.ingest(env).ack!!.st)
+        sessions.records[oid] = sessions.records.getValue(oid).copy(locallyEdited = true)
+        val rev = env.rev!! + 1
+        val newer = env.copy(rev = rev, p = JsonObject(env.p!! + ("rev" to JsonPrimitive(rev))))
+        assertEquals(AckStatus.ALREADY_APPLIED, ingest.ingest(newer).ack!!.st)
+        assertEquals(env.rev, sessions.records.getValue(oid).revision)
+    }
+
+    @Test
+    fun acknowledgedDeletesTheWatchEvictedAreNotResent() {
+        val gone = "a0000000-0000-4000-8000-000000000009"
+        val hello = Hello(listOf(1), "0.1.0", "fr965", emptyList(), emptyList(), 1000, 0, emptyList())
+        assertTrue(HelloDiff.toResend(listOf(PlanRecord(gone, 3, deleted = true, acknowledged = true)), hello).isEmpty())
+        assertEquals(1, HelloDiff.toResend(listOf(PlanRecord(gone, 3, deleted = true, acknowledged = false)), hello).size)
     }
 
     @Test

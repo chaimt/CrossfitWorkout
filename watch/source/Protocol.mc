@@ -99,6 +99,10 @@ module Proto {
         var v = U.num(msg, "v");
         var ackType = _ackTypeFor(t);
         var myG = Inbox.generation(kv);
+        if (mid == null) {
+            // An ack must name the message it answers; one with an empty mid is unmatchable.
+            return res;
+        }
         if (v == null || v != VERSION) {
             // REQ-SY07: unknown protocol major -> error ack in the minimal
             // envelope, so the phone can ask for a watch app update.
