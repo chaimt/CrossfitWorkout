@@ -84,6 +84,8 @@ M: list[tuple[str, list[str], str, str, str, str, dict[str, Any]]] = [
     ("Overhead lunge", ["OHL"], "strength", "ft", "Y", "barbell", {"measures": ["ft", "m", "reps"]}),
     ("Bulgarian split squat", ["BSS"], "strength", "reps", "optional", "dumbbell", {"side": "each"}),
     ("Box step-up", ["BSU", "box step-ups"], "strength", "reps", "optional", "box", {}),
+    # Owner report (2026-11-24): accessory calf work the board uses, bodyweight or holding a DB.
+    ("Calf raise", ["calf raises", "standing calf raise", "standing calf raises"], "strength", "reps", "optional", "bodyweight", {}),
     # E.3 Gymnastics and bodyweight
     ("Air squat", ["AS", "squat", "squats"], "gymnastics", "reps", "N", "bodyweight", {}),
     ("Pull-up", ["PU", "KPU", "kipping pull-up", "pull-ups", "pullups"], "gymnastics", "reps", "N", "bodyweight", {}),
@@ -118,6 +120,8 @@ M: list[tuple[str, list[str], str, str, str, str, dict[str, Any]]] = [
     ("Rope climb", ["RC"], "gymnastics", "reps", "N", "rope", {"notes": "15 ft"}),
     ("Legless rope climb", ["LRC"], "gymnastics", "reps", "N", "rope", {}),
     ("Pistol", ["SLS", "pistols"], "gymnastics", "reps", "optional", "bodyweight", {}),
+    # Owner report (2026-11-24): lateral unilateral squat, counted as total alternating reps like a pistol.
+    ("Cossack squat", ["cossack squats", "cossack"], "gymnastics", "reps", "optional", "bodyweight", {}),
     ("L-sit", [], "gymnastics", "s", "N", "bodyweight", {}),
     ("GHD sit-up", ["GHDSU", "GHD SU"], "gymnastics", "reps", "N", "ghd", {}),
     ("AbMat sit-up", ["sit-up", "sit-ups", "SU"], "gymnastics", "reps", "N", "bodyweight", {}),
