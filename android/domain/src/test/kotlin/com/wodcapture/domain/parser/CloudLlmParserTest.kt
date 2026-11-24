@@ -23,6 +23,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /** REQ-AX02–AX04 with a mocked HTTP layer; REQ-AX12 harness; REQ-AX18 job lifecycle. */
@@ -64,8 +66,33 @@ class CloudLlmParserTest {
 
     @Test
     fun settingsOfferTheFourClaudeModelsDefaultFirst() {
-        assertEquals(listOf("claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-fable-5-1"), CloudParserConfig.MODELS)
+        assertEquals(listOf("claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-fable-5-2"), CloudParserConfig.MODELS)
         assertEquals(CloudParserConfig.DEFAULT_MODEL, CloudParserConfig.MODELS.first())
+    }
+
+    @Test
+    fun haikuSendsNoServerSideFallback() {
+        val haiku = CloudLlmParser(CloudParserConfig(apiKey = "k", model = "claude-haiku-5-5"), TestSupport.catalog, Scripted())
+        assertNull(haiku.buildRequestBody(ParseInput(text = "x"))["fallbacks"])
+        assertNull(haiku.headers()["anthropic-beta"])
+        assertNotNull(parser(Scripted()).buildRequestBody(ParseInput(text = "x"))["fallbacks"], "Opus keeps the fallback")
+    }
+
+    @Test
+    fun hugeRetryAfterIsCapped() {
+        val http = Scripted({ HttpResponse(429, mapOf("retry-after" to "3600"), "{}") }, { ok(modelOutput()) })
+        assertIs<ParseOutcome.Success>(parser(http).parse(ParseInput(text = "x")))
+        assertEquals(listOf(CloudParserConfig.MAX_BACKOFF_MS), sleeps)
+    }
+
+    @Test
+    fun costIsPricedForTheSelectedModel() {
+        assertTrue(CostEstimator.typicalParseUsd(1, "claude-haiku-5-5") < CostEstimator.typicalParseUsd(1, "claude-opus-5-5"))
+        assertTrue(CostEstimator.typicalParseUsd(1, "claude-fable-5-2") > CostEstimator.typicalParseUsd(1, "claude-opus-5-5"))
+        assertEquals(CostEstimator.typicalParseUsd(1), CostEstimator.typicalParseUsd(1, "unknown-model"))
+        // Cache writes cost more than plain input; reads cost less.
+        assertEquals(5.0, CostEstimator.usd(ParseUsage(0, 0, 0, 1_000_000)), 1e-9)
+        assertEquals(0.2, CostEstimator.usd(ParseUsage(0, 0, 1_000_000, 0)), 1e-9)
     }
 
     @Test

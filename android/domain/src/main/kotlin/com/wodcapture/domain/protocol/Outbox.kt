@@ -90,7 +90,8 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
             throw IllegalStateException("Revision $rev of $oid is older than queued/delivered revision ${it.revision}")
         }
         same.firstOrNull { it.revision == rev && it.type == envelope.t && it.state != DeliveryState.FAILED }?.let { existing ->
-            if (existing.body == body) return existing
+            // Every envelope has a fresh message id and timestamp, so identity is the payload.
+            if (existing.body["p"] == body["p"]) return existing
             throw IllegalStateException("Revision $rev of $oid already exists with different content; bump the revision")
         }
         same.filter { it.state in PENDING }.forEach { replace(it.copy(state = DeliveryState.SUPERSEDED)) }
@@ -115,7 +116,8 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
             }
             return inFlight.copy(state = DeliveryState.SENDING, retries = inFlight.retries + 1, sentAtMs = nowMs).also(::replace)
         }
-        if (items.any { it.target == target && (it.state == DeliveryState.WAITING || it.state == DeliveryState.SUSPENDED) }) return null
+        // A capacity refusal must not block the deletes that would free the space (REQ-SY13).
+        if (items.any { it.target == target && it.blocksQueue() }) return null
         val queued = items.firstOrNull { it.target == target && it.state == DeliveryState.QUEUED } ?: return null
         return queued.copy(state = DeliveryState.SENDING, sentAtMs = nowMs).also(::replace)
     }
@@ -151,14 +153,27 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
             AckStatus.CONFLICT -> e.copy(state = DeliveryState.FAILED, reason = "conflict")
             else -> when (ack.rs) {
                 // Capacity is fixable on the watch (free history); retry on the next sync.
-                "capacity" -> e.copy(state = DeliveryState.WAITING, reason = "capacity")
+                CAPACITY -> e.copy(state = DeliveryState.WAITING, reason = CAPACITY)
                 else -> e.copy(state = DeliveryState.FAILED, reason = ack.rs ?: "error")
             }
         }
         replace(updated)
+        if (updated.state == DeliveryState.ON_WATCH && updated.type == MessageType.PLAN_DEL) retryCapacity(target)
         compact()
         return updated
     }
+
+    /** A delete freed a slot on the watch: plans refused for capacity get another try. */
+    private fun retryCapacity(target: WatchTarget) {
+        items.filter { it.target == target && it.state == DeliveryState.WAITING && it.reason == CAPACITY }
+            .forEach { replace(it.copy(state = DeliveryState.QUEUED, retries = 0, sentAtMs = null, reason = null)) }
+    }
+
+    /** Targets with undelivered work, so retries run for every target, not only the selected one. */
+    fun pendingTargets(): Set<WatchTarget> = items.filter { it.state in PENDING }.mapTo(mutableSetOf()) { it.target }
+
+    private fun OutboxEntry.blocksQueue(): Boolean =
+        state == DeliveryState.SUSPENDED || (state == DeliveryState.WAITING && reason != CAPACITY)
 
     /**
      * New lifecycle event (hello, device connected) or explicit Sync: waiting/suspended entries go
@@ -221,6 +236,7 @@ class Outbox(entries: List<OutboxEntry> = emptyList()) {
         val RETRY_DELAYS_MS = longArrayOf(5_000, 15_000, 60_000)
         const val MAX_RETRIES_PER_DRAIN = 3
         const val AUTO_RESTART_MS = 5 * 60_000L
+        private const val CAPACITY = "capacity"
         private val PENDING = setOf(DeliveryState.QUEUED, DeliveryState.SENDING, DeliveryState.SENT, DeliveryState.WAITING, DeliveryState.SUSPENDED)
     }
 }

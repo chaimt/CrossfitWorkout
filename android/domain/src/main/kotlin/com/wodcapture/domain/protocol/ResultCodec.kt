@@ -86,6 +86,8 @@ data class WireScore(
             "none" to emptyList(),
         )
         private val VALUE_KEYS = setOf("s", "r", "x", "n", "v", "u", "i", "ok", "tx")
+        private val MASS_UNITS = setOf("kg", "lb")
+        private val DISTANCE_UNITS = DistanceUnit.entries.map { it.wire }.toSet()
 
         fun parse(o: JsonObject): WireScore {
             requireOnly(o, setOf("ty", "rv", "man", "cs", "s", "r", "x", "n", "v", "u", "i", "ok", "tx", "pd"), "score")
@@ -107,7 +109,10 @@ data class WireScore(
             if (sc.s != null && sc.s !in 0..86399) throw WireException("invalid", "score.s")
             if (sc.n != null && sc.n !in 0..99999) throw WireException("invalid", "score.n")
             if (listOfNotNull(sc.r, sc.x, sc.i).any { it < 0 } || (sc.v ?: 0.0) < 0) throw WireException("invalid", "negative score")
-            if (sc.u != null && sc.u !in setOf("kg", "lb", "m", "km", "mi", "ft", "yd")) throw WireException("invalid", "score.u")
+            if (sc.u != null && sc.u !in MASS_UNITS + DISTANCE_UNITS) throw WireException("invalid", "score.u")
+            // A mass unit on a distance (or vice versa) would otherwise fail later, outside validation.
+            if (ty == "load" && sc.u != null && sc.u !in MASS_UNITS) throw WireException("invalid", "load score needs kg or lb")
+            if (ty == "distance" && sc.u != null && sc.u !in DISTANCE_UNITS) throw WireException("invalid", "distance score needs a distance unit")
             if ((sc.tx?.toByteArray()?.size ?: 0) > 256) throw WireException("invalid", "score.tx > 256 bytes")
             return sc
         }

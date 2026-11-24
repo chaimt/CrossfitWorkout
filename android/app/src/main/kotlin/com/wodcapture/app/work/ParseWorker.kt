@@ -19,6 +19,11 @@ import com.wodcapture.domain.parser.OkHttpTransport
 import com.wodcapture.domain.parser.ParseError
 import com.wodcapture.domain.parser.ParseInput
 import com.wodcapture.domain.parser.ParseOutcome
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
@@ -30,7 +35,10 @@ import java.io.File
  */
 class ParseWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): Result {
+    // Blocking HTTP, file reads and backoff sleeps belong on the IO pool, not Dispatchers.Default.
+    override suspend fun doWork(): Result = withContext(Dispatchers.IO) { work() }
+
+    private suspend fun work(): Result {
         val c = applicationContext.container
         val dao = c.db.dao()
         val jobId = inputData.getString(KEY_JOB) ?: return Result.failure()
@@ -48,7 +56,16 @@ class ParseWorker(context: Context, params: WorkerParameters) : CoroutineWorker(
 
         val parser = CloudLlmParser(CloudParserConfig(apiKey = key, model = settings.model, effort = settings.effort), c.catalog, OkHttpTransport())
         val input = ParseInput(images = images.map { ImageInput(it.readBytes()) }, text = draft!!.rawText)
-        val outcome = parser.parse(input) { isStopped || dao.job(jobId)?.state != JobState.RUNNING.name }
+        val outcome = try {
+            // Interruptible: stopping the worker interrupts a backoff sleep or an in-flight request.
+            runInterruptible { parser.parse(input) { isStopped || dao.job(jobId)?.state != JobState.RUNNING.name } }
+        } catch (e: CancellationException) {
+            // Never leave the job RUNNING and the draft stuck in "parsing" (REQ-AX18).
+            withContext(NonCancellable) {
+                dao.completeParse(jobId, ParseOutcome.Failure(ParseError.Cancelled, 0), System.currentTimeMillis() / 1000, true)
+            }
+            throw e
+        }
         val done = dao.completeParse(jobId, outcome, System.currentTimeMillis() / 1000, isStopped)
         return if (done?.state == JobState.QUEUED && outcome is ParseOutcome.Failure && outcome.error.retryable) Result.retry() else Result.success()
     }

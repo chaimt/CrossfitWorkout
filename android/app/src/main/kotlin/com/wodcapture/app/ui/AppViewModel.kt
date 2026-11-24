@@ -32,6 +32,7 @@ import com.wodcapture.domain.plan.CompileResult
 import com.wodcapture.domain.plan.PlanIdentity
 import com.wodcapture.domain.plan.PlanRefresher
 import com.wodcapture.domain.plan.PlanRefreshResult
+import com.wodcapture.domain.protocol.DeliveryState
 import com.wodcapture.domain.protocol.MessageType
 import com.wodcapture.domain.plan.WatchPlan
 import com.wodcapture.domain.plan.WireJson
@@ -175,7 +176,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val first = c.compiler.compile(workout, settings.value.profile, PlanIdentity(planId, prior?.revision ?: 1), options(levels))
             if (first !is CompileResult.Success) { message.value = "Cannot send: " + (first as CompileResult.Failure).errors.joinToString { it.message }; return@execute }
             val firstJson = WireJson.encodeToString(WatchPlan.serializer(), first.plan)
-            val unchanged = prior != null && prior.planJson == firstJson
+            // An unchanged plan whose last send failed permanently goes out again as a fresh revision;
+            // a plain Sync would leave it failed while the message claims it was queued.
+            val lastFailed = latest?.state == DeliveryState.FAILED
+            val unchanged = prior != null && prior.planJson == firstJson && !lastFailed
             val plan = if (unchanged || prior == null) first.plan else first.plan.copy(rev = prior.revision + 1)
             val json = WireJson.encodeToString(WatchPlan.serializer(), plan)
             dao.upsertPlan(PlanEntity(workout.id, target.key, planId, plan.rev, workout.revision, json))
@@ -187,10 +191,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Profile defaults to the watch (REQ-AG02, protocol §6). */
     fun sendProfile() = viewModelScope.launch(Dispatchers.IO) {
+        val target = c.currentTarget() ?: run { message.value = "No watch selected (Device screen)"; return@launch }
+        // An explicit send is a new revision, so a watch that lost its settings applies it again.
+        c.settings.update { it.copy(profileRevision = it.profileRevision + 1) }
         val s = c.settings.current()
-        val target = c.currentTarget() ?: return@launch
         val p = ProfilePayload.toJson(s.profile.watch, if (s.profile.displayUnit.wire == "lb") "lb" else "kg", s.profile.defaultRestSec)
-        c.sync.execute { runCatching { c.engine.sendProfile(target, PROFILE_ID, s.profileRevision, p) } }
+        c.sync.execute {
+            runCatching { c.engine.sendProfile(target, PROFILE_ID, s.profileRevision, p) }
+                .onSuccess { message.value = "Defaults queued for the watch" }
+                .onFailure { message.value = "Cannot send defaults: ${it.message}" }
+        }
     }
 
     fun requestSync() {

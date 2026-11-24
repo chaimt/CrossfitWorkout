@@ -24,6 +24,8 @@ class InMemoryResults : ResultRepository {
 class InMemorySessions : SessionRepository {
     val sessions = mutableMapOf<String, Session>()
     val records = mutableMapOf<String, DedupeRecord>()
+    val quarantined = mutableListOf<Pair<JsonObject, Int>>()
+    override fun quarantine(raw: JsonObject, generation: Int) { quarantined += raw to generation }
     override fun dedupe(sessionId: String) = records[sessionId]
     override fun commit(session: Session, raw: JsonObject, record: DedupeRecord) {
         sessions[session.id] = session

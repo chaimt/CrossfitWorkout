@@ -195,6 +195,8 @@ interface WodDao {
 
     @Upsert fun upsertSession(s: SessionEntity)
     @Insert fun insertQuarantine(q: QuarantineEntity)
+    /** Watch retries resend identical payloads; the quarantine keeps one copy of each. */
+    @Query("SELECT COUNT(*) FROM quarantine WHERE rawJson = :raw") fun quarantineCount(raw: String): Int
 
     @Upsert fun upsertOutbox(o: OutboxEntity)
     @Query("SELECT * FROM outbox") fun outbox(): List<OutboxEntity>
@@ -225,6 +227,7 @@ interface WodDao {
     @Query("DELETE FROM plans") fun wipePlans()
     @Query("DELETE FROM chunk_transfers") fun wipeChunks()
     @Query("DELETE FROM quarantine") fun wipeQuarantine()
+    @Query("DELETE FROM dedupe") fun wipeDedupe()
 }
 
 @Database(

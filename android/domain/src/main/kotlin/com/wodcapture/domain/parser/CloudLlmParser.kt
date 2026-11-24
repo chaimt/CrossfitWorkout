@@ -33,8 +33,8 @@ data class CloudParserConfig(
     val maxTokens: Int = 16_000,
     val baseUrl: String = "https://api.anthropic.com",
     val apiVersion: String = "2026-10-21",
-    /** Server-side refusal fallback (`fallbacks: "default"`), on by default for this model family. */
-    val serverFallback: Boolean = true,
+    /** Server-side refusal fallback (`fallbacks: "default"`); Haiku 5.5 has none, so it is off there. */
+    val serverFallback: Boolean = supportsServerFallback(model),
     val maxRetries: Int = 2,
 ) {
     override fun toString(): String = "CloudParserConfig(model=$model, effort=$effort, key=***)"
@@ -43,8 +43,14 @@ data class CloudParserConfig(
         const val DEFAULT_MODEL = "claude-opus-5-5"
 
         /** Models offered in the Settings → Model dropdown (REQ-AG03), default first. */
-        val MODELS: List<String> = listOf(DEFAULT_MODEL, "claude-sonnet-5-5", "claude-haiku-5-5", "claude-fable-5-1")
+        val MODELS: List<String> = listOf(DEFAULT_MODEL, "claude-sonnet-5-5", "claude-haiku-5-5", "claude-fable-5-2")
         const val FALLBACK_BETA = "server-side-fallback-2026-07-01"
+
+        /** Longest wait between retries; a larger Retry-After would outlive the parse worker. */
+        const val MAX_BACKOFF_MS = 60_000L
+
+        /** Haiku models have no server-side refusal fallback; sending `fallbacks` there is invalid. */
+        fun supportsServerFallback(model: String): Boolean = !model.startsWith("claude-haiku")
     }
 }
 
@@ -149,7 +155,8 @@ class CloudLlmParser(
 
     private fun backoffMs(error: ParseError, attempt: Int): Long {
         val retryAfter = (error as? ParseError.RateLimited)?.retryAfterSec
-        return retryAfter?.let { it * 1000 } ?: (1000L shl (attempt - 1))
+        val ms = retryAfter?.let { it * 1000 } ?: (1000L shl (attempt - 1))
+        return ms.coerceIn(0, CloudParserConfig.MAX_BACKOFF_MS)
     }
 
     private fun interpret(resp: HttpResponse, input: ParseInput, attempt: Int): ParseOutcome {
@@ -254,22 +261,43 @@ sealed interface KeyTestResult {
     data class Error(val message: String) : KeyTestResult
 }
 
-/** Cost estimate shown in settings (REQ-AX09). Prices per MTok for claude-opus-5-5. */
+/** USD per million tokens for one model (first-party API list prices, 2026-11). */
+data class ModelPrice(val input: Double, val output: Double, val cacheRead: Double) {
+    /** 5-minute cache writes bill at 1.25× the input price. */
+    val cacheWrite: Double get() = input * 1.25
+}
+
+/** Cost estimate shown in settings (REQ-AX09), priced for the selected model. */
 object CostEstimator {
-    const val INPUT_USD_PER_MTOK = 4.0
-    const val OUTPUT_USD_PER_MTOK = 20.0
     const val MAX_IMAGE_TOKENS = 4784
+
+    private val PRICES = mapOf(
+        "claude-opus-5-5" to ModelPrice(4.0, 20.0, 0.20),
+        "claude-sonnet-5-5" to ModelPrice(2.0, 10.0, 0.10),
+        "claude-haiku-5-5" to ModelPrice(0.10, 0.50, 0.01),
+        "claude-fable-5-2" to ModelPrice(8.0, 40.0, 0.20),
+        "claude-fable-5-1" to ModelPrice(10.0, 50.0, 1.00),
+    )
+
+    /** Price of [model]; unknown models are estimated at the default model's price. */
+    fun price(model: String): ModelPrice = PRICES[model] ?: PRICES.getValue(CloudParserConfig.DEFAULT_MODEL)
 
     /** ⌈w/28⌉ × ⌈h/28⌉ visual tokens, capped at the 2576-px limit. */
     fun imageTokens(width: Int, height: Int): Int =
         minOf(((width + 27) / 28) * ((height + 27) / 28), MAX_IMAGE_TOKENS)
 
-    fun usd(inputTokens: Int, outputTokens: Int): Double =
-        inputTokens * INPUT_USD_PER_MTOK / 1e6 + outputTokens * OUTPUT_USD_PER_MTOK / 1e6
+    fun usd(inputTokens: Int, outputTokens: Int, model: String = CloudParserConfig.DEFAULT_MODEL): Double {
+        val p = price(model)
+        return inputTokens * p.input / 1e6 + outputTokens * p.output / 1e6
+    }
 
-    fun usd(usage: ParseUsage): Double = usd(usage.inputTokens + usage.cacheWriteTokens, usage.outputTokens) +
-        usage.cacheReadTokens * 0.2 / 1e6
+    fun usd(usage: ParseUsage, model: String = CloudParserConfig.DEFAULT_MODEL): Double {
+        val p = price(model)
+        return usd(usage.inputTokens, usage.outputTokens, model) +
+            usage.cacheWriteTokens * p.cacheWrite / 1e6 + usage.cacheReadTokens * p.cacheRead / 1e6
+    }
 
     /** Typical parse: images + ~6k prompt tokens (mostly cached) + ~4k output/thinking. */
-    fun typicalParseUsd(imageCount: Int): Double = usd(imageCount * MAX_IMAGE_TOKENS + 6000, 4000)
+    fun typicalParseUsd(imageCount: Int, model: String = CloudParserConfig.DEFAULT_MODEL): Double =
+        usd(imageCount * MAX_IMAGE_TOKENS + 6000, 4000, model)
 }

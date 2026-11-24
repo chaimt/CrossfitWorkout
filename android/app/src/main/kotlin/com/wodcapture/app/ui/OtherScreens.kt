@@ -304,7 +304,7 @@ fun SettingsScreen(vm: AppViewModel, back: () -> Unit) {
             Button(enabled = apiKey.isNotBlank(), onClick = { vm.saveApiKey(apiKey); apiKey = "" }) { Text("Save key") }
             OutlinedButton(onClick = vm::testKey) { Text("Test key") }
         }
-        Text("Estimated cost: about $%.2f per photo parse, $%.2f per text parse (your own key).".format(CostEstimator.typicalParseUsd(1), CostEstimator.typicalParseUsd(0)), style = MaterialTheme.typography.bodySmall)
+        Text("Estimated cost: about $%.2f per photo parse, $%.2f per text parse (your own key).".format(CostEstimator.typicalParseUsd(1, s.model), CostEstimator.typicalParseUsd(0, s.model)), style = MaterialTheme.typography.bodySmall)
         SectionTitle("App")
         UpdateSettings(vm.updates)
         FeedbackSettings(vm.updates.installedVersion)

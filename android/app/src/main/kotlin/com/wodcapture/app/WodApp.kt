@@ -121,8 +121,11 @@ class AppContainer(context: Context) {
             _outbox.value = engine.outbox.snapshot()
         }
         ciq.onConnected = { t -> sync.execute { engine.onDeviceConnected(t) } }
-        // Periodic retry checks while the app is alive (ack timeout / backoff, REQ-SY13).
-        sync.scheduleWithFixedDelay({ runCatching { currentTarget()?.let { engine.tick(it) } } }, 5, 5, TimeUnit.SECONDS)
+        // Periodic retry checks while the app is alive (ack timeout / backoff, REQ-SY13): every
+        // target with pending work, so switching production/beta never strands the other queue.
+        sync.scheduleWithFixedDelay({
+            runCatching { (engine.outbox.pendingTargets() + listOfNotNull(currentTarget())).forEach(engine::tick) }
+        }, 5, 5, TimeUnit.SECONDS)
         ciq.start()
     }
 
@@ -162,6 +165,9 @@ class AppContainer(context: Context) {
             db.runInTransaction {
                 dao.cancelAllJobs(); dao.wipeJobs(); dao.wipeWorkouts(); dao.wipeRevisions(); dao.wipeResults()
                 dao.wipeSessions(); dao.wipePlans(); dao.wipeChunks(); dao.clearOutbox()
+                // "All local data" includes quarantined old-pairing payloads and dedupe records:
+                // after the generation bump every old message is quarantined before dedupe applies.
+                dao.wipeQuarantine(); dao.wipeDedupe()
             }
             settings.update { it.copy(generation = it.generation + 1, profileRevision = it.profileRevision + 1) }
             secrets.clear()
